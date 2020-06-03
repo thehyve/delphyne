@@ -7,7 +7,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 # To update the package version number, edit __version__.py
 version = {}
-with open(os.path.join(here, '__version__.py')) as f:
+with open(os.path.join(here, 'src', 'omop_etl_wrapper', '_version.py')) as f:
     exec(f.read(), version)
 
 with open("README.md") as readme_file:
