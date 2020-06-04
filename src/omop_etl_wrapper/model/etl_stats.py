@@ -18,6 +18,7 @@ import logging
 from abc import ABC, abstractmethod
 from collections import Counter
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Optional, Union, List, Dict, ClassVar
 
 import pandas as pd
@@ -166,7 +167,8 @@ class EtlStats:
                     self._log_transformation_counts(transformation)
 
             logger.info('Total insertions:')
-            counts = {k: v for k, v in sorted(self.total_insertions.items(), key=lambda item: item[1], reverse=True)}
+            counts = {k: v for k, v in sorted(self.total_insertions.items(),
+                                              key=lambda item: item[1], reverse=True)}
             for table, insertion_count in counts.items():
                 logger.info(f'\t{table}: {insertion_count}')
 
@@ -180,7 +182,9 @@ class EtlStats:
         if transformation.deletion_counts:
             logger.info(f'\t\tDeletions: {dict(transformation.deletion_counts)}')
 
-    def write_summary_files(self, output_dir) -> None:
+    def write_summary_files(self) -> None:
         time_str = time.strftime("%Y-%m-%dT%H%M%S")
+        output_dir = Path('./logs')
+        output_dir.mkdir(exist_ok=True)
         self.sources_df.to_csv(output_dir / f'{time_str}_sources.tsv', sep='\t', index=False)
         self.transformations_df.to_csv(output_dir / f'{time_str}_transformations.tsv', sep='\t', index=False)
