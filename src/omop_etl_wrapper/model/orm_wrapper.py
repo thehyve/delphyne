@@ -162,25 +162,23 @@ class OrmWrapper:
             self._collect_query_statistics(session, transformation_metadata=transformation_metadata)
         self.etl_stats.add_transformation(transformation_metadata)
 
-    def load_source_to_concept_map_from_csv(self,
-                                            source_file: Path,
-                                            truncate_first: bool = False
-                                            ) -> None:
+    def truncate_stcm_table(self):
+        """Delete all records in the source_to_concept_map table."""
+        logger.info('Truncating STCM table')
+        with self.db.session_scope() as session:
+            session.query(self.cdm.SourceToConceptMap).delete()
+
+    def load_source_to_concept_map_from_csv(self, source_file: Path) -> None:
         """
         Insert STCM csv file into the STCM vocabulary table and add
         contents to stcm_lookup
         :param source_file: Path
             csv file with header matching the CDM STCM columns
-        :param truncate_first: bool
-            remove all current records in db table before insert
         :return: None
         """
         logger.info(f'Loading source to concept file: {str(source_file)}')
         transformation_metadata = EtlTransformation(name=f'load_{source_file.stem}')
         with self.db.session_scope() as session, source_file.open('r') as f_in:
-            if truncate_first:
-                session.query(SourceToConceptMap).delete()
-
             rows = csv.DictReader(f_in)
 
             first_row = next(rows)
