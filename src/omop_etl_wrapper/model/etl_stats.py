@@ -127,12 +127,14 @@ class EtlStats:
 
     @property
     def sources_df(self) -> pd.DataFrame:
-        sources_df = pd.DataFrame(data=[s.to_dict() for s in self.sources])
+        sources_df = pd.DataFrame(columns=EtlSource.df_column_order)
+        sources_df.append([s.to_dict() for s in self.sources])
         return sources_df[EtlSource.df_column_order]
 
     @property
     def transformations_df(self) -> pd.DataFrame:
-        transformations_df = pd.DataFrame(data=[t.to_dict() for t in self.transformations])
+        transformations_df = pd.DataFrame(columns=EtlTransformation.df_column_order)
+        transformations_df.append([t.to_dict() for t in self.transformations])
         return transformations_df[EtlTransformation.df_column_order]
 
     @staticmethod
@@ -183,6 +185,7 @@ class EtlStats:
             logger.info(f'\t\tDeletions: {dict(transformation.deletion_counts)}')
 
     def write_summary_files(self) -> None:
+        logger.info('Writing summary files')
         time_str = time.strftime("%Y-%m-%dT%H%M%S")
         output_dir = Path('./logs')
         output_dir.mkdir(exist_ok=True)
