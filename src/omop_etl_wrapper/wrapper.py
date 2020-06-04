@@ -94,11 +94,15 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         print('OMOP wrapper goes brrrrrrrr')
 
     def load_stcm(self):
-        pass
-        # TODO: create separate method for clearing the STCM table, then
-        #  make this method loop through all csv files present and
-        #  insert the contents
-        # self.load_source_to_concept_map_from_csv(STCM_DIR / 'AE_source_to_concept.csv', truncate_first=True)
+        """Insert all stcm csv files into the source_to_concept_map
+        table."""
+        logger.info('Loading STCM files')
+        stcm_dir = Path('./resources/source_to_concept/')
+        if not stcm_dir.exists():
+            raise FileNotFoundError(f'{str(stcm_dir.resolve())} folder not found')
+        stcm_files = stcm_dir.glob('*.csv')
+        for stcm_file in stcm_files:
+            self.load_source_to_concept_map_from_csv(stcm_file)
 
     def transform(self) -> None:
         pass
