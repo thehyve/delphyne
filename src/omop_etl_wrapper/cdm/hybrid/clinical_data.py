@@ -19,10 +19,10 @@
 from sqlalchemy import BigInteger, Column, Date, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
 
-from omop_etl_wrapper import base
+from omop_etl_wrapper import Base
 
 
-class ConditionOccurrence(base):
+class ConditionOccurrence(Base):
     __tablename__ = 'condition_occurrence'
     __table_args__ = {'schema': 'cdm'}
 
@@ -57,7 +57,7 @@ class ConditionOccurrence(base):
     visit_occurrence = relationship('VisitOccurrence')
 
 
-class DeviceExposure(base):
+class DeviceExposure(Base):
     __tablename__ = 'device_exposure'
     __table_args__ = {'schema': 'cdm'}
 
@@ -88,7 +88,7 @@ class DeviceExposure(base):
     visit_occurrence = relationship('VisitOccurrence')
 
 
-class DrugExposure(base):
+class DrugExposure(Base):
     __tablename__ = 'drug_exposure'
     __table_args__ = {'schema': 'cdm'}
 
@@ -127,19 +127,19 @@ class DrugExposure(base):
     visit_occurrence = relationship('VisitOccurrence')
 
 
-class FactRelationship(base):
+class FactRelationship(Base):
     __tablename__ = 'fact_relationship'
     __table_args__ = {'schema': 'cdm'}
 
     fact_relationship_id = Column(Integer, primary_key=True)
-    domain_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False, index=True)
+    domain_concept_id_1 = Column(ForeignKey('vocab.concept.concept_id'), nullable=False, index=True)
     fact_id_1 = Column(Integer, nullable=False)
     domain_concept_id_2 = Column(ForeignKey('vocab.concept.concept_id'), nullable=False, index=True)
     fact_id_2 = Column(Integer, nullable=False)
     relationship_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False, index=True)
 
 
-class Measurement(base):
+class Measurement(Base):
     __tablename__ = 'measurement'
     __table_args__ = {'schema': 'cdm'}
 
@@ -183,7 +183,7 @@ class Measurement(base):
     visit_occurrence = relationship('VisitOccurrence')
 
 
-class Note(base):
+class Note(Base):
     __tablename__ = 'note'
     __table_args__ = {'schema': 'cdm'}
 
@@ -214,7 +214,7 @@ class Note(base):
     visit_occurrence = relationship('VisitOccurrence')
 
 
-class NoteNlp(base):
+class NoteNlp(Base):
     __tablename__ = 'note_nlp'
     __table_args__ = {'schema': 'cdm'}
 
@@ -240,7 +240,7 @@ class NoteNlp(base):
     section_concept = relationship('Concept', primaryjoin='NoteNlp.section_concept_id == Concept.concept_id')
 
 
-class Observation(base):
+class Observation(Base):
     __tablename__ = 'observation'
     __table_args__ = {'schema': 'cdm'}
 
@@ -283,7 +283,7 @@ class Observation(base):
     visit_occurrence = relationship('VisitOccurrence')
 
 
-class ObservationPeriod(base):
+class ObservationPeriod(Base):
     __tablename__ = 'observation_period'
     __table_args__ = {'schema': 'cdm'}
 
@@ -297,7 +297,7 @@ class ObservationPeriod(base):
     person = relationship('Person')
 
 
-class Person(base):
+class Person(Base):
     __tablename__ = 'person'
     __table_args__ = {'schema': 'cdm'}
 
@@ -333,7 +333,7 @@ class Person(base):
     race_source_concept = relationship('Concept', primaryjoin='Person.race_source_concept_id == Concept.concept_id')
 
 
-class Death(base):
+class Death(Base):
     """
     A v5 table, reinstated for v6 for backwards compatibility
     """
@@ -353,7 +353,7 @@ class Death(base):
     death_type_concept = relationship('Concept', primaryjoin='Death.death_type_concept_id == Concept.concept_id')
 
 
-class ProcedureOccurrence(base):
+class ProcedureOccurrence(Base):
     __tablename__ = 'procedure_occurrence'
     __table_args__ = {'schema': 'cdm'}
 
@@ -386,7 +386,7 @@ class ProcedureOccurrence(base):
     visit_occurrence = relationship('VisitOccurrence')
 
 
-class Specimen(base):
+class Specimen(Base):
     __tablename__ = 'specimen'
     __table_args__ = {'schema': 'cdm'}
 
@@ -417,7 +417,7 @@ class Specimen(base):
     unit_concept = relationship('Concept', primaryjoin='Specimen.unit_concept_id == Concept.concept_id')
 
 
-class SurveyConduct(base):
+class SurveyConduct(Base):
     __tablename__ = 'survey_conduct'
     __table_args__ = {'schema': 'cdm'}
 
@@ -467,7 +467,7 @@ class SurveyConduct(base):
                                     primaryjoin='SurveyConduct.visit_occurrence_id == VisitOccurrence.visit_occurrence_id')
 
 
-class VisitDetail(base):
+class VisitDetail(Base):
     __tablename__ = 'visit_detail'
     __table_args__ = {'schema': 'cdm'}
 
@@ -511,7 +511,7 @@ class VisitDetail(base):
     visit_occurrence = relationship('VisitOccurrence')
 
 
-class VisitOccurrence(base):
+class VisitOccurrence(Base):
     __tablename__ = 'visit_occurrence'
     __table_args__ = {'schema': 'cdm'}
 
@@ -549,7 +549,7 @@ class VisitOccurrence(base):
                                       primaryjoin='VisitOccurrence.visit_type_concept_id == Concept.concept_id')
 
 
-class StemTable(base):
+class StemTable(Base):
     __tablename__ = 'stem_table'
     __table_args__ = {'schema': 'cdm'}
 
@@ -625,7 +625,7 @@ class StemTable(base):
     event_field_concept = relationship('Concept', primaryjoin='StemTable.event_field_concept_id == Concept.concept_id')
 
 
-class Episode(base):
+class Episode(Base):
     __tablename__ = 'episode'
     __table_args__ = {'schema': 'cdm'}
 
@@ -652,7 +652,7 @@ class Episode(base):
     person = relationship('Person')
 
 
-class EpisodeEvent(base):
+class EpisodeEvent(Base):
     __tablename__ = 'episode_event'
     __table_args__ = {'schema': 'cdm'}
 

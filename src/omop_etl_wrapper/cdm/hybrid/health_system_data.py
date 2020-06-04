@@ -19,10 +19,10 @@
 from sqlalchemy import BigInteger, Column, Date, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import relationship
 
-from omop_etl_wrapper import base
+from omop_etl_wrapper import Base
 
 
-class CareSite(base):
+class CareSite(Base):
     __tablename__ = 'care_site'
     __table_args__ = {'schema': 'cdm'}
 
@@ -37,7 +37,7 @@ class CareSite(base):
     place_of_service_concept = relationship('Concept')
 
 
-class Location(base):
+class Location(Base):
     __tablename__ = 'location'
     __table_args__ = {'schema': 'cdm'}
 
@@ -57,7 +57,7 @@ class Location(base):
     region_concept = relationship('Concept')
 
 
-class LocationHistory(base):
+class LocationHistory(Base):
     __tablename__ = 'location_history'
     __table_args__ = {'schema': 'cdm'}
 
@@ -73,7 +73,7 @@ class LocationHistory(base):
     relationship_type_concept = relationship('Concept')
 
 
-class Provider(base):
+class Provider(Base):
     __tablename__ = 'provider'
     __table_args__ = {'schema': 'cdm'}
 

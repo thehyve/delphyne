@@ -19,10 +19,10 @@
 from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
 
-from omop_etl_wrapper import base
+from omop_etl_wrapper import Base
 
 
-class Concept(base):
+class Concept(Base):
     __tablename__ = 'concept'
     __table_args__ = {'schema': 'vocab'}
 
@@ -42,7 +42,7 @@ class Concept(base):
     vocabulary = relationship('Vocabulary', primaryjoin='Concept.vocabulary_id == Vocabulary.vocabulary_id')
 
 
-class ConceptAncestor(base):
+class ConceptAncestor(Base):
     __tablename__ = 'concept_ancestor'
     __table_args__ = {'schema': 'vocab'}
 
@@ -55,7 +55,7 @@ class ConceptAncestor(base):
     descendant_concept = relationship('Concept', primaryjoin='ConceptAncestor.descendant_concept_id == Concept.concept_id')
 
 
-class ConceptClass(base):
+class ConceptClass(Base):
     __tablename__ = 'concept_class'
     __table_args__ = {'schema': 'vocab'}
 
@@ -66,7 +66,7 @@ class ConceptClass(base):
     concept_class_concept = relationship('Concept', primaryjoin='ConceptClass.concept_class_concept_id == Concept.concept_id')
 
 
-class ConceptRelationship(base):
+class ConceptRelationship(Base):
     __tablename__ = 'concept_relationship'
     __table_args__ = {'schema': 'vocab'}
 
@@ -82,7 +82,7 @@ class ConceptRelationship(base):
     relationship = relationship('Relationship')
 
 
-class ConceptSynonym(base):
+class ConceptSynonym(Base):
     __tablename__ = 'concept_synonym'
     __table_args__ = {'schema': 'vocab'}
 
@@ -94,7 +94,7 @@ class ConceptSynonym(base):
     language_concept = relationship('Concept', primaryjoin='ConceptSynonym.language_concept_id == Concept.concept_id')
 
 
-class Domain(base):
+class Domain(Base):
     __tablename__ = 'domain'
     __table_args__ = {'schema': 'vocab'}
 
@@ -107,7 +107,7 @@ class Domain(base):
                                   post_update=True)
 
 
-class DrugStrength(base):
+class DrugStrength(Base):
     __tablename__ = 'drug_strength'
     __table_args__ = {'schema': 'vocab'}
 
@@ -131,7 +131,7 @@ class DrugStrength(base):
     numerator_unit_concept = relationship('Concept', primaryjoin='DrugStrength.numerator_unit_concept_id == Concept.concept_id')
 
 
-class Relationship(base):
+class Relationship(Base):
     __tablename__ = 'relationship'
     __table_args__ = {'schema': 'vocab'}
 
@@ -146,7 +146,7 @@ class Relationship(base):
     reverse_relationship = relationship('Relationship', remote_side=[relationship_id])
 
 
-class SourceToConceptMap(base):
+class SourceToConceptMap(Base):
     __tablename__ = 'source_to_concept_map'
     __table_args__ = {'schema': 'vocab'}
 
@@ -165,7 +165,7 @@ class SourceToConceptMap(base):
     target_vocabulary = relationship('Vocabulary', primaryjoin='SourceToConceptMap.target_vocabulary_id == Vocabulary.vocabulary_id')
 
 
-class Vocabulary(base):
+class Vocabulary(Base):
     __tablename__ = 'vocabulary'
     __table_args__ = {'schema': 'vocab'}
 

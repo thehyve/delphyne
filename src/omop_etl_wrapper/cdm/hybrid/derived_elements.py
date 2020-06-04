@@ -19,12 +19,12 @@
 from sqlalchemy import BigInteger, Column, Date, DateTime, ForeignKey, Integer, Numeric, String, Table, Text
 from sqlalchemy.orm import relationship
 
-from omop_etl_wrapper import base
+from omop_etl_wrapper import Base
 
-metadata = base.metadata
+metadata = Base.metadata
 
 
-class ConditionEra(base):
+class ConditionEra(Base):
     __tablename__ = 'condition_era'
     __table_args__ = {'schema': 'cdm'}
 
@@ -39,7 +39,7 @@ class ConditionEra(base):
     person = relationship('Person')
 
 
-class DoseEra(base):
+class DoseEra(Base):
     __tablename__ = 'dose_era'
     __table_args__ = {'schema': 'cdm'}
 
@@ -56,7 +56,7 @@ class DoseEra(base):
     unit_concept = relationship('Concept', primaryjoin='DoseEra.unit_concept_id == Concept.concept_id')
 
 
-class DrugEra(base):
+class DrugEra(Base):
     __tablename__ = 'drug_era'
     __table_args__ = {'schema': 'cdm'}
 
