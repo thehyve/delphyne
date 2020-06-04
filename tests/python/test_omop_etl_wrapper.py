@@ -1,4 +1,4 @@
-from omop_etl_wrapper import wrapper
+from src.omop_etl_wrapper import wrapper
 
 
 def test_omop_etl_wrapper():

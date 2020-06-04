@@ -1,4 +1,4 @@
-from omop_etl_wrapper.model.raw_sql_wrapper import RawSqlWrapper
+from src.omop_etl_wrapper.model.raw_sql_wrapper import RawSqlWrapper
 
 
 def test_apply_sql_parameters():
