@@ -18,6 +18,7 @@ import logging
 from abc import ABC, abstractmethod
 from collections import Counter
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Optional, Union, List, Dict, ClassVar
 
 import pandas as pd
@@ -126,12 +127,14 @@ class EtlStats:
 
     @property
     def sources_df(self) -> pd.DataFrame:
-        sources_df = pd.DataFrame(data=[s.to_dict() for s in self.sources])
+        sources_df = pd.DataFrame(columns=EtlSource.df_column_order)
+        sources_df.append([s.to_dict() for s in self.sources])
         return sources_df[EtlSource.df_column_order]
 
     @property
     def transformations_df(self) -> pd.DataFrame:
-        transformations_df = pd.DataFrame(data=[t.to_dict() for t in self.transformations])
+        transformations_df = pd.DataFrame(columns=EtlTransformation.df_column_order)
+        transformations_df.append([t.to_dict() for t in self.transformations])
         return transformations_df[EtlTransformation.df_column_order]
 
     @staticmethod
@@ -146,6 +149,10 @@ class EtlStats:
         self.sources.append(source)
 
     def log_summary(self) -> None:
+        """
+        Write a human readable summary of all sources and ETL
+        transformations to the logs.
+        """
         with LoggingFormatContext(logger, MESSAGE_ONLY):
             if self.sources:
                 logger.info(f'Source table row counts (total time: {self.get_total_duration(self.sources)}):')
@@ -166,7 +173,8 @@ class EtlStats:
                     self._log_transformation_counts(transformation)
 
             logger.info('Total insertions:')
-            counts = {k: v for k, v in sorted(self.total_insertions.items(), key=lambda item: item[1], reverse=True)}
+            counts = {k: v for k, v in sorted(self.total_insertions.items(),
+                                              key=lambda item: item[1], reverse=True)}
             for table, insertion_count in counts.items():
                 logger.info(f'\t{table}: {insertion_count}')
 
@@ -180,7 +188,12 @@ class EtlStats:
         if transformation.deletion_counts:
             logger.info(f'\t\tDeletions: {dict(transformation.deletion_counts)}')
 
-    def write_summary_files(self, output_dir) -> None:
+    def write_summary_files(self) -> None:
+        """Write overview tables for 1. the source tables and 2. the ETL
+        transformations."""
+        logger.info('Writing summary files')
         time_str = time.strftime("%Y-%m-%dT%H%M%S")
+        output_dir = Path('./logs')
+        output_dir.mkdir(exist_ok=True)
         self.sources_df.to_csv(output_dir / f'{time_str}_sources.tsv', sep='\t', index=False)
         self.transformations_df.to_csv(output_dir / f'{time_str}_transformations.tsv', sep='\t', index=False)

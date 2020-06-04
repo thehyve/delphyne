@@ -27,7 +27,7 @@ from .model.raw_sql_wrapper import RawSqlWrapper
 
 logger = logging.getLogger(__name__)
 
-_HERE = Path(__file__)
+_HERE = Path(__file__).parent
 
 _default_sql_parameters = {
     'vocab_schema': 'vocab',
@@ -100,6 +100,11 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         pass
 
     def stem_table_to_domains(self) -> None:
+        """
+        Transfer all stem table records to the OMOP clinical data
+        tables. Which OMOP table each records is copied into, is
+        determined by the target concept's domain_id.
+        """
         logger.info('Starting stem table to domain queries')
         post_processing_path = _HERE / 'post_processing'
         self.execute_sql_file(post_processing_path / 'stem_table_to_measurement.sql')
@@ -132,8 +137,10 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         self.db.base.metadata.create_all(bind=conn)
 
     def create_schemas_if_not_exists(self) -> None:
-        """Create the schemas used in the CDM table definitions if they
-        don't exist already."""
+        """
+        Create the schemas used in the CDM table definitions if they
+        don't exist already.
+        """
         conn = self.db.engine.connect()
         for schema_name in [
             self.sql_parameters['target_schema'],
