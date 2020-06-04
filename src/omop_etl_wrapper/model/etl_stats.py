@@ -149,6 +149,10 @@ class EtlStats:
         self.sources.append(source)
 
     def log_summary(self) -> None:
+        """
+        Write a human readable summary of all sources and ETL
+        transformations to the logs.
+        """
         with LoggingFormatContext(logger, MESSAGE_ONLY):
             if self.sources:
                 logger.info(f'Source table row counts (total time: {self.get_total_duration(self.sources)}):')
@@ -185,6 +189,8 @@ class EtlStats:
             logger.info(f'\t\tDeletions: {dict(transformation.deletion_counts)}')
 
     def write_summary_files(self) -> None:
+        """Write overview tables for 1. the source tables and 2. the ETL
+        transformations."""
         logger.info('Writing summary files')
         time_str = time.strftime("%Y-%m-%dT%H%M%S")
         output_dir = Path('./logs')

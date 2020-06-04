@@ -38,9 +38,9 @@ logger = logging.getLogger(__name__)
 
 class OrmWrapper:
     """
-    This module coordinates the execution of the python transformations.
+    Wrapper which coordinates the execution of python ORM
+    transformations.
     """
-
     def __init__(self, database: Database, bulk: bool):
         self.db = database
         self.bulk_mode = bulk
