@@ -132,7 +132,7 @@ class FactRelationship(Base):
     __table_args__ = {'schema': 'cdm'}
 
     fact_relationship_id = Column(Integer, primary_key=True)
-    domain_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False, index=True)
+    domain_concept_id_1 = Column(ForeignKey('vocab.concept.concept_id'), nullable=False, index=True)
     fact_id_1 = Column(Integer, nullable=False)
     domain_concept_id_2 = Column(ForeignKey('vocab.concept.concept_id'), nullable=False, index=True)
     fact_id_2 = Column(Integer, nullable=False)
