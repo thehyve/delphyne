@@ -14,16 +14,15 @@
 
 import logging
 from pathlib import Path
+from types import ModuleType
 from typing import Optional, Union, Dict
 
 from sqlalchemy.schema import CreateSchema
-# TODO: make cdm version agnostic
-# from .cdm import hybrid
+
 from .database.database import Database
 from .model.etl_stats import EtlStats
 from .model.orm_wrapper import OrmWrapper
 from .model.raw_sql_wrapper import RawSqlWrapper
-
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +50,9 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
     reports : bool
         Write two additional tsv files with detailed information on
         source data counts and ETL transformations.
+    cdm : module
+        A module from the cdm package which contains the OMOP ORM table
+        definitions
     sql_parameters : Dict, default None
         The...
     """
@@ -58,6 +60,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
                  database: Union[Database, str],
                  bulk: bool,
                  reports: bool,
+                 cdm: ModuleType,
                  sql_parameters: Optional[Dict] = None):
 
         if sql_parameters is None:
@@ -65,8 +68,9 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         self.sql_parameters = sql_parameters
 
         self.db = database
+        self.cdm = cdm
 
-        super().__init__(database=self.db, bulk=bulk)
+        super().__init__(database=self.db, cdm=cdm, bulk=bulk)
         super(OrmWrapper, self).__init__(database=self.db, sql_parameters=self.sql_parameters)
 
         self.write_reports = reports
@@ -120,7 +124,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         logger.info('Dropping OMOP CDM (non-vocabulary) tables if existing')
         tables = []
         # TODO: needs a less hacky implementation
-        for name, cls in hybrid.__dict__.items():
+        for name, cls in self.cdm.__dict__.items():
             if isinstance(cls, type):
                 file_module = cls.__module__.rsplit('.', 1)[-1]
                 if file_module != 'vocabularies':
