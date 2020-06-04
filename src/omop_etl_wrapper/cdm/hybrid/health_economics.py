@@ -19,10 +19,10 @@
 from sqlalchemy import BigInteger, Column, Date, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import relationship
 
-from omop_etl_wrapper import base
+from omop_etl_wrapper import Base
 
 
-class Cost(base):
+class Cost(Base):
     __tablename__ = 'cost'
     __table_args__ = {'schema': 'cdm'}
 
@@ -55,7 +55,7 @@ class Cost(base):
     revenue_code_concept = relationship('Concept', primaryjoin='Cost.revenue_code_concept_id == Concept.concept_id')
 
 
-class PayerPlanPeriod(base):
+class PayerPlanPeriod(Base):
     __tablename__ = 'payer_plan_period'
     __table_args__ = {'schema': 'cdm'}
 

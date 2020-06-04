@@ -9,7 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 from sqlalchemy_utils.functions import database_exists
 
-base = declarative_base()
+Base = declarative_base()
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ _default_sql_parameters = {
 class Database:
     def __init__(self, uri: str, sql_parameters: Optional[Dict[str, str]]):
         self.engine = create_engine(uri, executemany_mode='values')
-        self.base = base
+        self.base = Base
         if sql_parameters is not None:
             self.sql_parameters = sql_parameters
         else:
