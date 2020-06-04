@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from omop_etl_wrapper.model.etl_stats import EtlStats, EtlSource, EtlTransformation
+from src.omop_etl_wrapper.model.etl_stats import EtlStats, EtlSource, EtlTransformation
 
 
 @pytest.fixture(scope="module")

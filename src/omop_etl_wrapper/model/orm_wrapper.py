@@ -30,7 +30,7 @@ import pandas as pd
 
 from ..database.database import Database
 # Import ORM for all OMOP tables
-from ..cdm.hybrid import *
+# from ..cdm.hybrid import *
 from .etl_stats import EtlTransformation, EtlStats
 
 logger = logging.getLogger(__name__)

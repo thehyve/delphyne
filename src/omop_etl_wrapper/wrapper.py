@@ -17,8 +17,8 @@ from pathlib import Path
 from typing import Optional, Union, Dict
 
 from sqlalchemy.schema import CreateSchema
-
-from .cdm import hybrid  # TODO: make cdm version agnostic
+# TODO: make cdm version agnostic
+# from .cdm import hybrid
 from .database.database import Database
 from .model.etl_stats import EtlStats
 from .model.orm_wrapper import OrmWrapper
