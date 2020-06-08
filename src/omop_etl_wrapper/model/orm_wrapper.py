@@ -106,17 +106,20 @@ class OrmWrapper:
         logger.info(f'{statement.__name__} completed with success status: {transformation_metadata.query_success}')
         self.etl_stats.add_transformation(transformation_metadata)
 
-    @staticmethod
-    def _get_record_targets(record_containing_object: Iterable) -> str:
+    def _get_record_targets(self, record_containing_object: Iterable) -> str:
         for record in record_containing_object:
-            schema_name = record.__table_args__.get('schema')
+            default_schema_name = record.__table_args__.get('schema')
+            schema_name = self.db.schema_translate_map.get(default_schema_name)
             table_name = record.__tablename__
             if schema_name is None:
                 yield table_name
             else:
                 yield '.'.join([schema_name, table_name])
 
-    def _collect_query_statistics(self, session: Session, transformation_metadata: EtlTransformation) -> None:
+    def _collect_query_statistics(self,
+                                  session: Session,
+                                  transformation_metadata: EtlTransformation
+                                  ) -> None:
         # In regular mode, all the new objects can be accurately determined from the session
         transformation_metadata.deletion_counts = Counter(self._get_record_targets(session.deleted))
         transformation_metadata.insertion_counts = Counter(self._get_record_targets(session.new))
