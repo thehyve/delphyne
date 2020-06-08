@@ -20,6 +20,7 @@ from typing import Optional, Union, Dict, List
 from sqlalchemy import Table
 from sqlalchemy.schema import CreateSchema
 
+from ._settings import default_sql_parameters
 from .database.database import Database
 from .model.etl_stats import EtlStats
 from .model.orm_wrapper import OrmWrapper
@@ -28,12 +29,6 @@ from .model.raw_sql_wrapper import RawSqlWrapper
 logger = logging.getLogger(__name__)
 
 _HERE = Path(__file__).parent
-
-_default_sql_parameters = {
-    'vocab_schema': 'vocab',
-    'source_schema': 'source',
-    'target_schema': 'cdm_palermo'
-}
 
 
 class Wrapper(OrmWrapper, RawSqlWrapper):
@@ -53,7 +48,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         source data counts and ETL transformations.
     cdm : module
         A module from the cdm package which contains the OMOP ORM table
-        definitions
+        definitions.
     sql_parameters : Dict, default None
         The...
     """
@@ -65,7 +60,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
                  sql_parameters: Optional[Dict] = None):
 
         if sql_parameters is None:
-            sql_parameters = _default_sql_parameters
+            sql_parameters = default_sql_parameters
         self.sql_parameters = sql_parameters
 
         self.db = database
@@ -134,7 +129,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
 
     def drop_cdm(self, tables_to_drop: Optional[List[Table]] = None) -> None:
         """
-        Drop ORM defined tables (if they exist).
+        Drop non-vocabulary tables defined in the ORM (if they exist).
         :param tables_to_drop: List, default None
             List of SQLAlchemy table definitions that should be dropped.
             If not provided, all tables that by default are not part of

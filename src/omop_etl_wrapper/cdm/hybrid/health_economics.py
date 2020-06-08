@@ -15,7 +15,7 @@
 # OMOP CDM v6, with oncology extension, defined by https://github.com/OHDSI/CommonDataModel/tree/Dev/PostgreSQL #30d851a
 
 # coding: utf-8
-
+from .._defaults import VOCAB_SCHEMA, CDM_SCHEMA
 from sqlalchemy import BigInteger, Column, Date, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import relationship
 
@@ -24,26 +24,26 @@ from omop_etl_wrapper import Base
 
 class Cost(Base):
     __tablename__ = 'cost'
-    __table_args__ = {'schema': 'cdm'}
+    __table_args__ = {'schema': CDM_SCHEMA}
 
     cost_id = Column(BigInteger, primary_key=True)
-    person_id = Column(ForeignKey('cdm.person.person_id'), nullable=False, index=True)
+    person_id = Column(ForeignKey(f'{CDM_SCHEMA}.person.person_id'), nullable=False, index=True)
     cost_event_id = Column(BigInteger, nullable=False)
     cost_event_field_concept_id = Column(Integer, nullable=False)
-    cost_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
-    cost_type_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
-    currency_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
+    cost_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
+    cost_type_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
+    currency_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
     cost = Column(Numeric)
     incurred_date = Column(Date, nullable=False)
     billed_date = Column(Date)
     paid_date = Column(Date)
-    revenue_code_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
-    drg_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
+    revenue_code_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
+    drg_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
     cost_source_value = Column(String(50))
-    cost_source_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
+    cost_source_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
     revenue_code_source_value = Column(String(50))
     drg_source_value = Column(String(3))
-    payer_plan_period_id = Column(ForeignKey('cdm.payer_plan_period.payer_plan_period_id'))
+    payer_plan_period_id = Column(ForeignKey(f'{CDM_SCHEMA}.payer_plan_period.payer_plan_period_id'))
 
     cost_concept = relationship('Concept', primaryjoin='Cost.cost_concept_id == Concept.concept_id')
     cost_source_concept = relationship('Concept', primaryjoin='Cost.cost_source_concept_id == Concept.concept_id')
@@ -57,29 +57,29 @@ class Cost(Base):
 
 class PayerPlanPeriod(Base):
     __tablename__ = 'payer_plan_period'
-    __table_args__ = {'schema': 'cdm'}
+    __table_args__ = {'schema': CDM_SCHEMA}
 
     payer_plan_period_id = Column(BigInteger, primary_key=True)
-    person_id = Column(ForeignKey('cdm.person.person_id'), nullable=False, index=True)
-    contract_person_id = Column(ForeignKey('cdm.person.person_id'))
+    person_id = Column(ForeignKey(f'{CDM_SCHEMA}.person.person_id'), nullable=False, index=True)
+    contract_person_id = Column(ForeignKey(f'{CDM_SCHEMA}.person.person_id'))
     payer_plan_period_start_date = Column(Date, nullable=False)
     payer_plan_period_end_date = Column(Date, nullable=False)
-    payer_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
-    plan_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
-    contract_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
-    sponsor_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
-    stop_reason_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
+    payer_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
+    plan_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
+    contract_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
+    sponsor_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
+    stop_reason_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
     payer_source_value = Column(String(50))
-    payer_source_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
+    payer_source_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
     plan_source_value = Column(String(50))
-    plan_source_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
+    plan_source_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
     contract_source_value = Column(String(50))
-    contract_source_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
+    contract_source_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
     sponsor_source_value = Column(String(50))
-    sponsor_source_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
+    sponsor_source_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
     family_source_value = Column(String(50))
     stop_reason_source_value = Column(String(50))
-    stop_reason_source_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
+    stop_reason_source_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
 
     contract_concept = relationship('Concept', primaryjoin='PayerPlanPeriod.contract_concept_id == Concept.concept_id')
     contract_person = relationship('Person', primaryjoin='PayerPlanPeriod.contract_person_id == Person.person_id')

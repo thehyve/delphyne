@@ -9,19 +9,12 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 from sqlalchemy_utils.functions import database_exists
 
-Base = declarative_base()
+from .._settings import default_sql_parameters
+from ..cdm._defaults import VOCAB_SCHEMA, CDM_SCHEMA
 
 logger = logging.getLogger(__name__)
 
-# TODO: make default schemas "vocab" and "cdm" single reference
-#  variables for all files that use them
-
-# TODO: Deduplicate with the params from wrapper.py
-_default_sql_parameters = {
-    'vocab_schema': 'vocab',
-    'source_schema': 'source',
-    'target_schema': 'cdm_palermo'
-}
+Base = declarative_base()
 
 
 class Database:
@@ -31,15 +24,15 @@ class Database:
         if sql_parameters is not None:
             self.sql_parameters = sql_parameters
         else:
-            self.sql_parameters = _default_sql_parameters
+            self.sql_parameters = default_sql_parameters
 
         self.schema_translate_map: Dict[str, str] = self._set_schema_map()
         self._sessionmaker = sessionmaker(bind=self.engine, autoflush=False)
 
     def _set_schema_map(self):
         schema_map = {
-            'vocab': self.sql_parameters.get('vocab_schema', 'vocab'),
-            'cdm': self.sql_parameters.get('target_schema', 'cdm'),
+            VOCAB_SCHEMA: self.sql_parameters.get('vocab_schema', VOCAB_SCHEMA),
+            CDM_SCHEMA: self.sql_parameters.get('target_schema', CDM_SCHEMA),
         }
         return schema_map
 
