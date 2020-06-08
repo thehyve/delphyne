@@ -15,8 +15,9 @@
 import logging
 from pathlib import Path
 from types import ModuleType
-from typing import Optional, Union, Dict
+from typing import Optional, Union, Dict, List
 
+from sqlalchemy import Table
 from sqlalchemy.schema import CreateSchema
 
 from .database.database import Database
@@ -123,19 +124,29 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         self.execute_sql_file(post_processing_path / 'stem_table_to_procedure_occurrence.sql')
         self.execute_sql_file(post_processing_path / 'stem_table_to_specimen.sql')
 
-    def drop_cdm(self) -> None:
-        """Drop clinical tables, if they exist."""
+    def _get_cdm_tables_to_drop(self):
+        tables_to_drop = []
+        for table in self.db.base.metadata.tables.values():
+            default_schema = getattr(table, 'schema', None)
+            if default_schema != 'vocab':  # TODO: parameterize
+                tables_to_drop.append(table)
+        return tables_to_drop
+
+    def drop_cdm(self, tables_to_drop: Optional[List[Table]] = None) -> None:
+        """
+        Drop ORM defined tables (if they exist).
+        :param tables_to_drop: List, default None
+            List of SQLAlchemy table definitions that should be dropped.
+            If not provided, all tables that by default are not part of
+            the CDM vocabulary tables will be dropped.
+        :return: None
+        """
         logger.info('Dropping OMOP CDM (non-vocabulary) tables if existing')
-        tables = []
-        # TODO: needs a less hacky implementation
-        for name, cls in self.cdm.__dict__.items():
-            if isinstance(cls, type):
-                file_module = cls.__module__.rsplit('.', 1)[-1]
-                if file_module != 'vocabularies':
-                    tables.append(cls.__table__)
+        if tables_to_drop is None:
+            tables_to_drop = self._get_cdm_tables_to_drop()
         conn = self.db.engine.connect()
         conn = conn.execution_options(schema_translate_map=self.db.schema_translate_map)
-        self.db.base.metadata.drop_all(bind=conn, tables=tables)
+        self.db.base.metadata.drop_all(bind=conn, tables=tables_to_drop)
 
     def create_cdm(self) -> None:
         """Create all OMOP CDM tables as defined in base.metadata."""
