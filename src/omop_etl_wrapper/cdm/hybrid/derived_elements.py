@@ -84,7 +84,7 @@ t_cdm_source = Table(
     Column('cdm_release_date', Date),
     Column('cdm_version', String(10)),
     Column('vocabulary_version', String(20)),
-    schema='cdm'
+    schema=CDM_SCHEMA
 )
 
 
@@ -97,5 +97,5 @@ t_metadata = Table(
     Column('value_as_concept_id', Integer),
     Column('metadata_date', Date),
     Column('metadata_datetime', DateTime),
-    schema='cdm'
+    schema=CDM_SCHEMA
 )

@@ -21,6 +21,7 @@ from sqlalchemy import Table
 from sqlalchemy.schema import CreateSchema
 
 from ._settings import default_sql_parameters
+from .cdm._defaults import VOCAB_SCHEMA
 from .database.database import Database
 from .model.etl_stats import EtlStats
 from .model.orm_wrapper import OrmWrapper
@@ -123,7 +124,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         tables_to_drop = []
         for table in self.db.base.metadata.tables.values():
             default_schema = getattr(table, 'schema', None)
-            if default_schema != 'vocab':  # TODO: parameterize
+            if default_schema != VOCAB_SCHEMA:
                 tables_to_drop.append(table)
         return tables_to_drop
 
