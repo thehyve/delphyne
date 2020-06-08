@@ -14,22 +14,22 @@
 #
 # OMOP CDM v6, with oncology extension, defined by https://github.com/OHDSI/CommonDataModel/tree/Dev/PostgreSQL #30d851a
 
-# coding: utf-8
-
+from omop_etl_wrapper import Base
 from sqlalchemy import BigInteger, Column, Date, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import relationship
 
-from omop_etl_wrapper import Base
+# coding: utf-8
+from .._defaults import VOCAB_SCHEMA, CDM_SCHEMA
 
 
 class CareSite(Base):
     __tablename__ = 'care_site'
-    __table_args__ = {'schema': 'cdm'}
+    __table_args__ = {'schema': CDM_SCHEMA}
 
     care_site_id = Column(BigInteger, primary_key=True)
     care_site_name = Column(String(255))
-    place_of_service_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
-    location_id = Column(ForeignKey('cdm.location.location_id'))
+    place_of_service_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
+    location_id = Column(ForeignKey(f'{CDM_SCHEMA}.location.location_id'))
     care_site_source_value = Column(String(50))
     place_of_service_source_value = Column(String(50))
 
@@ -39,7 +39,7 @@ class CareSite(Base):
 
 class Location(Base):
     __tablename__ = 'location'
-    __table_args__ = {'schema': 'cdm'}
+    __table_args__ = {'schema': CDM_SCHEMA}
 
     location_id = Column(BigInteger, primary_key=True)
     address_1 = Column(String(50))
@@ -52,18 +52,18 @@ class Location(Base):
     location_source_value = Column(String(50))
     latitude = Column(Numeric)
     longitude = Column(Numeric)
-    region_concept_id = Column(ForeignKey('vocab.concept.concept_id'))
+    region_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
 
     region_concept = relationship('Concept')
 
 
 class LocationHistory(Base):
     __tablename__ = 'location_history'
-    __table_args__ = {'schema': 'cdm'}
+    __table_args__ = {'schema': CDM_SCHEMA}
 
     location_history_id = Column(BigInteger, primary_key=True)
-    location_id = Column(ForeignKey('cdm.location.location_id'), nullable=False)
-    relationship_type_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
+    location_id = Column(ForeignKey(f'{CDM_SCHEMA}.location.location_id'), nullable=False)
+    relationship_type_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
     domain_id = Column(String(50), nullable=False)
     entity_id = Column(BigInteger, nullable=False)
     start_date = Column(Date, nullable=False)
@@ -75,21 +75,21 @@ class LocationHistory(Base):
 
 class Provider(Base):
     __tablename__ = 'provider'
-    __table_args__ = {'schema': 'cdm'}
+    __table_args__ = {'schema': CDM_SCHEMA}
 
     provider_id = Column(BigInteger, primary_key=True)
     provider_name = Column(String(255))
     npi = Column(String(20))
     dea = Column(String(20))
-    specialty_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
-    care_site_id = Column(ForeignKey('cdm.care_site.care_site_id'))
+    specialty_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
+    care_site_id = Column(ForeignKey(f'{CDM_SCHEMA}.care_site.care_site_id'))
     year_of_birth = Column(Integer)
-    gender_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
+    gender_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
     provider_source_value = Column(String(50))
     specialty_source_value = Column(String(50))
-    specialty_source_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
+    specialty_source_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
     gender_source_value = Column(String(50))
-    gender_source_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
+    gender_source_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
 
     care_site = relationship('CareSite')
     gender_concept = relationship('Concept', primaryjoin='Provider.gender_concept_id == Concept.concept_id')

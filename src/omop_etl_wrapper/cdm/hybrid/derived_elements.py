@@ -15,7 +15,7 @@
 # OMOP CDM v6, with oncology extension, defined by https://github.com/OHDSI/CommonDataModel/tree/Dev/PostgreSQL #30d851a
 
 # coding: utf-8
-
+from .._defaults import VOCAB_SCHEMA, CDM_SCHEMA
 from sqlalchemy import BigInteger, Column, Date, DateTime, ForeignKey, Integer, Numeric, String, Table, Text
 from sqlalchemy.orm import relationship
 
@@ -26,11 +26,11 @@ metadata = Base.metadata
 
 class ConditionEra(Base):
     __tablename__ = 'condition_era'
-    __table_args__ = {'schema': 'cdm'}
+    __table_args__ = {'schema': CDM_SCHEMA}
 
     condition_era_id = Column(BigInteger, primary_key=True)
-    person_id = Column(ForeignKey('cdm.person.person_id'), nullable=False, index=True)
-    condition_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False, index=True)
+    person_id = Column(ForeignKey(f'{CDM_SCHEMA}.person.person_id'), nullable=False, index=True)
+    condition_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False, index=True)
     condition_era_start_datetime = Column(DateTime, nullable=False)
     condition_era_end_datetime = Column(DateTime, nullable=False)
     condition_occurrence_count = Column(Integer)
@@ -41,12 +41,12 @@ class ConditionEra(Base):
 
 class DoseEra(Base):
     __tablename__ = 'dose_era'
-    __table_args__ = {'schema': 'cdm'}
+    __table_args__ = {'schema': CDM_SCHEMA}
 
     dose_era_id = Column(BigInteger, primary_key=True)
-    person_id = Column(ForeignKey('cdm.person.person_id'), nullable=False, index=True)
-    drug_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False, index=True)
-    unit_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False)
+    person_id = Column(ForeignKey(f'{CDM_SCHEMA}.person.person_id'), nullable=False, index=True)
+    drug_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False, index=True)
+    unit_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
     dose_value = Column(Numeric, nullable=False)
     dose_era_start_datetime = Column(DateTime, nullable=False)
     dose_era_end_datetime = Column(DateTime, nullable=False)
@@ -58,11 +58,11 @@ class DoseEra(Base):
 
 class DrugEra(Base):
     __tablename__ = 'drug_era'
-    __table_args__ = {'schema': 'cdm'}
+    __table_args__ = {'schema': CDM_SCHEMA}
 
     drug_era_id = Column(BigInteger, primary_key=True)
-    person_id = Column(ForeignKey('cdm.person.person_id'), nullable=False, index=True)
-    drug_concept_id = Column(ForeignKey('vocab.concept.concept_id'), nullable=False, index=True)
+    person_id = Column(ForeignKey(f'{CDM_SCHEMA}.person.person_id'), nullable=False, index=True)
+    drug_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False, index=True)
     drug_era_start_datetime = Column(DateTime, nullable=False)
     drug_era_end_datetime = Column(DateTime, nullable=False)
     drug_exposure_count = Column(Integer)
