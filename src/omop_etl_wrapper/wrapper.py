@@ -131,6 +131,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
     def drop_cdm(self, tables_to_drop: Optional[List[Table]] = None) -> None:
         """
         Drop non-vocabulary tables defined in the ORM (if they exist).
+
         :param tables_to_drop: List, default None
             List of SQLAlchemy table definitions that should be dropped.
             If not provided, all tables that by default are not part of

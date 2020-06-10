@@ -60,6 +60,7 @@ class RawSqlWrapper:
     def apply_sql_parameters(parameterized_query: str, sql_parameters: Dict[str, str]):
         """
         Create finalized SQL query by replacing the parameters.
+
         :param parameterized_query: str
             Query containing parameters indicated by a '@'
         :param sql_parameters: Dict[str, str]
@@ -89,6 +90,7 @@ class RawSqlWrapper:
     def parse_target_table_sqlquery(query: str) -> str:
         """
         Find the target table of the provided query.
+
         :param query: str
             The SQL query to be parsed for a target table
         :return target table: str

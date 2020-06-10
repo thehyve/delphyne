@@ -6,6 +6,7 @@ import pandas as pd
 def replace_substrings(string: str, mapping: Dict[str, str]) -> str:
     """
     Replace substrings in string, based on the items in mapping.
+
     :param string:
         The string to be edited
     :param mapping: Dict[str, str]
@@ -24,6 +25,7 @@ def construct_full_date_value(date: Optional[str],
     Turn a partial date value into a full yyyy-mm-dd date string.
     If only year is available, return yyyy-07-01.
     If year and month are available, return yyyy-mm-15.
+
     :param date: str
         date value as present in the source data
     :param fallback_date: str

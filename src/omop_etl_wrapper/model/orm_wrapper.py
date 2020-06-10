@@ -78,7 +78,9 @@ class OrmWrapper:
 
     def execute_transformation(self, statement: Callable) -> None:
         """
-        Execute an ETL transformation via a python statement (function that will be called)
+        Execute an ETL transformation via a python statement (function
+        that will be called).
+
         :param statement: Callable
             python function which takes this wrapper as input
         """
@@ -139,6 +141,7 @@ class OrmWrapper:
         """
         Insert or update records in an OMOP vocabulary table, based on
         the contents of a csv file.
+
         :param source_file: Path
             csv file with header containing records of an OMOP
             vocabulary table
@@ -174,7 +177,8 @@ class OrmWrapper:
     def load_source_to_concept_map_from_csv(self, source_file: Path) -> None:
         """
         Insert STCM csv file into the STCM vocabulary table and add
-        contents to stcm_lookup
+        contents to stcm_lookup.
+
         :param source_file: Path
             csv file with header matching the CDM STCM columns
         :return: None
@@ -211,7 +215,8 @@ class OrmWrapper:
 
     def lookup_stcm(self, source_vocabulary_id: str, source_code: str) -> int:
         """
-        Get the target_concept_id for a given source code from the STCM
+        Get the target_concept_id for a given source code from the STCM.
+
         :param source_vocabulary_id: str
         :param source_code: str
         :return: int

@@ -52,7 +52,9 @@ class Database:
 
     @contextmanager
     def session_scope(self) -> None:
-        """Provide a transactional scope around a series of operations."""
+        """
+        Provide a transactional scope around a series of operations.
+        """
         session = self.session
         session.connection(execution_options={
             "schema_translate_map": self.schema_translate_map})
