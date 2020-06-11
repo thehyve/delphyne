@@ -1,6 +1,6 @@
 import logging
 from contextlib import contextmanager
-from typing import Optional, Dict
+from typing import Dict
 
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
@@ -9,32 +9,28 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 from sqlalchemy_utils.functions import database_exists
 
-from .._settings import default_sql_parameters
-from ..cdm._defaults import VOCAB_SCHEMA, CDM_SCHEMA
-
 logger = logging.getLogger(__name__)
 
 Base = declarative_base()
 
 
 class Database:
-    def __init__(self, uri: str, sql_parameters: Optional[Dict[str, str]]):
+    def __init__(self, uri: str, schema_translate_map: Dict[str, str]):
         self.engine = create_engine(uri, executemany_mode='values')
         self.base = Base
-        if sql_parameters is not None:
-            self.sql_parameters = sql_parameters
-        else:
-            self.sql_parameters = default_sql_parameters
-
-        self.schema_translate_map: Dict[str, str] = self._set_schema_map()
+        self.schema_translate_map = schema_translate_map
         self._sessionmaker = sessionmaker(bind=self.engine, autoflush=False)
 
-    def _set_schema_map(self):
-        schema_map = {
-            VOCAB_SCHEMA: self.sql_parameters.get('vocab_schema', VOCAB_SCHEMA),
-            CDM_SCHEMA: self.sql_parameters.get('target_schema', CDM_SCHEMA),
-        }
-        return schema_map
+    @classmethod
+    def from_config(cls, config: Dict) -> 'Database':
+        db_config = config['database']
+        hostname = db_config['host']
+        port = db_config['port']
+        database = db_config['database_name']
+        username = db_config['username']
+        password = db_config['password']
+        uri = f'postgresql://{username}:{password}@{hostname}:{port}/{database}'
+        return cls(uri=uri, schema_translate_map=config['schema_translate_map'])
 
     @property
     def session(self) -> Session:
@@ -57,7 +53,8 @@ class Database:
         """
         session = self.session
         session.connection(execution_options={
-            "schema_translate_map": self.schema_translate_map})
+            "schema_translate_map": self.schema_translate_map
+        })
         try:
             yield session
             session.commit()
