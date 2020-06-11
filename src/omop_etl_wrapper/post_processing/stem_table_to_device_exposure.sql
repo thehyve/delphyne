@@ -1,5 +1,5 @@
 
-INSERT INTO @target_schema.device_exposure
+INSERT INTO @cdm_schema.device_exposure
 (
 	--device_exposure_id,
 	person_id,
@@ -48,7 +48,7 @@ SELECT
 
 	coalesce(stem_table.source_concept_id, 0)	AS	device_source_concept_id
 
-FROM @target_schema.stem_table
-    LEFT JOIN @vocab_schema.concept USING (concept_id)
+FROM @cdm_schema.stem_table
+    LEFT JOIN @vocabulary_schema.concept USING (concept_id)
 WHERE concept.domain_id = 'Device'
 ;

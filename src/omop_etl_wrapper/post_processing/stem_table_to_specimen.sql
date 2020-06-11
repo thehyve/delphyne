@@ -1,5 +1,5 @@
 
-INSERT INTO @target_schema.specimen
+INSERT INTO @cdm_schema.specimen
 (
 	--specimen_id,
 	person_id,
@@ -48,7 +48,7 @@ SELECT
 
 	stem_table.disease_status_source_value	AS	disease_status_source_value
 
-FROM @target_schema.stem_table
-    LEFT JOIN @vocab_schema.concept USING (concept_id)
+FROM @cdm_schema.stem_table
+    LEFT JOIN @vocabulary_schema.concept USING (concept_id)
 WHERE concept.domain_id = 'Specimen'
 ;
