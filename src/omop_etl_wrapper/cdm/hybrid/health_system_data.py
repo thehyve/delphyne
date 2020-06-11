@@ -13,13 +13,13 @@
 # GNU General Public License for more details.
 #
 # OMOP CDM v6, with oncology extension, defined by https://github.com/OHDSI/CommonDataModel/tree/Dev/PostgreSQL #30d851a
+# coding: utf-8
 
-from omop_etl_wrapper import Base
 from sqlalchemy import BigInteger, Column, Date, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import relationship
 
-# coding: utf-8
 from .._defaults import VOCAB_SCHEMA, CDM_SCHEMA
+from ... import Base
 
 
 class CareSite(Base):

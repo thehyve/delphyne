@@ -13,13 +13,13 @@
 # GNU General vocab License for more details.
 #
 # OMOP CDM v6, with oncology extension, defined by https://github.com/OHDSI/CommonDataModel/tree/Dev/PostgreSQL #30d851a
+# coding: utf-8
 
-from omop_etl_wrapper import Base
 from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
 
-# coding: utf-8
 from .._defaults import VOCAB_SCHEMA
+from ... import Base
 
 
 class Concept(Base):
