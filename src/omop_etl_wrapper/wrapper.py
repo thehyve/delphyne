@@ -15,13 +15,12 @@
 import logging
 from pathlib import Path
 from types import ModuleType
-from typing import Optional, Union, Dict, List
+from typing import Optional, Dict, List, Set
 
 from sqlalchemy import Table
 from sqlalchemy.schema import CreateSchema
 
-from ._settings import default_sql_parameters
-from .cdm._defaults import VOCAB_SCHEMA
+from .cdm._schema_placeholders import VOCAB_SCHEMA
 from .database.database import Database
 from .model.etl_stats import EtlStats
 from .model.orm_wrapper import OrmWrapper
@@ -40,52 +39,23 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
     database : str or Database
         Either a URI string for connecting to a database or an already
         instantiated Database object.
-    bulk : bool
-        Insert ORM objects using SqlAlchemy's bulk_save_objects. This
-        will improve ETL performance, but comes at a cost of less
-        granular processing statistics.
-    reports : bool
-        Write two additional tsv files with detailed information on
-        source data counts and ETL transformations.
     cdm : module
         A module from the cdm package which contains the OMOP ORM table
         definitions.
-    sql_parameters : Dict, default None
-        The...
     """
     def __init__(self,
-                 database: Union[Database, str],
-                 bulk: bool,
-                 reports: bool,
+                 config: Dict[str, Dict],
                  cdm: ModuleType,
-                 sql_parameters: Optional[Dict] = None):
+                 ):
+        self.db = Database.from_config(config)
+        self.db.can_connect(self.db.engine.url)
+        self.bulk_mode = config['run_options']['bulk_mode']
+        self.write_reports = config['run_options']['write_reports']
 
-        if sql_parameters is None:
-            sql_parameters = default_sql_parameters
-        self.sql_parameters = sql_parameters
-
-        self.db = database
-        self.cdm = cdm
-
-        super().__init__(database=self.db, cdm=cdm, bulk=bulk)
-        super(OrmWrapper, self).__init__(database=self.db, sql_parameters=self.sql_parameters)
-
-        self.write_reports = reports
+        super().__init__(database=self.db, cdm=cdm, bulk=self.bulk_mode)
+        super(OrmWrapper, self).__init__(database=self.db, config=config)
 
         self.etl_stats = EtlStats()
-
-    @property
-    def db(self):
-        return self._db
-
-    @db.setter
-    def db(self, database: Union[Database, str]):
-        if isinstance(database, str):
-            self._db = Database(database, self.sql_parameters)
-        elif isinstance(database, Database):
-            self._db = database
-        else:
-            raise ValueError(f'Unsupported database type: {type(database)}')
 
     def run(self) -> None:
         print('OMOP wrapper goes brrrrrrrr')
@@ -123,8 +93,9 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
     def _get_cdm_tables_to_drop(self):
         tables_to_drop = []
         for table in self.db.base.metadata.tables.values():
-            default_schema = getattr(table, 'schema', None)
-            if default_schema != VOCAB_SCHEMA:
+            placeholder_schema = getattr(table, 'schema', None)
+            table_schema = self.db.schema_translate_map.get(placeholder_schema)
+            if table_schema != self.db.schema_translate_map[VOCAB_SCHEMA]:
                 tables_to_drop.append(table)
         return tables_to_drop
 
@@ -152,16 +123,27 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         conn = conn.execution_options(schema_translate_map=self.db.schema_translate_map)
         self.db.base.metadata.create_all(bind=conn)
 
-    def create_schemas_if_not_exists(self) -> None:
+    def _get_schemas_to_create(self) -> Set[str]:
+        schemas: Set[str] = set()
+        for table in self.db.base.metadata.tables.values():
+            placeholder_schema = getattr(table, 'schema', None)
+            if not placeholder_schema:
+                continue
+            if placeholder_schema in self.db.schema_translate_map:
+                schemas.add(self.db.schema_translate_map[placeholder_schema])
+            else:
+                schemas.add(placeholder_schema)
+        return schemas
+
+    def create_schemas(self) -> None:
         """
-        Create the schemas used in the CDM table definitions if they
-        don't exist already.
+        Create the schemas as present in the schema_translate_map of
+        the config file and ORM table definitions (if they don't exist
+        already).
         """
         conn = self.db.engine.connect()
-        for schema_name in [
-            self.sql_parameters['target_schema'],
-            self.sql_parameters['vocab_schema']
-        ]:
+        schemas = self._get_schemas_to_create()
+        for schema_name in schemas:
             if not conn.dialect.has_schema(conn, f'{schema_name}'):
                 logger.info(f'Creating schema: {schema_name}')
                 self.db.engine.execute(CreateSchema(f'{schema_name}'))
