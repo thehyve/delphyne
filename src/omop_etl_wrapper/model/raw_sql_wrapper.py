@@ -3,13 +3,13 @@ import re
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict
 
 from sqlalchemy import text
 from sqlalchemy.engine.result import ResultProxy
 
-from ..database.database import Database
 from .etl_stats import EtlTransformation, EtlStats
+from ..database.database import Database
 from ..util.helper import replace_substrings
 
 logger = logging.getLogger(__name__)
@@ -19,15 +19,21 @@ class RawSqlWrapper:
     """
     Wrapper which coordinates the execution of raw SQL transformations.
     """
-    def __init__(self, database: Database,
-                 sql_parameters: Optional[Dict] = None):
+    def __init__(self, database: Database, config: Dict):
         self.db = database
         self.etl_stats = EtlStats()
+        self.sql_parameters = self._get_sql_parameters(config)
 
-        if sql_parameters is not None:
-            self.sql_parameters = sql_parameters
-        else:
-            self.sql_parameters = {}
+    @staticmethod
+    def _get_sql_parameters(config: Dict):
+        sql_parameters = config['sql_parameters']
+        if sql_parameters is None:
+            return config['schema_translate_map']
+        # Add schema maps to sql_parameters, unless already present
+        for k, v in config['schema_translate_map'].items():
+            if k not in sql_parameters:
+                sql_parameters[k] = v
+        return sql_parameters
 
     def execute_sql_file(self, file_path: Path) -> None:
         # Open and read the file as a single buffer

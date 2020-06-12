@@ -18,7 +18,7 @@
 from sqlalchemy import BigInteger, Column, Date, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import relationship
 
-from .._defaults import VOCAB_SCHEMA, CDM_SCHEMA
+from .._schema_placeholders import VOCAB_SCHEMA, CDM_SCHEMA
 from ... import Base
 
 

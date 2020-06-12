@@ -13,6 +13,7 @@
 # GNU General Public License for more details.
 
 import csv
+import itertools
 import logging
 import os
 import subprocess
@@ -25,7 +26,6 @@ from pathlib import Path
 from types import ModuleType
 from typing import Callable, DefaultDict, Dict, Optional, Iterable, List
 
-import itertools
 import pandas as pd
 from sqlalchemy.orm.session import Session
 
@@ -42,8 +42,8 @@ class OrmWrapper:
     """
     def __init__(self, database: Database, cdm: ModuleType, bulk: bool):
         self.db = database
-        self.cdm = cdm
         self.bulk_mode = bulk
+        self._cdm = cdm
         self.etl_stats = EtlStats()
 
         # {source_vocabulary_id: {source_code: target_concept_id}}
@@ -67,14 +67,6 @@ class OrmWrapper:
             branch_str = str(subprocess.check_output(['git', 'branch']))
         except subprocess.CalledProcessError:
             return
-
-        # Check if branch is from a git version
-        # if re.search('HEAD', branch_str):
-        #     # Retrieve git release version
-        #     return 'release ' + re.findall(r'\*.+?([0-9.]+).+?\\\\n', str(branch_str))[0]
-        # else:
-        #     # Else retrieve the git branch name
-        #     return 'branch ' + re.findall(r'\* (.+?)\\\\n', str(branch_str))[0]
 
     def execute_transformation(self, statement: Callable) -> None:
         """
@@ -110,8 +102,8 @@ class OrmWrapper:
 
     def _get_record_targets(self, record_containing_object: Iterable) -> str:
         for record in record_containing_object:
-            default_schema_name = record.__table_args__.get('schema')
-            schema_name = self.db.schema_translate_map.get(default_schema_name)
+            placeholder_schema = record.__table_args__.get('schema')
+            schema_name = self.db.schema_translate_map.get(placeholder_schema, placeholder_schema)
             table_name = record.__tablename__
             if schema_name is None:
                 yield table_name
@@ -172,7 +164,7 @@ class OrmWrapper:
         """Delete all records in the source_to_concept_map table."""
         logger.info('Truncating STCM table')
         with self.db.session_scope() as session:
-            session.query(self.cdm.SourceToConceptMap).delete()
+            session.query(self._cdm.SourceToConceptMap).delete()
 
     def load_source_to_concept_map_from_csv(self, source_file: Path) -> None:
         """
@@ -189,10 +181,10 @@ class OrmWrapper:
             rows = csv.DictReader(f_in)
 
             first_row = next(rows)
-            source_vocab = session.query(self.cdm.Vocabulary).get(first_row['source_vocabulary_id'])
+            source_vocab = session.query(self._cdm.Vocabulary).get(first_row['source_vocabulary_id'])
 
             if not source_vocab:
-                session.add(self.cdm.Vocabulary(
+                session.add(self._cdm.Vocabulary(
                     vocabulary_id=first_row['source_vocabulary_id'],
                     vocabulary_name=first_row['source_vocabulary_id'].replace('_', ' '),
                     vocabulary_reference='Active Biotech',
@@ -207,7 +199,7 @@ class OrmWrapper:
                 if target_concept_id == 0:
                     continue
                 self._stcm_lookup[source_vocabulary_id][source_code] = target_concept_id
-                session.add(self.cdm.SourceToConceptMap(**row))
+                session.add(self._cdm.SourceToConceptMap(**row))
 
             transformation_metadata.end = datetime.now()
             self._collect_query_statistics(session, transformation_metadata)

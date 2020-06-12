@@ -1,5 +1,5 @@
 
-INSERT INTO @target_schema.condition_occurrence
+INSERT INTO @cdm_schema.condition_occurrence
 (
 	--condition_occurrence_id,
 	person_id,
@@ -51,7 +51,7 @@ SELECT
 
 	coalesce(stem_table.condition_status_concept_id, 0)	AS	condition_status_concept_id
 
-FROM @target_schema.stem_table
-    LEFT JOIN @vocab_schema.concept USING (concept_id)
+FROM @cdm_schema.stem_table
+    LEFT JOIN @vocabulary_schema.concept USING (concept_id)
 WHERE concept.domain_id = 'Condition'
 ;

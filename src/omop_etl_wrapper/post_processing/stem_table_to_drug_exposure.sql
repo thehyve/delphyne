@@ -1,5 +1,5 @@
 
-INSERT INTO @target_schema.drug_exposure
+INSERT INTO @cdm_schema.drug_exposure
 (
 	--drug_exposure_id,
 	person_id,
@@ -72,7 +72,7 @@ SELECT
 
 	stem_table.dose_unit_source_value	AS	dose_unit_source_value
 
-FROM @target_schema.stem_table
-    LEFT JOIN @vocab_schema.concept USING (concept_id)
+FROM @cdm_schema.stem_table
+    LEFT JOIN @vocabulary_schema.concept USING (concept_id)
 WHERE concept.domain_id = 'Drug'
 ;

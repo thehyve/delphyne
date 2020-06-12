@@ -1,5 +1,5 @@
 
-INSERT INTO @target_schema.observation
+INSERT INTO @cdm_schema.observation
 (
 	--observation_id,
 	person_id,
@@ -66,7 +66,7 @@ SELECT
 
 	stem_table.value_as_datetime	AS	value_as_datetime
 
-FROM @target_schema.stem_table
-    LEFT JOIN @vocab_schema.concept USING (concept_id)
+FROM @cdm_schema.stem_table
+    LEFT JOIN @vocabulary_schema.concept USING (concept_id)
 WHERE concept.domain_id = 'Observation'
 ;
