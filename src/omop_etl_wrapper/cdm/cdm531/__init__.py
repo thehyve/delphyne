@@ -20,7 +20,7 @@ from .clinical_data import (
     NoteNlp,
     Observation,
     ObservationPeriod,
-    Speciman,
+    Specimen,
     VisitDetail,
 )
 

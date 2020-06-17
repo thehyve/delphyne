@@ -357,7 +357,7 @@ class ProcedureOccurrence(Base):
     visit_occurrence = relationship('VisitOccurrence')
 
 
-class Speciman(Base):
+class Specimen(Base):
     __tablename__ = 'specimen'
     __table_args__ = {'schema': CDM_SCHEMA}
 
@@ -377,12 +377,12 @@ class Speciman(Base):
     anatomic_site_source_value = Column(String(50))
     disease_status_source_value = Column(String(50))
 
-    anatomic_site_concept = relationship('Concept', primaryjoin='Speciman.anatomic_site_concept_id == Concept.concept_id')
-    disease_status_concept = relationship('Concept', primaryjoin='Speciman.disease_status_concept_id == Concept.concept_id')
+    anatomic_site_concept = relationship('Concept', primaryjoin='Specimen.anatomic_site_concept_id == Concept.concept_id')
+    disease_status_concept = relationship('Concept', primaryjoin='Specimen.disease_status_concept_id == Concept.concept_id')
     person = relationship('Person')
-    specimen_concept = relationship('Concept', primaryjoin='Speciman.specimen_concept_id == Concept.concept_id')
-    specimen_type_concept = relationship('Concept', primaryjoin='Speciman.specimen_type_concept_id == Concept.concept_id')
-    unit_concept = relationship('Concept', primaryjoin='Speciman.unit_concept_id == Concept.concept_id')
+    specimen_concept = relationship('Concept', primaryjoin='Specimen.specimen_concept_id == Concept.concept_id')
+    specimen_type_concept = relationship('Concept', primaryjoin='Specimen.specimen_type_concept_id == Concept.concept_id')
+    unit_concept = relationship('Concept', primaryjoin='Specimen.unit_concept_id == Concept.concept_id')
 
 
 class VisitDetail(Base):
