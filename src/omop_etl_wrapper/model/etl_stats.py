@@ -15,15 +15,15 @@
 import copy
 import datetime
 import logging
+import time
 from abc import ABC, abstractmethod
 from collections import Counter
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Optional, Union, List, Dict, ClassVar
 
 import pandas as pd
-import time
 
+from .._paths import LOG_OUTPUT_DIR
 from ..log.log_formats import MESSAGE_ONLY
 from ..log.logging_context import LoggingFormatContext
 
@@ -193,7 +193,7 @@ class EtlStats:
         transformations."""
         logger.info('Writing summary files')
         time_str = time.strftime("%Y-%m-%dT%H%M%S")
-        output_dir = Path('./logs')
+        output_dir = LOG_OUTPUT_DIR
         output_dir.mkdir(exist_ok=True)
         self.sources_df.to_csv(output_dir / f'{time_str}_sources.tsv', sep='\t', index=False)
         self.transformations_df.to_csv(output_dir / f'{time_str}_transformations.tsv', sep='\t', index=False)

@@ -5,7 +5,7 @@ from typing import Dict
 import yaml
 
 
-def read_yaml_file(path: Path) -> dict:
+def read_yaml_file(path: Path) -> Dict:
     with path.open('rt') as f:
         contents = yaml.safe_load(f.read())
     return contents

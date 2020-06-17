@@ -20,6 +20,7 @@ from typing import Optional, Dict, List, Set
 from sqlalchemy import Table
 from sqlalchemy.schema import CreateSchema
 
+from ._paths import STCM_DIR
 from .cdm._schema_placeholders import VOCAB_SCHEMA
 from .database.database import Database
 from .model.etl_stats import EtlStats
@@ -64,10 +65,10 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         """Insert all stcm csv files into the source_to_concept_map
         table."""
         logger.info('Loading STCM files')
-        stcm_dir = Path('./resources/source_to_concept/')
-        if not stcm_dir.exists():
-            raise FileNotFoundError(f'{str(stcm_dir.resolve())} folder not found')
-        stcm_files = stcm_dir.glob('*.csv')
+        if not STCM_DIR.exists():
+            raise FileNotFoundError(f'{str(STCM_DIR.resolve())} folder not found')
+        # TODO: support multiple file extensions
+        stcm_files = STCM_DIR.glob('*.csv')
         for stcm_file in stcm_files:
             self.load_source_to_concept_map_from_csv(stcm_file)
 
