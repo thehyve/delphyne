@@ -17,7 +17,6 @@ jobs:
         # Provide the password for postgres
         env:
           POSTGRES_PASSWORD: secret
-          RUNNING_CI: true
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
@@ -31,6 +30,9 @@ jobs:
     strategy:
       matrix:
         python-version: [3.7, 3.8]
+
+    env:
+      RUNNING_CI: true
 
     steps:
     - uses: actions/checkout@v2
