@@ -8,6 +8,7 @@ import psycopg2
 import pytest
 
 _HERE = Path(__file__).parent
+_PG11_DOCKER_FILE = _HERE / '../docker/postgres11'
 
 
 DbConfig = namedtuple('DbConfig', ['host', 'dbname', 'user', 'password', 'port'])
@@ -30,17 +31,18 @@ def db_config() -> DbConfig:
 @pytest.fixture(scope="module")
 def container():
     container = None
-    if running_locally():
-        client = docker.from_env()
-        docker_file = _HERE / '../docker/postgres11'
-        client.images.build(path=str(docker_file), tag='pg11_test_image')
-        container = client.containers.run('pg11_test_image', detach=True,
-                                          ports={5432: 7722}, name='pg11_etl1_db')
-        while not postgres_is_ready():
-            sleep(1)
-    yield container  # if container else None
-    if running_locally():
-        container.remove(force=True)
+    try:
+        if running_locally():
+            client = docker.from_env()
+            client.images.build(path=str(_PG11_DOCKER_FILE), tag='pg11_test_image')
+            container = client.containers.run('pg11_test_image', detach=True,
+                                              ports={5432: 7722}, name='pg11_etl1_db')
+            while not postgres_is_ready():
+                sleep(1)
+        yield container
+    finally:
+        if running_locally():
+            container.remove(force=True)
 
 
 def running_locally() -> bool:
