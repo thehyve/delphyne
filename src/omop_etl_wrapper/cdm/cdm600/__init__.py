@@ -1,13 +1,12 @@
 """
-OMOP CDM Version 6.0.0 with oncology extension, and death table from
-v5.3.1. Generated with python using sqlacodegen package on 2019-10-21,
-model from https://github.com/OHDSI/CommonDataModel/tree/Dev/PostgreSQL,
-commit 30d851a.
+OMOP CDM Version 6.0.0. Generated with python using sqlacodegen package
+on 2019-10-21, model from
+https://github.com/OHDSI/CommonDataModel/tree/Dev/PostgreSQL, commit
+30d851a.
 """
 
-
-from .._shared_tables.cdm531.clinical_data import (
-    Death,
+from .clinical_data import (
+    Measurement,
 )
 
 from .._shared_tables.cdm600.clinical_data import (
@@ -58,8 +57,3 @@ from .._shared_tables.cdm600.vocabularies import (
     Relationship,
 )
 
-from .clinical_data import (
-    Episode,
-    EpisodeEvent,
-    Measurement,
-)
