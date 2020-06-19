@@ -7,8 +7,26 @@ on: [push, pull_request]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    # Service containers to run with `runner-job`
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres:11-alpine
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: secret
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 7722:5432
+
     strategy:
       matrix:
         python-version: [3.7, 3.8]
@@ -22,7 +40,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest
+        pip install flake8 pytest docker
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with flake8
       run: |
@@ -31,5 +49,8 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
+      env:
+        # Environment variable for tests to know if running in CI environment
+        RUNNING_CI: true
       run: |
         pytest -vs
