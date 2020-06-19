@@ -37,12 +37,11 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
     Task coordinator supporting the process of converting source data
     into the OMOP CDM.
 
-    database : str or Database
-        Either a URI string for connecting to a database or an already
-        instantiated Database object.
+    config : Dict
+        The run configuration as read from config.yml.
     cdm : module
-        A module from the cdm package which contains the OMOP ORM table
-        definitions.
+        A module from omop-etl-wrapper.cdm, which contains the OMOP ORM
+        table definitions.
     """
     def __init__(self,
                  config: Dict[str, Dict],

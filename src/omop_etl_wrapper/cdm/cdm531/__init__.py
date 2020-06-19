@@ -6,11 +6,14 @@ Excluded the attribute_definition and cohort_attribute tables, added
 stem_table.
 """
 
+from .._shared_tables.cdm531.clinical_data import (
+    Death
+)
+
 
 from .clinical_data import (
     ConditionOccurrence,
     Person,
-    Death,
     ProcedureOccurrence,
     VisitOccurrence,
     DeviceExposure,
