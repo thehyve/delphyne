@@ -44,7 +44,7 @@ from .health_system_data import (
     Provider,
 )
 
-from .vocabularies import (
+from .._shared_tables.cdm600.vocabularies import (
     Vocabulary,
     SourceToConceptMap,
     Concept,
@@ -54,4 +54,8 @@ from .vocabularies import (
     Domain,
     DrugStrength,
     Relationship,
+)
+
+from .vocabularies import (
+    CohortDefinition,
 )
