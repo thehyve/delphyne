@@ -14,7 +14,6 @@
 
 import logging
 from pathlib import Path
-from types import ModuleType
 from typing import Optional, Dict, List, Set
 
 from sqlalchemy import Table
@@ -22,7 +21,7 @@ from sqlalchemy.schema import CreateSchema
 
 from ._paths import STCM_DIR
 from .cdm._schema_placeholders import VOCAB_SCHEMA
-from .database.database import Database
+from .database import Database
 from .model.etl_stats import EtlStats
 from .model.orm_wrapper import OrmWrapper
 from .model.raw_sql_wrapper import RawSqlWrapper
@@ -39,23 +38,31 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
 
     config : Dict
         The run configuration as read from config.yml.
-    cdm : module
-        A module from omop-etl-wrapper.cdm, which contains the OMOP ORM
-        table definitions.
     """
-    def __init__(self,
-                 config: Dict[str, Dict],
-                 cdm: ModuleType,
-                 ):
+    def __init__(self, config: Dict[str, Dict]):
         self.db = Database.from_config(config)
         self.db.can_connect(self.db.engine.url)
         self.bulk_mode = config['run_options']['bulk_mode']
         self.write_reports = config['run_options']['write_reports']
 
-        super().__init__(database=self.db, cdm=cdm, bulk=self.bulk_mode)
+        self._cdm = self._set_cdm_version(config['run_options']['cdm'])
+
+        super().__init__(database=self.db, cdm=self._cdm, bulk=self.bulk_mode)
         super(OrmWrapper, self).__init__(database=self.db, config=config)
 
         self.etl_stats = EtlStats()
+
+    @staticmethod
+    def _set_cdm_version(cdm: str):
+        if cdm.upper() == 'CDM531':
+            from .cdm import cdm531 as orm
+        elif cdm.upper() == 'CDM600':
+            from .cdm import cdm600 as orm
+        elif cdm.upper() == 'HYBRID':
+            from .cdm import hybrid as orm
+        else:
+            raise ValueError(f'Unrecognized CDM version: "{cdm}"')
+        return orm
 
     def run(self) -> None:
         print('OMOP wrapper goes brrrrrrrr')
