@@ -23,7 +23,6 @@ from collections import defaultdict
 from datetime import datetime
 from inspect import signature
 from pathlib import Path
-from types import ModuleType
 from typing import Callable, DefaultDict, Dict, Optional, Iterable, List
 
 import pandas as pd
@@ -40,7 +39,7 @@ class OrmWrapper:
     Wrapper which coordinates the execution of python ORM
     transformations.
     """
-    def __init__(self, database: Database, cdm: ModuleType, bulk: bool):
+    def __init__(self, database: Database, cdm, bulk: bool):
         self.db = database
         self.bulk_mode = bulk
         self._cdm = cdm
