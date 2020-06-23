@@ -13,6 +13,7 @@
 # GNU General Public License for more details.
 
 import logging
+import sys
 from pathlib import Path
 from typing import Optional, Dict, List, Set
 
@@ -41,7 +42,6 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
     """
     def __init__(self, config: Dict[str, Dict]):
         self.db = Database.from_config(config)
-        self.db.can_connect(self.db.engine.url)
         self.bulk_mode = config['run_options']['bulk_mode']
         self.write_reports = config['run_options']['write_reports']
 
@@ -51,6 +51,9 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         super(OrmWrapper, self).__init__(database=self.db, config=config)
 
         self.etl_stats = EtlStats()
+
+        if not self.db.can_connect(str(self.db.engine.url)):
+            sys.exit()
 
     @staticmethod
     def _set_cdm_version(cdm: str):
