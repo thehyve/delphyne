@@ -26,6 +26,7 @@ from .database import Database
 from .model.etl_stats import EtlStats
 from .model.orm_wrapper import OrmWrapper
 from .model.raw_sql_wrapper import RawSqlWrapper
+from .model.source_data import SourceData
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
     """
     def __init__(self, config: Dict[str, Dict]):
         self.db = Database.from_config(config)
+        self.source_data = SourceData(config)
         self.bulk_mode = config['run_options']['bulk_mode']
         self.write_reports = config['run_options']['write_reports']
 
