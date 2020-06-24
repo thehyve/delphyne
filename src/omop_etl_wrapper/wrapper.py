@@ -81,9 +81,6 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         for stcm_file in stcm_files:
             self.load_source_to_concept_map_from_csv(stcm_file)
 
-    def transform(self) -> None:
-        pass
-
     def stem_table_to_domains(self) -> None:
         """
         Transfer all stem table records to the OMOP clinical data
