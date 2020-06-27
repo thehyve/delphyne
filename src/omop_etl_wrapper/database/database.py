@@ -1,5 +1,6 @@
 import logging
 from contextlib import contextmanager
+from getpass import getpass
 from typing import Dict
 
 from sqlalchemy import create_engine
@@ -23,6 +24,13 @@ class Database:
 
     @classmethod
     def from_config(cls, config: Dict) -> 'Database':
+        """
+        Create an instance of Database from a configuration file.
+
+        :param config: Dict
+            Contents of the configuration file.
+        :return: Database
+        """
         db_config = config['database']
         hostname = db_config['host']
         port = db_config['port']
@@ -30,7 +38,23 @@ class Database:
         username = db_config['username']
         password = db_config['password']
         uri = f'postgresql://{username}:{password}@{hostname}:{port}/{database}'
+        if not password and Database._password_needed(uri):
+            password = getpass('Database password:')
+            uri = f'postgresql://{username}:{password}@{hostname}:{port}/{database}'
         return cls(uri=uri, schema_translate_map=config['schema_translate_map'])
+
+    @staticmethod
+    def _password_needed(uri: str):
+        logger.disabled = True
+        try:
+            create_engine(uri).connect()
+        except OperationalError as e:
+            if 'no password supplied' in str(e):
+                return True
+        else:
+            return False
+        finally:
+            logger.disabled = False
 
     @property
     def session(self) -> Session:
