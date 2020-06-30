@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from contextlib import contextmanager
 from getpass import getpass
@@ -23,7 +25,7 @@ class Database:
         self._sessionmaker = sessionmaker(bind=self.engine, autoflush=False)
 
     @classmethod
-    def from_config(cls, config: Dict) -> 'Database':
+    def from_config(cls, config: Dict) -> Database:
         """
         Create an instance of Database from a configuration file.
 
@@ -44,7 +46,7 @@ class Database:
         return cls(uri=uri, schema_translate_map=config['schema_translate_map'])
 
     @staticmethod
-    def _password_needed(uri: str):
+    def _password_needed(uri: str) -> bool:
         logger.disabled = True
         try:
             create_engine(uri).connect()
