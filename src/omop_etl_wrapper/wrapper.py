@@ -25,6 +25,7 @@ from .cdm._schema_placeholders import VOCAB_SCHEMA
 from .database import Database
 from .model.etl_stats import EtlStats
 from .model.orm_wrapper import OrmWrapper
+from .model.vocabulary_loader import VocabularyLoader
 from .model.raw_sql_wrapper import RawSqlWrapper
 
 logger = logging.getLogger(__name__)
@@ -44,16 +45,16 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         self.db = Database.from_config(config)
         self.bulk_mode = config['run_options']['bulk_mode']
         self.write_reports = config['run_options']['write_reports']
-
         self._cdm = self._set_cdm_version(config['run_options']['cdm'])
+
+        if not self.db.can_connect(str(self.db.engine.url)):
+            sys.exit()
 
         super().__init__(database=self.db, cdm=self._cdm, bulk=self.bulk_mode)
         super(OrmWrapper, self).__init__(database=self.db, config=config)
 
         self.etl_stats = EtlStats()
-
-        if not self.db.can_connect(str(self.db.engine.url)):
-            sys.exit()
+        self.vocab_loader = VocabularyLoader(self.db, self._cdm)
 
     @staticmethod
     def _set_cdm_version(cdm: str):

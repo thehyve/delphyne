@@ -18,8 +18,7 @@ import logging
 import os
 import subprocess
 import traceback
-from collections import Counter
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import datetime
 from inspect import signature
 from pathlib import Path
