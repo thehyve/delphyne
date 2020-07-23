@@ -39,9 +39,8 @@ class OrmWrapper:
     Wrapper which coordinates the execution of python ORM
     transformations.
     """
-    def __init__(self, database: Database, cdm, bulk: bool):
+    def __init__(self, database: Database, cdm):
         self.db = database
-        self.bulk_mode = bulk
         self._cdm = cdm
         self.etl_stats = EtlStats()
 
@@ -67,13 +66,16 @@ class OrmWrapper:
         except subprocess.CalledProcessError:
             return
 
-    def execute_transformation(self, statement: Callable) -> None:
+    def execute_transformation(self, statement: Callable, bulk: bool = False) -> None:
         """
         Execute an ETL transformation via a python statement (function
         that will be called).
 
         :param statement: Callable
             python function which takes this wrapper as input
+        :param bulk: bool
+            Use SQLAlchemy's bulk_save_objects instead of add_all for
+            persisting the ORM objects
         """
         logger.info(f'Executing transformation: {statement.__name__}')
         transformation_metadata = EtlTransformation(name=statement.__name__)
@@ -83,7 +85,7 @@ class OrmWrapper:
                 func_args = signature(statement).parameters
                 records_to_insert = statement(self, session) if 'session' in func_args else statement(self)
                 logger.info(f'Saving {len(records_to_insert)} objects')
-                if self.bulk_mode:
+                if bulk:
                     session.bulk_save_objects(records_to_insert)
                     self._collect_query_statistics_bulk_mode(session, records_to_insert, transformation_metadata)
                 else:
