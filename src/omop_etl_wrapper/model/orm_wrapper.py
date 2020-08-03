@@ -13,18 +13,17 @@
 # GNU General Public License for more details.
 
 import csv
-import itertools
 import logging
 import os
 import subprocess
 import traceback
-from collections import Counter
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import datetime
 from inspect import signature
 from pathlib import Path
-from typing import Callable, DefaultDict, Dict, Optional, Iterable, List
+from typing import Callable, DefaultDict, Dict, Optional, List
 
+import itertools
 import pandas as pd
 from sqlalchemy.orm.session import Session
 
@@ -81,7 +80,7 @@ class OrmWrapper:
         transformation_metadata = EtlTransformation(name=statement.__name__)
 
         try:
-            with self.db.session_scope() as session:
+            with self.db.session_scope(transformation_metadata) as session:
                 func_args = signature(statement).parameters
                 records_to_insert = statement(self, session) if 'session' in func_args else statement(self)
                 logger.info(f'Saving {len(records_to_insert)} objects')
@@ -90,7 +89,6 @@ class OrmWrapper:
                     self._collect_query_statistics_bulk_mode(session, records_to_insert, transformation_metadata)
                 else:
                     session.add_all(records_to_insert)
-                    self._collect_query_statistics(session, transformation_metadata)
 
         except Exception as msg:
             logger.error(msg)
@@ -101,34 +99,17 @@ class OrmWrapper:
         logger.info(f'{statement.__name__} completed with success status: {transformation_metadata.query_success}')
         self.etl_stats.add_transformation(transformation_metadata)
 
-    def _get_record_targets(self, record_containing_object: Iterable) -> str:
-        for record in record_containing_object:
-            placeholder_schema = record.__table_args__.get('schema')
-            schema_name = self.db.schema_translate_map.get(placeholder_schema, placeholder_schema)
-            table_name = record.__tablename__
-            if schema_name is None:
-                yield table_name
-            else:
-                yield '.'.join([schema_name, table_name])
-
-    def _collect_query_statistics(self,
-                                  session: Session,
-                                  transformation_metadata: EtlTransformation
-                                  ) -> None:
-        # In regular mode, all the new objects can be accurately determined from the session
-        transformation_metadata.deletion_counts = Counter(self._get_record_targets(session.deleted))
-        transformation_metadata.insertion_counts = Counter(self._get_record_targets(session.new))
-        transformation_metadata.update_counts = Counter(self._get_record_targets(session.dirty))
-
-    def _collect_query_statistics_bulk_mode(self,
-                                            session: Session,
+    @staticmethod
+    def _collect_query_statistics_bulk_mode(session: Session,
                                             records_to_insert: List,
                                             transformation_metadata: EtlTransformation
                                             ) -> None:
-        # In bulk mode, only deleted objects and new objects in the record list are counted,
-        # not possible relationships to other new objects
-        transformation_metadata.deletion_counts = Counter(self._get_record_targets(session.deleted))
-        transformation_metadata.insertion_counts = Counter(self._get_record_targets(records_to_insert))
+        # As SQLAlchemy's before_flush listener doesn't work in bulk
+        # mode, only deleted and new objects in the record list are counted
+        dc = Counter(Database.get_record_targets(session.deleted))
+        transformation_metadata.deletion_counts = dc
+        ic = Counter(Database.get_record_targets(records_to_insert))
+        transformation_metadata.insertion_counts = ic
 
     def load_vocab_records_from_csv(self, source_file: Path, target_table) -> None:
         """
@@ -144,7 +125,7 @@ class OrmWrapper:
         """
         # Note: inserts are one-by-one, so can be slow for large vocabulary files
         transformation_metadata = EtlTransformation(name=f'load_vocab_{source_file.name}')
-        with source_file.open('r') as f_in, self.db.session_scope() as session:
+        with source_file.open('r') as f_in, self.db.session_scope(transformation_metadata) as session:
             rows = csv.DictReader(f_in)
             for row in rows:
                 pk_col: str = target_table.__table__.primary_key.columns.values()[0].name
@@ -158,7 +139,6 @@ class OrmWrapper:
 
                 session.add(record)
             transformation_metadata.end = datetime.now()
-            self._collect_query_statistics(session, transformation_metadata=transformation_metadata)
         self.etl_stats.add_transformation(transformation_metadata)
 
     def truncate_stcm_table(self):
@@ -178,7 +158,7 @@ class OrmWrapper:
         """
         logger.info(f'Loading source to concept file: {str(source_file)}')
         transformation_metadata = EtlTransformation(name=f'load_{source_file.stem}')
-        with self.db.session_scope() as session, source_file.open('r') as f_in:
+        with self.db.session_scope(transformation_metadata) as session, source_file.open('r') as f_in:
             rows = csv.DictReader(f_in)
 
             first_row = next(rows)
@@ -203,7 +183,6 @@ class OrmWrapper:
                 session.add(self._cdm.SourceToConceptMap(**row))
 
             transformation_metadata.end = datetime.now()
-            self._collect_query_statistics(session, transformation_metadata)
             self.etl_stats.add_transformation(transformation_metadata)
 
     def lookup_stcm(self, source_vocabulary_id: str, source_code: str) -> int:
