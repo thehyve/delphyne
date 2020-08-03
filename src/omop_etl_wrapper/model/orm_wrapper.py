@@ -99,8 +99,8 @@ class OrmWrapper:
         logger.info(f'{statement.__name__} completed with success status: {transformation_metadata.query_success}')
         self.etl_stats.add_transformation(transformation_metadata)
 
-    def _collect_query_statistics_bulk_mode(self,
-                                            session: Session,
+    @staticmethod
+    def _collect_query_statistics_bulk_mode(session: Session,
                                             records_to_insert: List,
                                             transformation_metadata: EtlTransformation
                                             ) -> None:
