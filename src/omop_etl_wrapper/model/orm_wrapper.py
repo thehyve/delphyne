@@ -119,7 +119,8 @@ class OrmWrapper:
         """
         # Note: inserts are one-by-one, so can be slow for large vocabulary files
         transformation_metadata = EtlTransformation(name=f'load_vocab_{source_file.name}')
-        with source_file.open('r') as f_in, self.db.session_scope(transformation_metadata) as session:
+        with source_file.open('r') as f_in, \
+                self.db.session_scope(metadata=transformation_metadata) as session:
             rows = csv.DictReader(f_in)
             for row in rows:
                 pk_col: str = target_table.__table__.primary_key.columns.values()[0].name
