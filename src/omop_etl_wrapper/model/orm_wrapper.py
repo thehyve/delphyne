@@ -16,7 +16,6 @@ import csv
 import logging
 import os
 import subprocess
-import traceback
 from collections import Counter, defaultdict
 from datetime import datetime
 from inspect import signature
@@ -79,21 +78,16 @@ class OrmWrapper:
         logger.info(f'Executing transformation: {statement.__name__}')
         transformation_metadata = EtlTransformation(name=statement.__name__)
 
-        try:
-            with self.db.session_scope(transformation_metadata) as session:
-                func_args = signature(statement).parameters
-                records_to_insert = statement(self, session) if 'session' in func_args else statement(self)
-                logger.info(f'Saving {len(records_to_insert)} objects')
-                if bulk:
-                    session.bulk_save_objects(records_to_insert)
-                    self._collect_query_statistics_bulk_mode(session, records_to_insert, transformation_metadata)
-                else:
-                    session.add_all(records_to_insert)
-
-        except Exception as msg:
-            logger.error(msg)
-            logger.error(traceback.format_exc())
-            transformation_metadata.query_success = False
+        with self.db.session_scope(raise_on_error=False,
+                                   metadata=transformation_metadata) as session:
+            func_args = signature(statement).parameters
+            records_to_insert = statement(self, session) if 'session' in func_args else statement(self)
+            logger.info(f'Saving {len(records_to_insert)} objects')
+            if bulk:
+                session.bulk_save_objects(records_to_insert)
+                self._collect_query_statistics_bulk_mode(session, records_to_insert, transformation_metadata)
+            else:
+                session.add_all(records_to_insert)
 
         transformation_metadata.end = datetime.now()
         logger.info(f'{statement.__name__} completed with success status: {transformation_metadata.query_success}')
@@ -125,7 +119,8 @@ class OrmWrapper:
         """
         # Note: inserts are one-by-one, so can be slow for large vocabulary files
         transformation_metadata = EtlTransformation(name=f'load_vocab_{source_file.name}')
-        with source_file.open('r') as f_in, self.db.session_scope(transformation_metadata) as session:
+        with source_file.open('r') as f_in, \
+                self.db.session_scope(metadata=transformation_metadata) as session:
             rows = csv.DictReader(f_in)
             for row in rows:
                 pk_col: str = target_table.__table__.primary_key.columns.values()[0].name
@@ -158,7 +153,7 @@ class OrmWrapper:
         """
         logger.info(f'Loading source to concept file: {str(source_file)}')
         transformation_metadata = EtlTransformation(name=f'load_{source_file.stem}')
-        with self.db.session_scope(transformation_metadata) as session, source_file.open('r') as f_in:
+        with self.db.session_scope(metadata=transformation_metadata) as session, source_file.open('r') as f_in:
             rows = csv.DictReader(f_in)
 
             first_row = next(rows)

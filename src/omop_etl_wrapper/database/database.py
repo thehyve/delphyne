@@ -79,10 +79,16 @@ class Database:
         logger.info('Rollback completed')
 
     @contextmanager
-    def session_scope(self, metadata: Optional[EtlTransformation] = None) -> None:
+    def session_scope(self,
+                      raise_on_error: bool = True,
+                      metadata: Optional[EtlTransformation] = None
+                      ) -> None:
         """
         Provide a transactional scope around a series of operations.
 
+        :param raise_on_error: bool, default True
+            if True, raise the exception when the session cannot be
+            committed
         :param metadata: EtlTransformation, default None
             if provided, all flushed table mutations (i.e. inserts,
             updates, deletions) will be stored in this object
@@ -99,9 +105,12 @@ class Database:
             yield session
             session.commit()
         except Exception as e:
-            logger.error(e)
+            logging.error(e, exc_info=True)
             self.perform_rollback(session)
-            raise
+            if metadata is not None:
+                metadata.query_success = False
+            if raise_on_error:
+                raise
         finally:
             SessionTracker.remove_session(session_id)
             session.close()
