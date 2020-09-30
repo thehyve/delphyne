@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 import logging
+from collections import Counter
 from contextlib import contextmanager
 from getpass import getpass
-from typing import Dict
+from typing import Dict, Iterable, Optional
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 from sqlalchemy_utils.functions import database_exists
+
+from .session_tracker import SessionTracker
+from ..model.etl_stats import EtlTransformation
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +22,13 @@ Base = declarative_base()
 
 
 class Database:
+    schema_translate_map: Dict = {}
+
     def __init__(self, uri: str, schema_translate_map: Dict[str, str]):
         self.engine = create_engine(uri, executemany_mode='values')
         self.base = Base
-        self.schema_translate_map = schema_translate_map
         self._sessionmaker = sessionmaker(bind=self.engine, autoflush=False)
+        Database.schema_translate_map = schema_translate_map
 
     @classmethod
     def from_config(cls, config: Dict) -> Database:
@@ -73,11 +79,25 @@ class Database:
         logger.info('Rollback completed')
 
     @contextmanager
-    def session_scope(self) -> None:
+    def session_scope(self,
+                      raise_on_error: bool = True,
+                      metadata: Optional[EtlTransformation] = None
+                      ) -> None:
         """
         Provide a transactional scope around a series of operations.
+
+        :param raise_on_error: bool, default True
+            if True, raise the exception when the session cannot be
+            committed
+        :param metadata: EtlTransformation, default None
+            if provided, all flushed table mutations (i.e. inserts,
+            updates, deletions) will be stored in this object
+        :return: None
         """
         session = self.session
+        session_id = id(session)
+        if metadata is not None:
+            SessionTracker.sessions[session_id] = metadata
         session.connection(execution_options={
             "schema_translate_map": self.schema_translate_map
         })
@@ -85,11 +105,45 @@ class Database:
             yield session
             session.commit()
         except Exception as e:
-            logger.error(e)
+            logging.error(e, exc_info=True)
             self.perform_rollback(session)
-            raise
+            if metadata is not None:
+                metadata.query_success = False
+            if raise_on_error:
+                raise
         finally:
+            SessionTracker.remove_session(session_id)
             session.close()
+
+    @staticmethod
+    @event.listens_for(Session, "before_flush")
+    def _track_instances_before_flush(session: Session, context, instances):
+        if id(session) not in SessionTracker.sessions:
+            return
+        tm: EtlTransformation = SessionTracker.sessions[id(session)]
+        tm.deletion_counts += Counter(Database.get_record_targets(session.deleted))
+        tm.insertion_counts += Counter(Database.get_record_targets(session.new))
+        tm.update_counts += Counter(Database.get_record_targets(session.dirty))
+
+    @staticmethod
+    def get_record_targets(record_containing_object: Iterable) -> Iterable[str]:
+        """
+        Retrieve target tables of a SQLAlchemy record object. Include
+        the target schema if available.
+
+        :param record_containing_object: Iterable
+            container of new, updated, or deleted ORM objects
+        :return: Iterable[str]
+            target table
+        """
+        for record in record_containing_object:
+            placeholder_schema = record.__table_args__.get('schema')
+            schema_name = Database.schema_translate_map.get(placeholder_schema, placeholder_schema)
+            table_name = record.__tablename__
+            if schema_name is None:
+                yield table_name
+            else:
+                yield '.'.join([schema_name, table_name])
 
     @staticmethod
     def can_connect(uri: str) -> bool:

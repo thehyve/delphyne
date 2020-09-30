@@ -15,7 +15,6 @@ run_options:
   skip_vocabulary_loading: True
   skip_custom_vocabulary_loading: True
   skip_source_to_concept_map_loading: True
-  bulk_mode: False
   write_reports: False
   debug_mode: False
 

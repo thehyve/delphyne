@@ -43,14 +43,14 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
     """
     def __init__(self, config: Dict[str, Dict]):
         self.db = Database.from_config(config)
-        self.bulk_mode = config['run_options']['bulk_mode']
         self.write_reports = config['run_options']['write_reports']
+
         self._cdm = self._set_cdm_version(config['run_options']['cdm'])
 
         if not self.db.can_connect(str(self.db.engine.url)):
             sys.exit()
 
-        super().__init__(database=self.db, cdm=self._cdm, bulk=self.bulk_mode)
+        super().__init__(database=self.db, cdm=self._cdm)
         super(OrmWrapper, self).__init__(database=self.db, config=config)
 
         self.etl_stats = EtlStats()
