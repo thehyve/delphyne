@@ -7,6 +7,7 @@ from pathlib import Path
 
 # Config file used by setup_logging
 LOG_CONFIG_PATH = Path('./config/logging.yml')
+SOURCE_DATA_CONFIG_PATH = Path('./config/source_config.yml')
 
 # Directory containing all source_to_concept_map files
 STCM_DIR = Path('./resources/source_to_concept/')

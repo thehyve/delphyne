@@ -34,10 +34,13 @@ class SourceDataException(Exception):
 
 
 class SourceData:
+    """Handle for all interactions related to source data files."""
     def __init__(self, config: Dict):
         pass
         # TODO: implement init using config parameters
-        # self.source_dir: Path = source_dir
+        self.source_dir = Path(config['source_data_folder'])
+        self.file_defaults: dict = config['file_defaults']
+        self.source_files: List[SourceFile] = self.get_source_files()
         # self.source_counts: Dict[str, int] = self._get_archived_source_counts()
         # self.source_config: Dict = io.read_yaml_file(source_config)
 
@@ -51,11 +54,9 @@ class SourceData:
     def load_sas_file(self,
                       table_name: str,
                       apply_dtypes: bool = True,
-                      merge_supp: bool = False
                       ) -> pd.DataFrame:
         """
         Read a SAS source file and return as pandas DataFrame.
-        All column names will be made lowercase.
 
         :param table_name: str
             file name in source data folder (without suffix)
@@ -63,18 +64,12 @@ class SourceData:
             convert the df columns to the dtypes specified in
             data_types.yaml. If False, dtypes will stay as specified in
             the SAS file
-        :param merge_supp: bool, default False
-            merge the supplementary table onto the base table
-        :return df: pandas DataFrame
+        :return: pd.DataFrame
         """
         logger.info(f'Reading source file: {table_name}')
         source_file_path = self._find_source_file(table_name)
         file_encoding = self._get_file_encoding(table_name)
         df = pd.read_sas(source_file_path, encoding=file_encoding)
-        df.columns = [col.lower() for col in df.columns]
-
-        if merge_supp:
-            df = self._merge_supplementary_table(df, table_name)
 
         if apply_dtypes:
             dtypes_dict = self._get_file_dtypes(table_name)
@@ -121,41 +116,6 @@ class SourceData:
         int_cols = [col for col, dtype in dtypes.items() if dtype == 'Int64']
         df[int_cols] = df[int_cols].astype('float64')
         return df.astype(dtypes)
-
-    def _merge_supplementary_table(self, base_df: pd.DataFrame, table_name: str) -> pd.DataFrame:
-        """
-        Read and merge supplementary tables:
-        In the supp tables the data are in long format. In order to
-        merge them with the main domains we need to match the format by
-        pivoting the tables.
-        Also need to rename the variable 'idvarval' to match the 'seq'
-        variable in main the domain.
-        :param base_df: pd.Dataframe
-            the dataframe to merge on
-        :param table_name: str
-            name of the base table
-        :return: pd.Dataframe
-        """
-        # dm domain doesn't have a sequence variable, unlike the rest,
-        # so it can only be merged on the usubjid(subject id).
-        if table_name == 'sdtm_dm':
-            df_supp = self.load_sas_file('sdtm_suppdm')
-            df_supp = pd.pivot_table(df_supp, values='qval', index='usubjid',
-                                     columns='qnam', aggfunc='first')
-            df_supp.reset_index(inplace=True)
-            df = pd.merge(base_df, df_supp, on='usubjid', how='outer')
-        else:
-            supp_name = table_name[:-2] + 'supp' + table_name[-2:]
-            df_supp = self.load_sas_file(supp_name, apply_dtypes=False)
-            df_supp = pd.pivot_table(df_supp, values='qval', index=['usubjid', 'idvarval'],
-                                     columns='qnam', aggfunc='first')
-            df_supp.reset_index(inplace=True)
-            domn_seq = table_name[-2:] + 'seq'
-            df_supp = df_supp.rename(columns={'idvarval': domn_seq})
-            df_supp[domn_seq] = df_supp[domn_seq].astype(float)
-            df = pd.merge(base_df, df_supp, on=['usubjid', domn_seq], how='outer')
-        df.columns = [col.lower() for col in df.columns]
-        return df
 
     def get_source_counts(self) -> List[EtlSource]:
         logger.info('Collecting source file row counts')
