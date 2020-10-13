@@ -5,10 +5,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict
 
-from omop_etl_wrapper.model.etl_stats import EtlSource, EtlStats
-from omop_etl_wrapper.util import io
-
 from .source_file import SourceFile
+from ...model.etl_stats import EtlSource, EtlStats
+from ...util import io
 
 logger = logging.getLogger(__name__)
 

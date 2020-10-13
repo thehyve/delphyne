@@ -4,7 +4,8 @@ from pathlib import Path
 from typing import Dict, Optional, List, OrderedDict, Callable
 
 import pandas as pd
-from omop_etl_wrapper.util.io import get_file_line_count
+
+from ...util.io import get_file_line_count
 
 logger = logging.getLogger(__name__)
 
