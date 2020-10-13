@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Optional, Dict, List, Set
 
 import sys
-from omop_etl_wrapper.model.source_data import SourceData
 from sqlalchemy import Table
 from sqlalchemy.schema import CreateSchema
 
@@ -27,6 +26,7 @@ from .database import Database
 from .model.etl_stats import EtlStats
 from .model.orm_wrapper import OrmWrapper
 from .model.raw_sql_wrapper import RawSqlWrapper
+from .model.source_data import SourceData
 from .util.io import read_yaml_file
 
 logger = logging.getLogger(__name__)
