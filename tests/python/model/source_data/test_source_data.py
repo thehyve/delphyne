@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Dict
 
 import pytest
-from omop_etl_wrapper.model.etl_stats import EtlStats
+from src.omop_etl_wrapper.model.etl_stats import EtlStats
 from src.omop_etl_wrapper.model.source_data import SourceData
 from src.omop_etl_wrapper.util.io import read_yaml_file
 
