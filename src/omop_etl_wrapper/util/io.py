@@ -22,6 +22,14 @@ def is_hidden(path: Path) -> bool:
 
 
 def get_file_line_count(file_path: Path, skip_header: bool = True) -> int:
+    """
+    Get the line count of a text (non-binary) file.
+
+    :param file_path: Path
+    :param skip_header: bool, default True
+        If True, the first line is not added to the line count.
+    :return: int
+    """
     if file_path.stat().st_size == 0:  # Empty file
         return 0
     n_rows = 0
