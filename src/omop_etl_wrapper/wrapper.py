@@ -13,20 +13,21 @@
 # GNU General Public License for more details.
 
 import logging
-import sys
 from pathlib import Path
 from typing import Optional, Dict, List, Set
 
+import sys
+from omop_etl_wrapper.model.source_data import SourceData
 from sqlalchemy import Table
 from sqlalchemy.schema import CreateSchema
 
-from ._paths import STCM_DIR
+from ._paths import STCM_DIR, SOURCE_DATA_CONFIG_PATH
 from .cdm._schema_placeholders import VOCAB_SCHEMA
 from .database import Database
 from .model.etl_stats import EtlStats
 from .model.orm_wrapper import OrmWrapper
 from .model.raw_sql_wrapper import RawSqlWrapper
-from .model.source_data import SourceData
+from .util.io import read_yaml_file
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +44,6 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
     """
     def __init__(self, config: Dict[str, Dict]):
         self.db = Database.from_config(config)
-        self.source_data = SourceData(config)
 
         if not self.db.can_connect(str(self.db.engine.url)):
             sys.exit()
@@ -55,8 +55,15 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         super(OrmWrapper, self).__init__(database=self.db, config=config)
 
         self.etl_stats = EtlStats()
+        self.source_data: Optional[SourceData] = self._set_source_data()
 
-
+    def _set_source_data(self):
+        if not SOURCE_DATA_CONFIG_PATH.exists():
+            logger.info(f'No source data config file found at {SOURCE_DATA_CONFIG_PATH}, '
+                        f'assuming no source data files are present')
+            return None
+        source_config = read_yaml_file(SOURCE_DATA_CONFIG_PATH)
+        return SourceData(source_config, self.etl_stats)
 
     @staticmethod
     def _set_cdm_version(cdm: str):
