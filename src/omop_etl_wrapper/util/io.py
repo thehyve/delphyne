@@ -16,6 +16,11 @@ def write_yaml_file(contents: Dict, out_path: Path) -> None:
         yaml.dump(contents, out)
 
 
+def is_hidden(path: Path) -> bool:
+    """Return True if a path is hidden."""
+    return path.name.startswith(('.', '~'))
+
+
 def get_file_line_count(file_path: Path, skip_header: bool = True) -> int:
     if file_path.stat().st_size == 0:  # Empty file
         return 0
