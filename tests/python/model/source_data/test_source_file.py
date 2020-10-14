@@ -180,8 +180,8 @@ def test_absent_binary_flag(caplog, sas_source_file: SourceFile):
 def test_read_csv_types(source_file2: SourceFile):
     rows = source_file2.get_csv_as_list_of_dicts()
     assert type(rows) == list
-    types = [type(row) for row in rows]
-    assert types == [OrderedDict] * 4
+    # csv returns OrderedDict <= 3.7, regular dict for >= 3.8
+    assert all([issubclass(type(row), dict) for row in rows])
 
 
 def test_read_csv_no_cache(source_file2: SourceFile):
