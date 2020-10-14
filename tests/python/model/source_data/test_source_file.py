@@ -1,10 +1,11 @@
+import logging
 from pathlib import Path
 from typing import Dict
 from unittest.mock import MagicMock
 
 import pandas as pd
-import logging
 import pytest
+from _collections import OrderedDict
 from numpy import nan, dtype
 from src.omop_etl_wrapper.model.source_data import SourceFile
 
@@ -174,3 +175,37 @@ def test_absent_binary_flag(caplog, sas_source_file: SourceFile):
     with caplog.at_level(logging.DEBUG):
         assert sas_source_file.get_line_count() is None
     assert 'No binary field available for for file beer.sas7bdat' in caplog.text
+
+
+def test_read_csv_types(source_file2: SourceFile):
+    rows = source_file2.get_csv_as_list_of_dicts()
+    assert type(rows) == list
+    types = [type(row) for row in rows]
+    assert types == [OrderedDict] * 4
+
+
+def test_read_csv_no_cache(source_file2: SourceFile):
+    source_file2.get_csv_as_list_of_dicts()
+    assert not source_file2._csv
+
+
+def test_read_csv_cache(source_file2: SourceFile):
+    source_file2.get_csv_as_list_of_dicts(cache=True)
+    assert len(source_file2._csv) == 4
+
+
+def test_read_csv_generator_not_subscriptable(source_file2: SourceFile):
+    rows = source_file2.get_csv_as_dict_generator()
+    with pytest.raises(TypeError) as excinfo:
+        second_row = rows[1]
+    assert "'generator' object is not subscriptable" in str(excinfo.value)
+
+
+def test_read_csv_values_accessible_via_column_names(source_file2: SourceFile):
+    rows = source_file2.get_csv_as_dict_generator()
+    first_row = next(rows)
+    assert first_row['column_a'] == 'Tungsten carbide'
+
+
+def test_read_csv_additional_kwargs(source_file2: SourceFile):
+    assert source_file2.get_csv_as_list_of_dicts(strict=True)[0]
