@@ -136,6 +136,13 @@ def test_setting_cached_df_manually(source_file2: SourceFile):
     assert 'column_a' not in df.columns
 
 
+def test_sas_requires_encoding_param(sas_source_file: SourceFile):
+    del sas_source_file._params['encoding']
+    with pytest.raises(ValueError) as excinfo:
+        sas_source_file.get_sas_as_df(apply_dtypes=False)
+    assert "encoding" in str(excinfo.value)
+
+
 def test_kwargs_overrule_file_params(sas_source_file: SourceFile):
     """Adding encoding='iso8859' as a kwarg to get_sas_as_df, should
     overrule the original encoding value in the SourceFile's params."""
