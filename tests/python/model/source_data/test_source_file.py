@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 
 import pandas as pd
 import pytest
-from _collections import OrderedDict
 from numpy import nan, dtype
 from src.omop_etl_wrapper.model.source_data import SourceFile
 
@@ -195,14 +194,14 @@ def test_read_csv_cache(source_file2: SourceFile):
 
 
 def test_read_csv_generator_not_subscriptable(source_file2: SourceFile):
-    rows = source_file2.get_csv_as_dict_generator()
+    rows = source_file2.get_csv_as_generator_of_dicts()
     with pytest.raises(TypeError) as excinfo:
         second_row = rows[1]
     assert "'generator' object is not subscriptable" in str(excinfo.value)
 
 
 def test_read_csv_values_accessible_via_column_names(source_file2: SourceFile):
-    rows = source_file2.get_csv_as_dict_generator()
+    rows = source_file2.get_csv_as_generator_of_dicts()
     first_row = next(rows)
     assert first_row['column_a'] == 'Tungsten carbide'
 

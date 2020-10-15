@@ -217,7 +217,7 @@ class SourceFile:
                            f'in the source config. Skipping line count calculation.')
         return None
 
-    def get_csv_as_dict_generator(self, **kwargs) -> Generator[OrderedDict, None, None]:
+    def get_csv_as_generator_of_dicts(self, **kwargs) -> Generator[OrderedDict, None, None]:
         """
         Return delimited text file as a generator of OrderedDicts.
 
