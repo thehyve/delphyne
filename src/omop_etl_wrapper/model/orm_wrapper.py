@@ -21,7 +21,7 @@ from datetime import datetime
 from inspect import signature
 from pathlib import Path
 from typing import Callable, DefaultDict, Dict, Optional, List
-
+from abc import ABC, abstractmethod
 import itertools
 import pandas as pd
 from sqlalchemy.orm.session import Session
@@ -32,18 +32,22 @@ from ..database.database import Database
 logger = logging.getLogger(__name__)
 
 
-class OrmWrapper:
+class OrmWrapper(ABC):
     """
     Wrapper which coordinates the execution of python ORM
     transformations.
     """
-    def __init__(self, database: Database, cdm):
+    def __init__(self, database: Database):
         self.db = database
-        self._cdm = cdm
         self.etl_stats = EtlStats()
 
         # {source_vocabulary_id: {source_code: target_concept_id}}
         self._stcm_lookup: DefaultDict[str, Dict[str, int]] = defaultdict(dict)
+
+    @property
+    @abstractmethod
+    def cdm(cls):
+        return NotImplementedError('Missing class variable: cdm')
 
     def run(self):
         """Run ETL procedure"""
@@ -140,7 +144,7 @@ class OrmWrapper:
         """Delete all records in the source_to_concept_map table."""
         logger.info('Truncating STCM table')
         with self.db.session_scope() as session:
-            session.query(self._cdm.SourceToConceptMap).delete()
+            session.query(self.cdm.SourceToConceptMap).delete()
 
     def load_source_to_concept_map_from_csv(self, source_file: Path) -> None:
         """
@@ -157,10 +161,10 @@ class OrmWrapper:
             rows = csv.DictReader(f_in)
 
             first_row = next(rows)
-            source_vocab = session.query(self._cdm.Vocabulary).get(first_row['source_vocabulary_id'])
+            source_vocab = session.query(self.cdm.Vocabulary).get(first_row['source_vocabulary_id'])
 
             if not source_vocab:
-                session.add(self._cdm.Vocabulary(
+                session.add(self.cdm.Vocabulary(
                     vocabulary_id=first_row['source_vocabulary_id'],
                     vocabulary_name=first_row['source_vocabulary_id'].replace('_', ' '),
                     vocabulary_reference='Active Biotech',
@@ -175,7 +179,7 @@ class OrmWrapper:
                 if target_concept_id == 0:
                     continue
                 self._stcm_lookup[source_vocabulary_id][source_code] = target_concept_id
-                session.add(self._cdm.SourceToConceptMap(**row))
+                session.add(self.cdm.SourceToConceptMap(**row))
 
             transformation_metadata.end = datetime.now()
             self.etl_stats.add_transformation(transformation_metadata)
