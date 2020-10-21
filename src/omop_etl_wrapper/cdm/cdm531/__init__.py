@@ -5,46 +5,58 @@ DDL from https://github.com/OHDSI/CommonDataModel/tree/v5.3.1.
 Excluded the attribute_definition and cohort_attribute tables, added
 stem_table.
 """
-
-from .._shared_tables.cdm531.clinical_data import (
-    Death
-)
+from .tables import Base_cdm_531
 
 
-from .clinical_data import (
-    ConditionOccurrence,
+# clinical data
+from .tables import (
     Person,
-    ProcedureOccurrence,
-    VisitOccurrence,
-    DeviceExposure,
-    DrugExposure,
-    Measurement,
+    Death,
     Note,
+    Measurement,
     NoteNlp,
     Observation,
-    ObservationPeriod,
     Specimen,
+    StemTable,
     VisitDetail,
+    ConditionOccurrence,
+    DeviceExposure,
+    DrugExposure,
+    FactRelationship,
+    ObservationPeriod,
+    ProcedureOccurrence,
+    VisitOccurrence,
 )
 
-from .derived_elements import (
+# health system data
+from .tables import (
+    Location,
+    CareSite,
+    Provider,
+)
+
+# derived_elements
+from .tables import (
     ConditionEra,
     DoseEra,
     DrugEra,
+    Cohort,
 )
 
-from .health_economics import (
+# health_economics
+from .tables import (
     Cost,
     PayerPlanPeriod,
 )
 
-from .health_system_data import (
-    CareSite,
-    Location,
-    Provider,
+# metadata
+from .tables import (
+    CdmSource,
+    Metadata,
 )
 
-from .._shared_tables.cdm600.vocabularies import (
+# vocabularies
+from .tables import (
     Vocabulary,
     SourceToConceptMap,
     Concept,
@@ -54,8 +66,5 @@ from .._shared_tables.cdm600.vocabularies import (
     Domain,
     DrugStrength,
     Relationship,
-)
-
-from .vocabularies import (
     CohortDefinition,
 )

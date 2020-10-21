@@ -5,55 +5,64 @@ https://github.com/OHDSI/CommonDataModel/tree/Dev/PostgreSQL, commit
 30d851a.
 """
 
-from .clinical_data import (
-    Measurement,
-)
+from .tables import Base_cdm_600
 
-from .._shared_tables.cdm600.clinical_data import (
-    ConditionOccurrence,
+# clinical data
+from .tables import (
     Person,
-    ProcedureOccurrence,
-    VisitOccurrence,
+    Note,
+    Measurement,
+    NoteNlp,
+    Observation,
+    Specimen,
+    StemTable,
+    VisitDetail,
+    ConditionOccurrence,
     DeviceExposure,
     DrugExposure,
     FactRelationship,
-    Note,
-    NoteNlp,
-    Observation,
     ObservationPeriod,
-    Specimen,
+    ProcedureOccurrence,
     SurveyConduct,
-    VisitDetail,
+    VisitOccurrence,
 )
 
-from .._shared_tables.cdm600.derived_elements import (
-    ConditionEra,
-    DoseEra,
-    DrugEra,
-)
-
-from .._shared_tables.cdm600.health_economics import (
-    Cost,
-    PayerPlanPeriod,
-)
-
-from .._shared_tables.cdm600.health_system_data import (
-    CareSite,
+# health system data
+from .tables import (
     Location,
     LocationHistory,
+    CareSite,
     Provider,
 )
 
-from .._shared_tables.cdm600.vocabularies import (
+# derived elements
+from .tables import (
+    DoseEra,
+    DrugEra,
+    ConditionEra,
+)
+
+# metadata
+from .tables import (
+    CdmSource,
+    Metadata,
+)
+
+# health_economics
+from .tables import (
+    # Cost,
+    PayerPlanPeriod,
+)
+
+# vocabularies
+from .tables import (
     Vocabulary,
     SourceToConceptMap,
     Concept,
     ConceptAncestor,
     ConceptClass,
     ConceptRelationship,
-    ConceptSynonym,
     Domain,
     DrugStrength,
     Relationship,
 )
-
