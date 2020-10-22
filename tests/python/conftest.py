@@ -30,6 +30,12 @@ default_db_config = DbConfig(
 )
 
 
+@pytest.fixture(scope='session')
+def test_data_dir() -> Path:
+    """Return Path of the folder containing the test data files."""
+    return _HERE.parent / 'test_data'
+
+
 def running_locally() -> bool:
     if 'RUNNING_CI' in os.environ:
         return False

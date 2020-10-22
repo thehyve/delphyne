@@ -6,13 +6,15 @@ import sys
 from sqlalchemy import Table
 from sqlalchemy.schema import CreateSchema
 
-from ._paths import STCM_DIR
 from .cdm import vocabularies as cdm
+from ._paths import STCM_DIR, SOURCE_DATA_CONFIG_PATH
 from .cdm._schema_placeholders import VOCAB_SCHEMA
 from .database import Database
 from .model.etl_stats import EtlStats
 from .model.orm_wrapper import OrmWrapper
 from .model.raw_sql_wrapper import RawSqlWrapper
+from .model.source_data import SourceData
+from .util.io import read_yaml_file
 
 logger = logging.getLogger(__name__)
 
@@ -31,15 +33,25 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
 
     def __init__(self, config: Dict[str, Dict], base):
         self.db = Database.from_config(config, base)
+
+        if not self.db.can_connect(str(self.db.engine.url)):
+            sys.exit()
+
         self.write_reports = config['run_options']['write_reports']
 
         super().__init__(database=self.db)
         super(OrmWrapper, self).__init__(database=self.db, config=config)
 
         self.etl_stats = EtlStats()
+        self.source_data: Optional[SourceData] = self._set_source_data()
 
-        if not self.db.can_connect(str(self.db.engine.url)):
-            sys.exit()
+    def _set_source_data(self):
+        if not SOURCE_DATA_CONFIG_PATH.exists():
+            logger.info(f'No source data config file found at {SOURCE_DATA_CONFIG_PATH}, '
+                        f'assuming no source data files are present')
+            return None
+        source_config = read_yaml_file(SOURCE_DATA_CONFIG_PATH)
+        return SourceData(source_config, self.etl_stats)
 
     def run(self) -> None:
         print('OMOP wrapper goes brrrrrrrr')
