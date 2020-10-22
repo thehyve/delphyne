@@ -25,10 +25,10 @@ class SourceData:
             self._calculate_file_line_counts()
 
     @property
-    def source_dir(self):
+    def source_dir(self) -> Path:
         return self._source_dir
 
-    def _set_source_dir(self):
+    def _set_source_dir(self) -> Path:
         source_dir = Path(self.source_config['source_data_folder'])
         if not source_dir.exists() or not source_dir.is_dir():
             raise ValueError(f'Could not set source data folder, {source_dir} '

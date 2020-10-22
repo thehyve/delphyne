@@ -42,11 +42,11 @@ class SourceFile:
             logger.info(f'Removing cached df of {self.path.name}')
             self._df = None
 
-    def _retrieve_cached_df(self):
+    def _retrieve_cached_df(self) -> pd.DataFrame:
         logger.info(f'Retrieving {self._path.name} DataFrame from cache')
         return self._df
 
-    def _cache_df_copy(self, df: pd.DataFrame):
+    def _cache_df_copy(self, df: pd.DataFrame) -> None:
         logger.info('Caching deepcopy of DataFrame')
         self._df = df.copy(deep=True)
 
@@ -55,11 +55,11 @@ class SourceFile:
             logger.info(f'Removing cached csv records of {self.path.name}')
             self._csv = []
 
-    def _retrieve_cached_csv(self):
+    def _retrieve_cached_csv(self) -> List[OrderedDict]:
         logger.info(f'Retrieving {self._path.name} csv records from cache')
         return self._csv
 
-    def _cache_csv_copy(self, csv_records: List[OrderedDict]):
+    def _cache_csv_copy(self, csv_records: List[OrderedDict]) -> None:
         logger.info('Caching deepcopy of csv records')
         self._csv = deepcopy(csv_records)
 
@@ -88,72 +88,6 @@ class SourceFile:
         return self._get_df(read_func=self._read_csv_as_df, apply_dtypes=apply_dtypes,
                             force_reload=force_reload, cache=cache, **kwargs)
 
-    def cache_df(self, df: pd.DataFrame) -> None:
-        """
-        Save a DataFrame in memory for future use.
-
-        The main reason for manually caching a DataFrame linked to a
-        source file, would be if it has already undergone a kind of
-        generic processing that then doesn't need to be redone when
-        using it in a later transformation.
-        Calling this method will overwrite any existing cached DataFrame
-        for this source file.
-
-        :param df: pd.DataFrame
-            The DataFrame to save in memory.
-        :return: None
-        """
-        self._cache_df_copy(df)
-
-    def _get_df(self,
-                read_func: Callable,
-                apply_dtypes: bool,
-                force_reload: bool,
-                cache: bool,
-                **kwargs
-                ):
-        if force_reload:
-            self._remove_cached_df()
-
-        if self._df is not None:
-            df = self._retrieve_cached_df()
-        else:
-            logger.info(f'Reading {self._path.name} as DataFrame')
-            df = read_func(apply_dtypes, **kwargs)
-
-        if cache:
-            self._cache_df_copy(df)
-        else:
-            self._remove_cached_df()
-
-        return df
-
-    def _read_csv_as_df(self, apply_dtypes: bool, **kwargs):
-        config_kwargs = {kw: self._params.get(kw) for kw in self._params
-                         if kw in _READ_CSV_PARAMS}
-        full_kwargs = {**config_kwargs, **kwargs}
-        self._check_missing_params(params=full_kwargs, required=['delimiter', 'encoding'])
-        df = pd.read_csv(self._path, dtype='object', **full_kwargs)
-        if apply_dtypes:
-            df = self._apply_dtypes(df)
-        return df
-
-    def _read_sas_as_df(self, apply_dtypes: bool, **kwargs):
-        config_kwargs = {kw: self._params.get(kw) for kw in self._params
-                         if kw in _READ_SAS_PARAMS}
-        full_kwargs = {**config_kwargs, **kwargs}
-        self._check_missing_params(params=full_kwargs, required=['encoding'])
-        df = pd.read_sas(self._path, **full_kwargs)
-        if apply_dtypes:
-            df = self._apply_dtypes(df)
-        return df
-
-    def _check_missing_params(self, params: Dict, required: List[str]) -> None:
-        missing = [kw for kw in required if params.get(kw) is None]
-        if missing:
-            raise ValueError(f'Cannot read {self._path.name}, missing required '
-                             f'parameters: {", ".join(missing)}')
-
     def get_sas_as_df(self,
                       apply_dtypes: bool,
                       force_reload: bool = False,
@@ -178,6 +112,72 @@ class SourceFile:
         """
         return self._get_df(read_func=self._read_sas_as_df, apply_dtypes=apply_dtypes,
                             force_reload=force_reload, cache=cache, **kwargs)
+
+    def cache_df(self, df: pd.DataFrame) -> None:
+        """
+        Save a DataFrame in memory for future use.
+
+        The main reason for manually caching a DataFrame linked to a
+        source file, would be if it has already undergone a kind of
+        generic processing that then doesn't need to be redone when
+        using it in a later transformation.
+        Calling this method will overwrite any existing cached DataFrame
+        for this source file.
+
+        :param df: pd.DataFrame
+            The DataFrame to save in memory.
+        :return: None
+        """
+        self._cache_df_copy(df)
+
+    def _get_df(self,
+                read_func: Callable,
+                apply_dtypes: bool,
+                force_reload: bool,
+                cache: bool,
+                **kwargs
+                ) -> pd.DataFrame:
+        if force_reload:
+            self._remove_cached_df()
+
+        if self._df is not None:
+            df = self._retrieve_cached_df()
+        else:
+            logger.info(f'Reading {self._path.name} as DataFrame')
+            df = read_func(apply_dtypes, **kwargs)
+
+        if cache:
+            self._cache_df_copy(df)
+        else:
+            self._remove_cached_df()
+
+        return df
+
+    def _read_csv_as_df(self, apply_dtypes: bool, **kwargs) -> pd.DataFrame:
+        config_kwargs = {kw: self._params.get(kw) for kw in self._params
+                         if kw in _READ_CSV_PARAMS}
+        full_kwargs = {**config_kwargs, **kwargs}
+        self._check_missing_params(params=full_kwargs, required=['delimiter', 'encoding'])
+        df = pd.read_csv(self._path, dtype='object', **full_kwargs)
+        if apply_dtypes:
+            df = self._apply_dtypes(df)
+        return df
+
+    def _read_sas_as_df(self, apply_dtypes: bool, **kwargs) -> pd.DataFrame:
+        config_kwargs = {kw: self._params.get(kw) for kw in self._params
+                         if kw in _READ_SAS_PARAMS}
+        full_kwargs = {**config_kwargs, **kwargs}
+        self._check_missing_params(params=full_kwargs, required=['encoding'])
+        df = pd.read_sas(self._path, **full_kwargs)
+        if apply_dtypes:
+            df = self._apply_dtypes(df)
+        return df
+
+    def _check_missing_params(self, params: Dict, required: List[str]) -> None:
+        missing = [kw for kw in required if params.get(kw) is None]
+        if missing:
+            raise ValueError(f'Cannot read {self._path.name}, missing required '
+                             f'parameters: {", ".join(missing)}')
 
     def _apply_dtypes(self, df: pd.DataFrame) -> pd.DataFrame:
         # Apply source_config dtypes to the columns in the DataFrame.
