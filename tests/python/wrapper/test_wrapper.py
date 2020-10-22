@@ -52,12 +52,21 @@ def test_create_tables_cdm531(wrapper_cdm531: Wrapper):
         'dose_era'}
 
 
-@pytest.mark.skip('Needs separate process')
 @pytest.mark.usefixtures("test_db")
 def test_create_tables_cdm600(wrapper_cdm600: Wrapper):
     wrapper_cdm600.create_schemas()
     wrapper_cdm600.create_cdm()
     vocab_tables = inspect(wrapper_cdm600.db.engine).get_table_names('vocab')
-    assert set(vocab_tables) == {}
+    assert set(vocab_tables) == {
+        'domain', 'concept_ancestor', 'drug_strength', 'concept_relationship', 'vocabulary',
+        'concept_synonym', 'relationship', 'concept_class', 'source_to_concept_map',
+        'concept'}
     cdm_tables = inspect(wrapper_cdm600.db.engine).get_table_names('cdm')
-    assert set(cdm_tables) == {}
+    assert set(cdm_tables) == {
+        'cdm_source', 'metadata', 'fact_relationship', 'location',
+        'care_site', 'location_history', 'provider', 'person',
+        'specimen', 'observation_period', 'visit_occurrence', 'payer_plan_period',
+        'dose_era', 'drug_era', 'condition_era', 'visit_detail', 'cost', 'note',
+        'measurement', 'observation', 'stem_table', 'condition_occurrence',
+        'device_exposure', 'drug_exposure', 'procedure_occurrence', 'survey_conduct',
+        'note_nlp'}

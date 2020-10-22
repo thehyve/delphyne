@@ -1,7 +1,6 @@
 import os
 from collections import namedtuple
 from pathlib import Path
-from time import sleep
 from typing import Dict
 
 import docker
@@ -9,9 +8,11 @@ import psycopg2
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy_utils import create_database, drop_database
-
 from src.omop_etl_wrapper.util.io import read_yaml_file
 from src.omop_etl_wrapper.wrapper import Wrapper
+from time import sleep
+
+from .cdm import Base_cdm_531, Base_cdm_600
 
 _HERE = Path(__file__).parent
 _PG11_DOCKER_FILE = _HERE / '../docker/postgres11'
@@ -98,7 +99,7 @@ def test_db(test_db_uri) -> None:
 @pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
 def wrapper_cdm531(default_run_config):
-    wrapper = Wrapper(default_run_config)
+    wrapper = Wrapper(default_run_config, Base_cdm_531)
     yield wrapper
 
 
@@ -106,5 +107,5 @@ def wrapper_cdm531(default_run_config):
 @pytest.fixture(scope='function')
 def wrapper_cdm600(default_run_config):
     default_run_config['run_options']['cdm'] = 'cdm600'
-    wrapper = Wrapper(default_run_config)
+    wrapper = Wrapper(default_run_config, Base_cdm_600)
     yield wrapper
