@@ -1,8 +1,11 @@
 from typing import Optional, Dict
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, SecretStr
 
-_REQUIRED_SCHEMAS = ['cdm_schema', 'vocabulary_schema']
+from ...cdm._schema_placeholders import VOCAB_SCHEMA, CDM_SCHEMA
+
+
+_REQUIRED_SCHEMAS = [VOCAB_SCHEMA, CDM_SCHEMA]
 
 
 class _DataBase(BaseModel):
@@ -10,7 +13,13 @@ class _DataBase(BaseModel):
     port: int
     database_name: str
     username: str
-    password: Optional[str]
+    password: Optional[SecretStr]
+
+    @validator('password', always=True)
+    def missing_password(cls, password):
+        if password is None:
+            password = SecretStr('')
+        return password
 
 
 class _RunOptions(BaseModel):
