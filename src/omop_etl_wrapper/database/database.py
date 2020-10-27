@@ -45,7 +45,7 @@ class Database:
         port = db_config.port
         database = db_config.database_name
         username = db_config.username
-        password = db_config.password
+        password = db_config.password.get_secret_value()
         uri = f'postgresql://{username}:{password}@{hostname}:{port}/{database}'
         if not password and Database._password_needed(uri):
             password = getpass('Database password:')
