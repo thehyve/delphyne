@@ -26,13 +26,17 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
     """
     Task coordinator supporting the process of converting source data
     into the OMOP CDM.
-
-    config : MainConfig
-        The run configuration as read from config.yml.
     """
     cdm = cdm
 
     def __init__(self, config: MainConfig, base):
+        """
+        :param config: MainConfig
+            The run configuration as read from config.yml.
+        :param base: SQLAlchemy declarative Base
+            Base to which the CDM tables are bound via SQLAlchemy's
+            declarative model.
+        """
         self.db = Database.from_config(config, base)
 
         if not self.db.can_connect(str(self.db.engine.url)):
