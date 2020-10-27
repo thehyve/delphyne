@@ -89,19 +89,19 @@ def default_main_config(default_run_config) -> MainConfig:
 
 
 @pytest.fixture(scope='session')
-def test_db_uri(default_main_config) -> str:
+def test_db_uri(default_main_config: MainConfig) -> str:
     db_config = default_main_config.database
     hostname = db_config.host
     port = db_config.port
     database = db_config.database_name
     username = db_config.username
-    password = db_config.password
+    password = db_config.password.get_secret_value()
     return f'postgresql://{username}:{password}@{hostname}:{port}/{database}'
 
 
 @pytest.mark.usefixtures("container")
 @pytest.fixture(scope='function')
-def test_db(test_db_uri) -> None:
+def test_db(test_db_uri: str) -> None:
     engine = create_engine(test_db_uri)
     create_database(engine.url)
     yield
