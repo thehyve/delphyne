@@ -8,6 +8,7 @@ import psycopg2
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy_utils import create_database, drop_database
+from src.omop_etl_wrapper.config.models import MainConfig
 from src.omop_etl_wrapper.util.io import read_yaml_file
 from src.omop_etl_wrapper.wrapper import Wrapper
 from time import sleep
@@ -83,13 +84,18 @@ def default_run_config() -> Dict:
 
 
 @pytest.fixture(scope='session')
-def test_db_uri(default_run_config) -> str:
-    db_config = default_run_config['database']
-    hostname = db_config['host']
-    port = db_config['port']
-    database = db_config['database_name']
-    username = db_config['username']
-    password = db_config['password']
+def default_main_config(default_run_config) -> MainConfig:
+    return MainConfig(**default_run_config)
+
+
+@pytest.fixture(scope='session')
+def test_db_uri(default_main_config) -> str:
+    db_config = default_main_config.database
+    hostname = db_config.host
+    port = db_config.port
+    database = db_config.database_name
+    username = db_config.username
+    password = db_config.password
     return f'postgresql://{username}:{password}@{hostname}:{port}/{database}'
 
 
@@ -104,14 +110,13 @@ def test_db(test_db_uri) -> None:
 
 @pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
-def wrapper_cdm531(default_run_config):
-    wrapper = Wrapper(default_run_config, Base_cdm_531)
+def wrapper_cdm531(default_main_config):
+    wrapper = Wrapper(default_main_config, Base_cdm_531)
     yield wrapper
 
 
 @pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
-def wrapper_cdm600(default_run_config):
-    default_run_config['run_options']['cdm'] = 'cdm600'
-    wrapper = Wrapper(default_run_config, Base_cdm_600)
+def wrapper_cdm600(default_main_config):
+    wrapper = Wrapper(default_main_config, Base_cdm_600)
     yield wrapper
