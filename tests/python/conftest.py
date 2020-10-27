@@ -110,13 +110,34 @@ def test_db(test_db_uri) -> None:
 
 @pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
-def wrapper_cdm531(default_main_config):
+def wrapper_cdm531(default_main_config: MainConfig):
     wrapper = Wrapper(default_main_config, Base_cdm_531)
     yield wrapper
 
 
 @pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
-def wrapper_cdm600(default_main_config):
+def wrapper_cdm600(default_main_config: MainConfig):
     wrapper = Wrapper(default_main_config, Base_cdm_600)
     yield wrapper
+
+
+@pytest.fixture(scope="session")
+def source_config_dir(test_data_dir: Path) -> Path:
+    return test_data_dir / 'source_data_configs'
+
+
+@pytest.fixture(scope="session")
+def source_data_test_dir(test_data_dir: Path) -> Path:
+    """Directory holding subdirectories with source data test files."""
+    return test_data_dir / 'source_data_files'
+
+
+@pytest.fixture
+def source_config(source_config_dir: Path, source_data_test_dir: Path) -> Dict:
+    source_config_path = source_config_dir / 'source_config.yml'
+    source_config = read_yaml_file(source_config_path)
+    # Insert the resolved path of the source_data_dir in the config
+    source_data_dir = Path(source_data_test_dir / 'test_dir1').resolve()
+    source_config['source_data_folder'] = source_data_dir
+    return source_config
