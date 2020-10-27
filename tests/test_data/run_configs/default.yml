@@ -10,13 +10,10 @@ schema_translate_map:
   vocabulary_schema: 'vocab'
 
 run_options:
-  cdm: 'cdm531'
-  source_data_folder: './resources/source_data'
   skip_vocabulary_loading: True
   skip_custom_vocabulary_loading: True
   skip_source_to_concept_map_loading: True
   write_reports: False
-  debug_mode: False
 
 sql_parameters:
   #placeholder: 'value'
