@@ -13,6 +13,7 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy_utils.functions import database_exists
 
 from .session_tracker import SessionTracker
+from ..config.models import MainConfig
 from ..model.etl_stats import EtlTransformation
 
 logger = logging.getLogger(__name__)
@@ -28,28 +29,28 @@ class Database:
         Database.schema_translate_map = schema_translate_map
 
     @classmethod
-    def from_config(cls, config: Dict, base) -> Database:
+    def from_config(cls, config: MainConfig, base) -> Database:
         """
         Create an instance of Database from a configuration file.
 
-        :param config: Dict
+        :param config: MainConfig
             Contents of the configuration file.
         :param base: SQLAlchemy declarative Base
             Base to which the CDM tables are bound via SQLAlchemy's
             declarative model
         :return: Database
         """
-        db_config = config['database']
-        hostname = db_config['host']
-        port = db_config['port']
-        database = db_config['database_name']
-        username = db_config['username']
-        password = db_config['password']
+        db_config = config.database
+        hostname = db_config.host
+        port = db_config.port
+        database = db_config.database_name
+        username = db_config.username
+        password = db_config.password
         uri = f'postgresql://{username}:{password}@{hostname}:{port}/{database}'
         if not password and Database._password_needed(uri):
             password = getpass('Database password:')
             uri = f'postgresql://{username}:{password}@{hostname}:{port}/{database}'
-        return cls(uri=uri, schema_translate_map=config['schema_translate_map'], base=base)
+        return cls(uri=uri, schema_translate_map=config.schema_translate_map, base=base)
 
     @staticmethod
     def _password_needed(uri: str) -> bool:
