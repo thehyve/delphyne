@@ -42,9 +42,9 @@ setup(
     name="omop_etl_wrapper",
     package_dir={"": "src"},
     packages=find_packages(include=["src/omop_etl_wrapper", "src/omop_etl_wrapper.*"]),
-    tests_require=[
-        'pytest',
-    ],
+    extras_require={
+        "TEST":  ["pytest", "docker"],
+    },
     url="https://github.com/thehyve/omop_etl_wrapper",
     version=version['__version__'],
     zip_safe=False,
