@@ -1,17 +1,3 @@
-# Copyright 2019 The Hyve
-#
-# Licensed under the GNU General Public License, version 3,
-# or (at your option) any later version (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# https://www.gnu.org/licenses/
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
 import logging
 from pathlib import Path
 from typing import Optional, Dict, List, Set
@@ -20,6 +6,7 @@ import sys
 from sqlalchemy import Table
 from sqlalchemy.schema import CreateSchema
 
+from .cdm import vocabularies as cdm
 from ._paths import STCM_DIR, SOURCE_DATA_CONFIG_PATH
 from .cdm._schema_placeholders import VOCAB_SCHEMA
 from .database import Database
@@ -42,16 +29,17 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
     config : Dict
         The run configuration as read from config.yml.
     """
-    def __init__(self, config: Dict[str, Dict]):
-        self.db = Database.from_config(config)
+    cdm = cdm
+
+    def __init__(self, config: Dict[str, Dict], base):
+        self.db = Database.from_config(config, base)
 
         if not self.db.can_connect(str(self.db.engine.url)):
             sys.exit()
 
         self.write_reports = config['run_options']['write_reports']
-        self._cdm = self._set_cdm_version(config['run_options']['cdm'])
 
-        super().__init__(database=self.db, cdm=self._cdm)
+        super().__init__(database=self.db)
         super(OrmWrapper, self).__init__(database=self.db, config=config)
 
         self.etl_stats = EtlStats()
@@ -64,18 +52,6 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
             return None
         source_config = read_yaml_file(SOURCE_DATA_CONFIG_PATH)
         return SourceData(source_config, self.etl_stats)
-
-    @staticmethod
-    def _set_cdm_version(cdm: str):
-        if cdm.upper() == 'CDM531':
-            from .cdm import cdm531 as orm
-        elif cdm.upper() == 'CDM600':
-            from .cdm import cdm600 as orm
-        elif cdm.upper() == 'HYBRID':
-            from .cdm import hybrid as orm
-        else:
-            raise ValueError(f'Unrecognized CDM version: "{cdm}"')
-        return orm
 
     def run(self) -> None:
         print('OMOP wrapper goes brrrrrrrr')

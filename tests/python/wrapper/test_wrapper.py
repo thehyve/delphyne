@@ -1,7 +1,25 @@
+import docker
 import pytest
+from docker.errors import DockerException
 from sqlalchemy import inspect
-from src.omop_etl_wrapper.database.database import Database
 from src.omop_etl_wrapper import Wrapper
+from src.omop_etl_wrapper.database.database import Database
+
+from ..conftest import running_locally
+
+
+def docker_daemon_is_running() -> bool:
+    try:
+        client = docker.from_env()
+        client.info()
+    except (ConnectionRefusedError, DockerException):
+        return False
+    return True
+
+
+docker_not_available = (running_locally() and not docker_daemon_is_running())
+pytestmark = pytest.mark.skipif(condition=docker_not_available,
+                                reason='Docker daemon is not running')
 
 
 @pytest.mark.usefixtures("container")
@@ -52,12 +70,21 @@ def test_create_tables_cdm531(wrapper_cdm531: Wrapper):
         'dose_era'}
 
 
-@pytest.mark.skip('Needs separate process')
 @pytest.mark.usefixtures("test_db")
 def test_create_tables_cdm600(wrapper_cdm600: Wrapper):
     wrapper_cdm600.create_schemas()
     wrapper_cdm600.create_cdm()
     vocab_tables = inspect(wrapper_cdm600.db.engine).get_table_names('vocab')
-    assert set(vocab_tables) == {}
+    assert set(vocab_tables) == {
+        'domain', 'concept_ancestor', 'drug_strength', 'concept_relationship', 'vocabulary',
+        'concept_synonym', 'relationship', 'concept_class', 'source_to_concept_map',
+        'concept'}
     cdm_tables = inspect(wrapper_cdm600.db.engine).get_table_names('cdm')
-    assert set(cdm_tables) == {}
+    assert set(cdm_tables) == {
+        'cdm_source', 'metadata', 'fact_relationship', 'location',
+        'care_site', 'location_history', 'provider', 'person',
+        'specimen', 'observation_period', 'visit_occurrence', 'payer_plan_period',
+        'dose_era', 'drug_era', 'condition_era', 'visit_detail', 'cost', 'note',
+        'measurement', 'observation', 'stem_table', 'condition_occurrence',
+        'device_exposure', 'drug_exposure', 'procedure_occurrence', 'survey_conduct',
+        'note_nlp'}

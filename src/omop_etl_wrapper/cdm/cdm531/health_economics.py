@@ -1,16 +1,21 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Date, Numeric
+from sqlalchemy import (Column, ForeignKey, Integer, String, Date,
+                        Numeric)
+from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
 from .._schema_placeholders import VOCAB_SCHEMA, CDM_SCHEMA
-from ... import Base
 
 
-class PayerPlanPeriod(Base):
+class BasePayerPlanPeriodCdm531:
     __tablename__ = 'payer_plan_period'
     __table_args__ = {'schema': CDM_SCHEMA}
 
     payer_plan_period_id = Column(Integer, primary_key=True)
-    person_id = Column(ForeignKey(f'{CDM_SCHEMA}.person.person_id'), nullable=False, index=True)
+
+    @declared_attr
+    def person_id(cls):
+        return Column(ForeignKey(f'{CDM_SCHEMA}.person.person_id'), nullable=False, index=True)
+
     payer_plan_period_start_date = Column(Date, nullable=False)
     payer_plan_period_end_date = Column(Date, nullable=False)
     payer_concept_id = Column(Integer)
@@ -27,10 +32,12 @@ class PayerPlanPeriod(Base):
     stop_reason_source_value = Column(String(50))
     stop_reason_source_concept_id = Column(Integer)
 
-    person = relationship('Person')
+    @declared_attr
+    def person(cls):
+        return relationship('Person')
 
 
-class Cost(Base):
+class BaseCostCdm531:
     __tablename__ = 'cost'
     __table_args__ = {'schema': CDM_SCHEMA}
 
@@ -38,7 +45,11 @@ class Cost(Base):
     cost_event_id = Column(Integer, nullable=False)
     cost_domain_id = Column(String(20), nullable=False)
     cost_type_concept_id = Column(Integer, nullable=False)
-    currency_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
+
+    @declared_attr
+    def currency_concept_id(cls):
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
+
     total_charge = Column(Numeric)
     total_cost = Column(Numeric)
     total_paid = Column(Numeric)
@@ -50,14 +61,29 @@ class Cost(Base):
     paid_by_primary = Column(Numeric)
     paid_ingredient_cost = Column(Numeric)
     paid_dispensing_fee = Column(Numeric)
-    payer_plan_period_id = Column(ForeignKey(f'{CDM_SCHEMA}.payer_plan_period.payer_plan_period_id'))
+
+    @declared_attr
+    def payer_plan_period_id(cls):
+        return Column(ForeignKey(f'{CDM_SCHEMA}.payer_plan_period.payer_plan_period_id'))
+
     amount_allowed = Column(Numeric)
     revenue_code_concept_id = Column(Integer)
     reveue_code_source_value = Column(String(50))
-    drg_concept_id = Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
+
+    @declared_attr
+    def drg_concept_id(cls):
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
+
     drg_source_value = Column(String(3))
 
-    currency_concept = relationship('Concept', primaryjoin='Cost.currency_concept_id == Concept.concept_id')
-    drg_concept = relationship('Concept', primaryjoin='Cost.drg_concept_id == Concept.concept_id')
-    payer_plan_period = relationship('PayerPlanPeriod')
+    @declared_attr
+    def currency_concept(cls):
+        return relationship('Concept', primaryjoin='Cost.currency_concept_id == Concept.concept_id')
 
+    @declared_attr
+    def drg_concept(cls):
+        return relationship('Concept', primaryjoin='Cost.drg_concept_id == Concept.concept_id')
+
+    @declared_attr
+    def payer_plan_period(cls):
+        return relationship('PayerPlanPeriod')
