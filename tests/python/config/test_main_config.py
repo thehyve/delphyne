@@ -38,17 +38,17 @@ def test_missing_database_raises_validation_error(default_main_config: Dict):
     assert 'database' in str(error.value)
 
 
-def test_sql_parameter_key_empty_string(default_main_config: Dict):
-    sql_paramters = {'var1': ''}
-    default_main_config['sql_parameters'] = sql_paramters
+def test_sql_parameter_value_empty_string(default_main_config: Dict):
+    sql_parameters = {'var1': ''}
+    default_main_config['sql_parameters'] = sql_parameters
     with pytest.raises(ValidationError) as error:
         MainConfig(**default_main_config)
     assert "Strings cannot be empty: var1:" in str(error.value)
 
 
-def test_sql_parameter_value_empty_string(default_main_config: Dict):
-    sql_paramters = {'var1': 'val1', '': 'val2'}
-    default_main_config['sql_parameters'] = sql_paramters
+def test_sql_parameter_key_empty_string(default_main_config: Dict):
+    sql_parameters = {'var1': 'val1', '': 'val2'}
+    default_main_config['sql_parameters'] = sql_parameters
     with pytest.raises(ValidationError) as error:
         MainConfig(**default_main_config)
     assert "Strings cannot be empty: : val2" in str(error.value)
