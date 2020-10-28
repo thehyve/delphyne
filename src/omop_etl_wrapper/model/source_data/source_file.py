@@ -74,6 +74,7 @@ class SourceFile:
 
         :param apply_dtypes: bool
             Apply source_config dtypes to the columns in the DataFrame.
+            If False, all columns will be loaded as 'object' dtype.
         :param force_reload: bool, default False
             If True, remove the cached df (if there is one), and reload
             from source file.
