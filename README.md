@@ -10,6 +10,22 @@ Wrapper for OMOP ETL projects
 ## Features
 -   TODO
 
+
+## Installation
+The package is currently not (yet) available on PyPI, therefore a local installation is needed.
+
+```sh
+git clone https://github.com/thehyve/omop-etl-wrapper.git
+cd omop-etl-wrapper
+
+# regular installation
+pip install .
+
+# or install in editable mode (including test dependencies)
+pip install -e '.[TEST]'
+```
+
+
 # Credits
 This package was created with Cookiecutter and the `cs01/cookiecutter-pypackage` project template.
 
