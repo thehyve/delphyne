@@ -49,6 +49,19 @@ def source_file2(source_data_test_dir: Path) -> SourceFile:
 
 
 @pytest.fixture
+def source_file2_partial_dtypes(source_data_test_dir: Path) -> SourceFile:
+    """Get SourceFile instance of source_file2.tsv with dtypes set for
+    only 2/4 columns."""
+    file_path = source_data_test_dir / 'test_dir1' / 'source_file2.tsv'
+    dtypes = {
+        'column_b': 'Int64',
+        'column_c': 'datetime64[ns]',
+    }
+    params = get_file_params(dtypes=dtypes)
+    return SourceFile(file_path, params)
+
+
+@pytest.fixture
 def sas_source_file(source_data_test_dir: Path) -> SourceFile:
     """Get DataFrame of beer.sas7bdat."""
     file_path = source_data_test_dir / 'test_dir1' / 'beer.sas7bdat'
@@ -71,6 +84,32 @@ def test_source_file2_has_only_object_dtypes(source_file2: SourceFile):
     assert list(df.dtypes) == [dtype('O')] * 4
 
 
+def test_source_file2_has_config_dtypes(source_file2: SourceFile):
+    df = source_file2.get_csv_as_df(apply_dtypes=True)
+    expected_dtypes = {
+        'column_a': dtype('O'),
+        'column_b': pd.Int64Dtype(),
+        'column_c': dtype('<M8[ns]'),
+        'column_d': dtype('float64'),
+    }
+    assert df.dtypes.to_dict() == expected_dtypes
+
+
+def test_source_file2_has_partial_dtypes(source_file2_partial_dtypes: SourceFile):
+    """
+    If for only a subset of the columns the dtypes were provided, those
+    should be applied, and the other columns should have 'object' dtype.
+    """
+    df = source_file2_partial_dtypes.get_csv_as_df(apply_dtypes=True)
+    expected_dtypes = {
+        'column_a': dtype('O'),
+        'column_b': pd.Int64Dtype(),
+        'column_c': dtype('<M8[ns]'),
+        'column_d': dtype('O'),
+    }
+    assert df.dtypes.to_dict() == expected_dtypes
+
+
 def test_get_csv_as_df_requires_delimiter(source_file2: SourceFile):
     del source_file2._params['delimiter']
     with pytest.raises(ValueError) as excinfo:
@@ -83,17 +122,6 @@ def test_get_csv_as_df_requires_encoding(source_file2: SourceFile):
     with pytest.raises(ValueError) as excinfo:
         source_file2.get_csv_as_df(apply_dtypes=False)
     assert "encoding" in str(excinfo.value)
-
-
-def test_source_file2_has_config_dtypes(source_file2: SourceFile):
-    df = source_file2.get_csv_as_df(apply_dtypes=True)
-    expected_dtypes = {
-        'column_a': dtype('O'),
-        'column_b': pd.Int64Dtype(),
-        'column_c': dtype('<M8[ns]'),
-        'column_d': dtype('float64'),
-    }
-    assert df.dtypes.to_dict() == expected_dtypes
 
 
 def test_cache_method_is_called(source_file2: SourceFile):
