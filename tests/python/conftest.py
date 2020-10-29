@@ -8,6 +8,7 @@ import psycopg2
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy_utils import create_database, drop_database
+from src.omop_etl_wrapper.config.models import MainConfig
 from src.omop_etl_wrapper.util.io import read_yaml_file
 from src.omop_etl_wrapper.wrapper import Wrapper
 from time import sleep
@@ -83,19 +84,24 @@ def default_run_config() -> Dict:
 
 
 @pytest.fixture(scope='session')
-def test_db_uri(default_run_config) -> str:
-    db_config = default_run_config['database']
-    hostname = db_config['host']
-    port = db_config['port']
-    database = db_config['database_name']
-    username = db_config['username']
-    password = db_config['password']
+def default_main_config(default_run_config) -> MainConfig:
+    return MainConfig(**default_run_config)
+
+
+@pytest.fixture(scope='session')
+def test_db_uri(default_main_config: MainConfig) -> str:
+    db_config = default_main_config.database
+    hostname = db_config.host
+    port = db_config.port
+    database = db_config.database_name
+    username = db_config.username
+    password = db_config.password.get_secret_value()
     return f'postgresql://{username}:{password}@{hostname}:{port}/{database}'
 
 
 @pytest.mark.usefixtures("container")
 @pytest.fixture(scope='function')
-def test_db(test_db_uri) -> None:
+def test_db(test_db_uri: str) -> None:
     engine = create_engine(test_db_uri)
     create_database(engine.url)
     yield
@@ -104,14 +110,34 @@ def test_db(test_db_uri) -> None:
 
 @pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
-def wrapper_cdm531(default_run_config):
-    wrapper = Wrapper(default_run_config, Base_cdm_531)
+def wrapper_cdm531(default_main_config: MainConfig):
+    wrapper = Wrapper(default_main_config, Base_cdm_531)
     yield wrapper
 
 
 @pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
-def wrapper_cdm600(default_run_config):
-    default_run_config['run_options']['cdm'] = 'cdm600'
-    wrapper = Wrapper(default_run_config, Base_cdm_600)
+def wrapper_cdm600(default_main_config: MainConfig):
+    wrapper = Wrapper(default_main_config, Base_cdm_600)
     yield wrapper
+
+
+@pytest.fixture(scope="session")
+def source_config_dir(test_data_dir: Path) -> Path:
+    return test_data_dir / 'source_data_configs'
+
+
+@pytest.fixture(scope="session")
+def source_data_test_dir(test_data_dir: Path) -> Path:
+    """Directory holding subdirectories with source data test files."""
+    return test_data_dir / 'source_data_files'
+
+
+@pytest.fixture
+def source_config(source_config_dir: Path, source_data_test_dir: Path) -> Dict:
+    source_config_path = source_config_dir / 'source_config.yml'
+    source_config = read_yaml_file(source_config_path)
+    # Insert the resolved path of the source_data_dir in the config
+    source_data_dir = Path(source_data_test_dir / 'test_dir1').resolve()
+    source_config['source_data_folder'] = source_data_dir
+    return source_config

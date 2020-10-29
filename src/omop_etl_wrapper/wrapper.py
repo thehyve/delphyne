@@ -1,14 +1,15 @@
 import logging
 from pathlib import Path
-from typing import Optional, Dict, List, Set
+from typing import Optional, List, Set
 
 import sys
 from sqlalchemy import Table
 from sqlalchemy.schema import CreateSchema
 
-from .cdm import vocabularies as cdm
 from ._paths import STCM_DIR, SOURCE_DATA_CONFIG_PATH
+from .cdm import vocabularies as cdm
 from .cdm._schema_placeholders import VOCAB_SCHEMA
+from .config.models import MainConfig
 from .database import Database
 from .model.etl_stats import EtlStats
 from .model.orm_wrapper import OrmWrapper
@@ -25,19 +26,23 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
     """
     Task coordinator supporting the process of converting source data
     into the OMOP CDM.
-
-    config : Dict
-        The run configuration as read from config.yml.
     """
     cdm = cdm
 
-    def __init__(self, config: Dict[str, Dict], base):
+    def __init__(self, config: MainConfig, base):
+        """
+        :param config: MainConfig
+            The run configuration as read from config.yml.
+        :param base: SQLAlchemy declarative Base
+            Base to which the CDM tables are bound via SQLAlchemy's
+            declarative model.
+        """
         self.db = Database.from_config(config, base)
 
         if not self.db.can_connect(str(self.db.engine.url)):
             sys.exit()
 
-        self.write_reports = config['run_options']['write_reports']
+        self.write_reports = config.run_options.write_reports
 
         super().__init__(database=self.db)
         super(OrmWrapper, self).__init__(database=self.db, config=config)
