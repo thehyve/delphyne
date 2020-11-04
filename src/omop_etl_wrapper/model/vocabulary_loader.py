@@ -124,3 +124,27 @@ class VocabularyLoader:
                 .filter(self._cdm.ConceptClass.concept_class_concept_id == class_concept_id) \
                 .one_or_none()
             return False if not existing_record else True
+
+    def drop_custom_concepts(self, vocab_ids):
+
+        if vocab_ids:
+            with self.db.session_scope() as session:
+                session.query(self._cdm.Concept) \
+                    .filter(self._cdm.Concept.vocabulary_id._in(vocab_ids)) \
+                    .delete()
+
+    def drop_custom_vocabularies(self, vocab_ids):
+
+        if vocab_ids:
+            with self.db.session_scope() as session:
+                session.query(self._cdm.Vocabulary) \
+                    .filter(self._cdm.Vocabulary.vocabulary_id._in(vocab_ids)) \
+                    .delete()
+
+    def drop_custom_classes(self, class_ids):
+
+        if class_ids:
+            with self.db.session_scope() as session:
+                session.query(self._cdm.ConceptClass) \
+                    .filter(self._cdm.ConceptClass.concept_class_id._in(class_ids)) \
+                    .delete()
