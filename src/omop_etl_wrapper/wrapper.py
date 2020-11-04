@@ -67,7 +67,9 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         print('OMOP wrapper goes brrrrrrrr')
 
     def load_custom_vocabularies(self):
+        logger.info(f'Loading custom vocabulary tables: {not self.skip_custom_vocabulary_loading}')
         if not self.skip_custom_vocabulary_loading:
+
             self.vocab_loader.load_custom_vocabulary_tables()
 
     def load_stcm(self):
