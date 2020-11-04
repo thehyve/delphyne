@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Set, Dict
+from typing import List, Tuple, Set, Dict
 
 from .._paths import CUSTOM_VOCAB_DIR
 from ..database import Database
@@ -37,14 +37,27 @@ class VocabularyLoader:
             vocabs = session.query(self._cdm.Vocabulary).all()
             return {v.vocabulary_id: v.vocabulary_version for v in vocabs}
 
+    def _get_existing_class_versions(self) -> Dict[str, Tuple[str,int]]:
+        with self.db.session_scope() as session:
+            classes = session.query(self._cdm.ConceptClass).all()
+            return {c.concept_class_id:
+                        (c.concept_class_name, c.concept_class_concept_id) for c in classes}
+
     def load_custom_vocabulary_tables(self) -> None:
 
-        # TODO: quality checks: mandatory fields, dependencies
-        # self.check_custom_vocabularies_format()
+        # get all vocabularies and versions currently loaded in Vocabulary table
+        existing_vocabs = self._get_existing_vocab_versions()
+        existing_classes = self._get_existing_class_versions()
 
-        # TODO: not sure I need this for anything, see how it is implemented in
-        #  check_if_existing_vocab_version(), check_if_existing_custom_class()
-        # existing_vocabs = self._get_existing_vocab_versions()
+        # TODO: implement to check for accidental overriding / leftover custom vocabularies
+        # get all standard Athena vocabulary names
+        standard_vocabs = self._get_set_of_valid_vocabularies()
+        # get all standard Athena class names
+        standard_classes = self._get_list_of_valid_classes()
+
+        # TODO: quality checks: mandatory fields, dependencies;
+        #  warn if overriding standard Athena vocabulary name
+        # self.check_custom_vocabularies_format()
 
         # get vocabularies and classes that need to be updated
         vocab_ids = self._get_new_custom_vocabulary_ids()
@@ -66,11 +79,9 @@ class VocabularyLoader:
         #  and check that no unknown vocabulary is present (not in Athena nor custom vocab files);
         #  check if the cleanup is time-consuming, if so should preferably not be executed
         #  every time (consider adding a configuration parameter)
-        valid_vocabs = self._get_set_of_valid_vocabularies()
-        self._drop_unused_custom_concepts(valid_vocabs)
-        self._drop_unused_custom_vocabularies(valid_vocabs)
-        valid_classes = self._get_list_of_valid_classes()
-        self._drop_unused_custom_classes(valid_classes)
+        self._drop_unused_custom_concepts(standard_vocabs)
+        self._drop_unused_custom_vocabularies(standard_vocabs)
+        self._drop_unused_custom_classes(standard_classes)
 
     def _get_new_custom_vocabulary_ids(self) -> List[str]:
 
@@ -265,11 +276,11 @@ class VocabularyLoader:
         class_ids = set()
         return class_ids
 
-    def _drop_unused_custom_concepts(self, vocab_ids: List[str]) -> None:
+    def _drop_unused_custom_concepts(self, vocab_ids: Set[str]) -> None:
         pass
 
-    def _drop_unused_custom_vocabularies(self, vocab_ids: List[str]) -> None:
+    def _drop_unused_custom_vocabularies(self, vocab_ids: Set[str]) -> None:
         pass
 
-    def _drop_unused_custom_classes(self, class_ids: List[str]) -> None:
+    def _drop_unused_custom_classes(self, class_ids: Set[str]) -> None:
         pass
