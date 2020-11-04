@@ -64,32 +64,63 @@ class VocabularyLoader:
         valid_classes = self.get_list_of_valid_classes()
         self.drop_unused_custom_classes(valid_classes)
 
-        def get_custom_vocabulary_ids_and_files(self, file_pattern):
+    def get_custom_vocabulary_ids_and_files(self, file_pattern):
 
-            vocab_ids = set()
-            vocab_files = set()
+        vocab_ids = set()
+        vocab_files = set()
 
-            for vocab_file in self.path_custom_vocabularies.glob(file_pattern):
+        for vocab_file in self.path_custom_vocabularies.glob(file_pattern):
 
-                df = pd.read_csv(vocab_file, sep='\t')
-                for _, row in df.iterrows():
-                    vocab_id = df['vocabulary_id']
-                    vocab_version = df['vocabulary_version']
+            df = pd.read_csv(vocab_file, sep='\t')
+            for _, row in df.iterrows():
+                vocab_id = df['vocabulary_id']
+                vocab_version = df['vocabulary_version']
 
-                    if self.check_if_existing_vocab_version(vocab_id, vocab_version):
-                        continue
+                if self.check_if_existing_vocab_version(vocab_id, vocab_version):
+                    continue
 
-                    vocab_ids.add(vocab_id)
-                    vocab_files.add(vocab_file.name)
+                vocab_ids.add(vocab_id)
+                vocab_files.add(vocab_file.name)
 
-            return list(vocab_ids), list(vocab_files)
+        return list(vocab_ids), list(vocab_files)
 
-        def check_if_existing_vocab_version(self, vocab_id, vocab_version):
+    def check_if_existing_vocab_version(self, vocab_id, vocab_version):
 
-            with self.db.session_scope() as session:
-                existing_record = \
-                    session.query(self._cdm.Vocabulary) \
-                        .filter(self._cdm.Vocabulary.vocabulary_id == vocab_id) \
-                        .filter(self._cdm.Vocabulary.vocabulary_version == vocab_version) \
-                        .one_or_none()
-                return False if not existing_record else True
+        with self.db.session_scope() as session:
+            existing_record = \
+                session.query(self._cdm.Vocabulary) \
+                    .filter(self._cdm.Vocabulary.vocabulary_id == vocab_id) \
+                    .filter(self._cdm.Vocabulary.vocabulary_version == vocab_version) \
+                    .one_or_none()
+            return False if not existing_record else True
+
+    def get_custom_class_ids_and_files(self, file_pattern):
+
+        class_ids = set()
+        class_files = set()
+
+        for class_file in self.path_custom_vocabularies.glob(file_pattern):
+            df = pd.read_csv(class_file, sep='\t')
+            for _, row in df.iterrows():
+                class_id = df['concept_class_id']
+                class_name = df['concept_class_name']
+                class_concept_id = df['concept_class_concept_id']
+
+                if self.check_if_existing_custom_class(class_id, class_name, class_concept_id):
+                    continue
+
+                class_ids.add(class_id)
+                class_files.add(class_file)
+
+        return list(class_ids), list(class_files)
+
+    def check_if_existing_custom_class(self, class_id, class_name, class_concept_id):
+
+        with self.db.session_scope() as session:
+            existing_record = \
+                session.query(self._cdm.ConceptClass) \
+                .filter(self._cdm.ConceptClass.concept_class_id == class_id) \
+                .filter(self._cdm.ConceptClass.concept_class_name == class_name) \
+                .filter(self._cdm.ConceptClass.concept_class_concept_id == class_concept_id) \
+                .one_or_none()
+            return False if not existing_record else True
