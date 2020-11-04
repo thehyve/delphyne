@@ -4,6 +4,7 @@ from typing import List
 from .._paths import CUSTOM_VOCAB_DIR
 from ..database import Database
 from ..util.io import is_hidden
+import pandas as pd
 
 
 class VocabularyLoader:
@@ -62,3 +63,33 @@ class VocabularyLoader:
         self.drop_unused_custom_vocabularies(valid_vocabs)
         valid_classes = self.get_list_of_valid_classes()
         self.drop_unused_custom_classes(valid_classes)
+
+        def get_custom_vocabulary_ids_and_files(self, file_pattern):
+
+            vocab_ids = set()
+            vocab_files = set()
+
+            for vocab_file in self.path_custom_vocabularies.glob(file_pattern):
+
+                df = pd.read_csv(vocab_file, sep='\t')
+                for _, row in df.iterrows():
+                    vocab_id = df['vocabulary_id']
+                    vocab_version = df['vocabulary_version']
+
+                    if self.check_if_existing_vocab_version(vocab_id, vocab_version):
+                        continue
+
+                    vocab_ids.add(vocab_id)
+                    vocab_files.add(vocab_file.name)
+
+            return list(vocab_ids), list(vocab_files)
+
+        def check_if_existing_vocab_version(self, vocab_id, vocab_version):
+
+            with self.db.session_scope() as session:
+                existing_record = \
+                    session.query(self._cdm.Vocabulary) \
+                        .filter(self._cdm.Vocabulary.vocabulary_id == vocab_id) \
+                        .filter(self._cdm.Vocabulary.vocabulary_version == vocab_version) \
+                        .one_or_none()
+                return False if not existing_record else True
