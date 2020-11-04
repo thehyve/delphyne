@@ -148,3 +148,69 @@ class VocabularyLoader:
                 session.query(self._cdm.ConceptClass) \
                     .filter(self._cdm.ConceptClass.concept_class_id._in(class_ids)) \
                     .delete()
+
+    def load_custom_classes(self, class_ids, class_files):
+
+        if class_ids:
+
+            with self.db.session_scope() as session:
+
+                for class_file in class_files:
+                    df = pd.read_csv(self.path_custom_vocabularies / class_file, sep='\t')
+                    df = df[df['concept_class_id'].isin(class_ids)]
+
+                    records = []
+                    for _,row in df.iterrows():
+                        records.append(self._cdm.ConceptClass(
+                            concept_class_id=row['concept_class_id'],
+                            concept_class_name=row['concept_class_id'],
+                            concept_class_concept_id=row['concept_class_concept_id']
+                        ))
+                    session.add_all(records)
+
+    def load_custom_vocabularies(self, vocab_ids, vocab_files):
+
+        if vocab_ids:
+
+            with self.db.session_scope() as session:
+
+                for vocab_file in vocab_files:
+                    df = pd.read_csv(self.path_custom_vocabularies / vocab_file, sep='\t')
+                    df = df[df['vocabulary_id'].isin(vocab_ids)]
+
+                    records = []
+                    for _, row in df.iterrows():
+                        records.append(self._cdm.Vocabulary(
+                            vocabulary_id=row['vocabulary_id'],
+                            vocabulary_name=row['vocabulary_name'],
+                            vocabulary_reference=row['vocabulary_reference'],
+                            vocabulary_version=row['vocabulary_version'],
+                            vocabulary_concept_id=row['vocabulary_concept_id']
+                        ))
+                    session.add_all(records)
+
+    def load_custom_concepts(self, vocab_ids, concept_file_pattern):
+
+        if vocab_ids:
+
+            with self.db.session_scope() as session:
+
+                for concept_file in self.path_custom_vocabularies.glob(concept_file_pattern):
+                    df = pd.read_csv(concept_file, sep='\t')
+                    df = df[df['vocabulary_id'].isin(vocab_ids)]
+
+                    records = []
+                    for _, row in df.iterrows():
+                        records.append(self._cdm.Concept(
+                            concept_id=row['concept_id'],
+                            concept_name=row['concept_name'],
+                            domain_id=row['domain_id'],
+                            vocabulary_id=row['vocabulary_id'],
+                            concept_class_id=row['concept_class_id'],
+                            standard_concept=row['standard_concept'],
+                            concept_code=row['concept_code'],
+                            valid_start_date=row['valid_start_date'],
+                            valid_end_date=row['valid_end_date'],
+                            invalid_reason=row['invalid_reason']
+                        ))
+                    session.add_all(records)
