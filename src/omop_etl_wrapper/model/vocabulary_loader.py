@@ -37,6 +37,8 @@ class VocabularyLoader:
         # TODO: quality checks: mandatory fields, dependencies
         # self.check_custom_vocabularies_format()
 
+        existing_vocabs = self._get_loaded_vocab_versions()
+
         vocab_ids, vocab_files = self.get_custom_vocabulary_ids_and_files()
         class_ids, class_files = self.get_custom_class_ids_and_files()
 
@@ -68,14 +70,14 @@ class VocabularyLoader:
 
             df = pd.read_csv(vocab_file, sep='\t')
             for _, row in df.iterrows():
-                vocab_id = df['vocabulary_id']
-                vocab_version = df['vocabulary_version']
+                vocab_id = row['vocabulary_id']
+                vocab_version = row['vocabulary_version']
 
                 if self.check_if_existing_vocab_version(vocab_id, vocab_version):
                     continue
 
                 vocab_ids.add(vocab_id)
-                vocab_files.add(vocab_file.name)
+                vocab_files.add(vocab_file)
 
         return list(vocab_ids), list(vocab_files)
 
@@ -97,9 +99,9 @@ class VocabularyLoader:
         for class_file in self._subset_custom_vocab_files('concept_class'):
             df = pd.read_csv(class_file, sep='\t')
             for _, row in df.iterrows():
-                class_id = df['concept_class_id']
-                class_name = df['concept_class_name']
-                class_concept_id = df['concept_class_concept_id']
+                class_id = row['concept_class_id']
+                class_name = row['concept_class_name']
+                class_concept_id = row['concept_class_concept_id']
 
                 if self.check_if_existing_custom_class(class_id, class_name, class_concept_id):
                     continue
@@ -125,24 +127,24 @@ class VocabularyLoader:
         if vocab_ids:
             with self.db.session_scope() as session:
                 session.query(self._cdm.Concept) \
-                    .filter(self._cdm.Concept.vocabulary_id._in(vocab_ids)) \
-                    .delete()
+                    .filter(self._cdm.Concept.vocabulary_id.in_(vocab_ids)) \
+                    .delete(synchronize_session='fetch')
 
     def drop_custom_vocabularies(self, vocab_ids):
 
         if vocab_ids:
             with self.db.session_scope() as session:
                 session.query(self._cdm.Vocabulary) \
-                    .filter(self._cdm.Vocabulary.vocabulary_id._in(vocab_ids)) \
-                    .delete()
+                    .filter(self._cdm.Vocabulary.vocabulary_id.in_(vocab_ids)) \
+                    .delete(synchronize_session='fetch')
 
     def drop_custom_classes(self, class_ids):
 
         if class_ids:
             with self.db.session_scope() as session:
                 session.query(self._cdm.ConceptClass) \
-                    .filter(self._cdm.ConceptClass.concept_class_id._in(class_ids)) \
-                    .delete()
+                    .filter(self._cdm.ConceptClass.concept_class_id.in_(class_ids)) \
+                    .delete(synchronize_session='fetch')
 
     def load_custom_classes(self, class_ids, class_files):
 
@@ -151,7 +153,7 @@ class VocabularyLoader:
             with self.db.session_scope() as session:
 
                 for class_file in class_files:
-                    df = pd.read_csv(CUSTOM_VOCAB_DIR / class_file, sep='\t')
+                    df = pd.read_csv(class_file, sep='\t')
                     df = df[df['concept_class_id'].isin(class_ids)]
 
                     records = []
@@ -170,7 +172,7 @@ class VocabularyLoader:
             with self.db.session_scope() as session:
 
                 for vocab_file in vocab_files:
-                    df = pd.read_csv(CUSTOM_VOCAB_DIR / vocab_file, sep='\t')
+                    df = pd.read_csv(vocab_file, sep='\t')
                     df = df[df['vocabulary_id'].isin(vocab_ids)]
 
                     records = []
