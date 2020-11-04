@@ -13,6 +13,7 @@ from .config.models import MainConfig
 from .database import Database
 from .model.etl_stats import EtlStats
 from .model.orm_wrapper import OrmWrapper
+from .model.vocabulary_loader import VocabularyLoader
 from .model.raw_sql_wrapper import RawSqlWrapper
 from .model.source_data import SourceData
 from .util.io import read_yaml_file
@@ -49,6 +50,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
 
         self.etl_stats = EtlStats()
         self.source_data: Optional[SourceData] = self._set_source_data()
+        self.vocab_loader = VocabularyLoader(self.db, cdm)
 
     def _set_source_data(self):
         if not SOURCE_DATA_CONFIG_PATH.exists():
