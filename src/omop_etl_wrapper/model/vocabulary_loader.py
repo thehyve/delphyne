@@ -42,6 +42,8 @@ class VocabularyLoader:
         vocab_ids, vocab_files = self.get_custom_vocabulary_ids_and_files()
         class_ids, class_files = self.get_custom_class_ids_and_files()
 
+        # TODO: remove/reapply constraints where needed
+        # TODO: drop/load custom vocabulary concept id, if != 0
         # drop older versions
         self.drop_custom_concepts(vocab_ids)
         self.drop_custom_vocabularies(vocab_ids)

@@ -30,7 +30,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
     """
     cdm = cdm
 
-    def __init__(self, config: MainConfig, base):
+    def __init__(self, config: MainConfig, base, cdm):
         """
         :param config: MainConfig
             The run configuration as read from config.yml.
@@ -39,6 +39,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
             declarative model.
         """
         self.db = Database.from_config(config, base)
+        self.cdm = cdm
 
         if not self.db.can_connect(str(self.db.engine.url)):
             sys.exit()
@@ -50,7 +51,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
 
         self.etl_stats = EtlStats()
         self.source_data: Optional[SourceData] = self._set_source_data()
-        self.vocab_loader = VocabularyLoader(self.db, cdm)
+        self.vocab_loader = VocabularyLoader(self.db, self.cdm)
         self.skip_custom_vocabulary_loading: bool = \
             config.run_options.skip_custom_vocabulary_loading
 
