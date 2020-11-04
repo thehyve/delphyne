@@ -5,6 +5,7 @@ from .._paths import CUSTOM_VOCAB_DIR
 from ..database import Database
 from ..util.io import is_hidden
 import pandas as pd
+import numpy as np
 
 
 class VocabularyLoader:
@@ -195,8 +196,10 @@ class VocabularyLoader:
             with self.db.session_scope() as session:
 
                 for concept_file in self._subset_custom_vocab_files('concept'):
+
                     df = pd.read_csv(concept_file, sep='\t')
                     df = df[df['vocabulary_id'].isin(vocab_ids)]
+                    df = df.replace({np.nan: None})
 
                     records = []
                     for _, row in df.iterrows():
