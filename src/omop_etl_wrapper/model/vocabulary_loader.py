@@ -89,10 +89,13 @@ class VocabularyLoader:
                 if self._check_if_existing_vocab_version(vocab_id, vocab_version):
                     continue
 
+                logging.info(f'Found vocabulary: {vocab_id, vocab_version}')
+
                 vocab_ids.add(vocab_id)
                 vocab_files.add(vocab_file)
 
-        logging.info(f'Found vocabularies: {vocab_ids}')
+        if not vocab_ids:
+            logging.info('No new vocabulary version found')
 
         return list(vocab_ids), list(vocab_files)
 
@@ -118,16 +121,19 @@ class VocabularyLoader:
             for _, row in df.iterrows():
                 class_id = row['concept_class_id']
                 class_name = row['concept_class_name']
-                class_concept_id = row['concept_class_concept_id']
+                class_concept_id = int(row['concept_class_concept_id'])
 
                 # skip loading if class version already present
                 if self._check_if_existing_custom_class(class_id, class_name, class_concept_id):
                     continue
 
+                logging.info(f'Found class: {class_id, class_name, class_concept_id}')
+
                 class_ids.add(class_id)
                 class_files.add(class_file)
 
-        logging.info(f'Found classes: {class_ids}')
+        if not class_ids:
+            logging.info('No new class version found')
 
         return list(class_ids), list(class_files)
 
@@ -192,7 +198,7 @@ class VocabularyLoader:
                     for _,row in df.iterrows():
                         records.append(self._cdm.ConceptClass(
                             concept_class_id=row['concept_class_id'],
-                            concept_class_name=row['concept_class_id'],
+                            concept_class_name=row['concept_class_name'],
                             concept_class_concept_id=row['concept_class_concept_id']
                         ))
                     session.add_all(records)
