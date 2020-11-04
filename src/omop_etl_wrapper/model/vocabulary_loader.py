@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List
+from typing import List, Tuple, Dict
 
 from .._paths import CUSTOM_VOCAB_DIR
 from ..database import Database
@@ -32,12 +32,12 @@ class VocabularyLoader:
         # based on the file name conventions (e.g. "concept")
         return [f for f in self._custom_vocab_files if f.stem.endswith(omop_table)]
 
-    def _get_existing_vocab_versions(self):
+    def _get_existing_vocab_versions(self) -> Dict[str,str]:
         with self.db.session_scope() as session:
             vocabs = session.query(self._cdm.Vocabulary).all()
             return {v.vocabulary_id: v.vocabulary_version for v in vocabs}
 
-    def load_custom_vocabulary_tables(self):
+    def load_custom_vocabulary_tables(self) -> None:
 
         # TODO: quality checks: mandatory fields, dependencies
         # self.check_custom_vocabularies_format()
@@ -63,15 +63,16 @@ class VocabularyLoader:
         # TODO: remove obsolete versions (i.e. cleanup in case of renaming of vocabs/classes);
         #  if the name has been changed, the previous drop won't find them;
         #  NOTE: for this to work, you need to keep a list of valid Athena vocabulary ids
-        #  and check that no unknown vocabulary is present (not in Athena or custom vocab files);
-        #  the cleanup could be rather time-consuming and should not be executed every time
+        #  and check that no unknown vocabulary is present (not in Athena nor custom vocab files);
+        #  check if the cleanup is time-consuming, if so should preferably not be executed
+        #  every time (consider adding a configuration parameter)
         valid_vocabs = self._get_list_of_valid_vocabularies()
         self._drop_unused_custom_concepts(valid_vocabs)
         self._drop_unused_custom_vocabularies(valid_vocabs)
         valid_classes = self._get_list_of_valid_classes()
         self._drop_unused_custom_classes(valid_classes)
 
-    def _get_new_custom_vocabulary_ids_and_files(self):
+    def _get_new_custom_vocabulary_ids_and_files(self) -> Tuple[List, List]:
 
         logging.info('Looking for new custom vocabulary versions')
 
@@ -99,7 +100,7 @@ class VocabularyLoader:
 
         return list(vocab_ids), list(vocab_files)
 
-    def _check_if_existing_vocab_version(self, vocab_id, vocab_version):
+    def _check_if_existing_vocab_version(self, vocab_id: str, vocab_version: str) -> bool:
 
         with self.db.session_scope() as session:
             existing_record = \
@@ -109,7 +110,7 @@ class VocabularyLoader:
                     .one_or_none()
             return False if not existing_record else True
 
-    def _get_custom_class_ids_and_files(self):
+    def _get_custom_class_ids_and_files(self) -> Tuple[List, List]:
 
         logging.info('Looking for new custom class versions')
 
@@ -121,10 +122,11 @@ class VocabularyLoader:
             for _, row in df.iterrows():
                 class_id = row['concept_class_id']
                 class_name = row['concept_class_name']
-                class_concept_id = int(row['concept_class_concept_id'])
+                class_concept_id = row['concept_class_concept_id']
 
                 # skip loading if class version already present
-                if self._check_if_existing_custom_class(class_id, class_name, class_concept_id):
+                if self._check_if_existing_custom_class(class_id, class_name,
+                                                        int(class_concept_id)):
                     continue
 
                 logging.info(f'Found class: {class_id, class_name, class_concept_id}')
@@ -137,7 +139,8 @@ class VocabularyLoader:
 
         return list(class_ids), list(class_files)
 
-    def _check_if_existing_custom_class(self, class_id, class_name, class_concept_id):
+    def _check_if_existing_custom_class(self, class_id: str, class_name: str,
+                                        class_concept_id: int) -> bool:
 
         with self.db.session_scope() as session:
             existing_record = \
@@ -148,7 +151,7 @@ class VocabularyLoader:
                 .one_or_none()
             return False if not existing_record else True
 
-    def _drop_custom_concepts(self, vocab_ids):
+    def _drop_custom_concepts(self, vocab_ids: List[str]) -> None:
 
         logging.info(f'Dropping old custom concepts: '
                      f'{True if vocab_ids else False}')
@@ -159,7 +162,7 @@ class VocabularyLoader:
                     .filter(self._cdm.Concept.vocabulary_id.in_(vocab_ids)) \
                     .delete(synchronize_session='fetch')
 
-    def _drop_custom_vocabularies(self, vocab_ids):
+    def _drop_custom_vocabularies(self, vocab_ids: List[str]) -> None:
 
         logging.info(f'Dropping old custom vocabulary versions: '
                      f'{True if vocab_ids else False}')
@@ -170,7 +173,7 @@ class VocabularyLoader:
                     .filter(self._cdm.Vocabulary.vocabulary_id.in_(vocab_ids)) \
                     .delete(synchronize_session='fetch')
 
-    def _drop_custom_classes(self, class_ids):
+    def _drop_custom_classes(self, class_ids: List[str]) -> None:
 
         logging.info(f'Dropping old custom concept class versions: '
                      f'{True if class_ids else False}')
@@ -181,7 +184,7 @@ class VocabularyLoader:
                     .filter(self._cdm.ConceptClass.concept_class_id.in_(class_ids)) \
                     .delete(synchronize_session='fetch')
 
-    def _load_custom_classes(self, class_ids, class_files):
+    def _load_custom_classes(self, class_ids: List[str], class_files: List[Path]) -> None:
 
         logging.info(f'Loading new custom class versions: '
                      f'{True if class_ids else False}')
@@ -203,7 +206,7 @@ class VocabularyLoader:
                         ))
                     session.add_all(records)
 
-    def _load_custom_vocabularies(self, vocab_ids, vocab_files):
+    def _load_custom_vocabularies(self, vocab_ids: List[str], vocab_files: List[Path]) -> None:
 
         logging.info(f'Loading new custom vocabulary versions: '
                      f'{True if vocab_ids else False}')
@@ -227,7 +230,7 @@ class VocabularyLoader:
                         ))
                     session.add_all(records)
 
-    def _load_custom_concepts(self, vocab_ids):
+    def _load_custom_concepts(self, vocab_ids: List[str]) -> None:
 
         logging.info(f'Loading new custom concept_ids: '
                      f'{True if vocab_ids else False}')
@@ -258,17 +261,17 @@ class VocabularyLoader:
                         ))
                     session.add_all(records)
 
-    def _get_list_of_valid_vocabularies(self):
+    def _get_list_of_valid_vocabularies(self) -> None:
         pass
 
-    def _get_list_of_valid_classes(self):
+    def _get_list_of_valid_classes(self) -> None:
         pass
 
-    def _drop_unused_custom_concepts(self, vocab_ids):
+    def _drop_unused_custom_concepts(self, vocab_ids: List[str]) -> None:
         pass
 
-    def _drop_unused_custom_vocabularies(self, vocab_ids):
+    def _drop_unused_custom_vocabularies(self, vocab_ids: List[str]) -> None:
         pass
 
-    def _drop_unused_custom_classes(self, class_ids):
+    def _drop_unused_custom_classes(self, class_ids: List[str]) -> None:
         pass
