@@ -214,3 +214,18 @@ class VocabularyLoader:
                             invalid_reason=row['invalid_reason']
                         ))
                     session.add_all(records)
+
+    def get_list_of_valid_vocabularies(self):
+        pass
+
+    def get_list_of_valid_classes(self):
+        pass
+
+    def drop_unused_custom_concepts(self, vocab_ids):
+        pass
+
+    def drop_unused_custom_vocabularies(self, vocab_ids):
+        pass
+
+    def drop_unused_custom_classes(self, class_ids):
+        pass
