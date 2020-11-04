@@ -30,3 +30,35 @@ class VocabularyLoader:
         with self.db.session_scope() as session:
             vocabs = session.query(self._cdm.Vocabulary).all()
             return {v.vocabulary_id: v.vocabulary_version for v in vocabs}
+
+    def load_custom_vocabulary_tables(self):
+
+        # patterns
+        VOCAB_FILE_PATTERN = '*_vocabulary.tsv'
+        CLASS_FILE_PATTERN = '*_concept_class.tsv'
+        CONCEPT_FILE_PATTERN = '*_concept.tsv'
+
+        # TODO: quality checks: mandatory fields, dependencies
+        # self.check_custom_vocabularies_format()
+
+        vocab_ids, vocab_files = self.get_custom_vocabulary_ids_and_files(VOCAB_FILE_PATTERN)
+        class_ids, class_files = self.get_custom_class_ids_and_files(CLASS_FILE_PATTERN)
+
+        # drop older versions
+        self.drop_custom_concepts(vocab_ids)
+        self.drop_custom_vocabularies(vocab_ids)
+        self.drop_custom_classes(class_ids)
+        # load new versions
+        self.load_custom_classes(class_ids, class_files)
+        self.load_custom_vocabularies(vocab_ids, vocab_files)
+        self.load_custom_concepts(vocab_ids, CONCEPT_FILE_PATTERN)
+        # TODO: remove obsolete versions (i.e. cleanup in case of renaming of vocabs/classes);
+        #  if the name has been changed, the previous drop won't find them;
+        #  NOTE: for this to work, you need to keep a list of valid Athena vocabulary ids
+        #  and check that no unknown vocabulary is present (not in Athena or custom vocab files);
+        #  the cleanup could be rather time-consuming and should not be executed every time
+        valid_vocabs = self.get_list_of_valid_vocabularies()
+        self.drop_unused_custom_concepts(valid_vocabs)
+        self.drop_unused_custom_vocabularies(valid_vocabs)
+        valid_classes = self.get_list_of_valid_classes()
+        self.drop_unused_custom_classes(valid_classes)
