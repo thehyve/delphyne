@@ -34,16 +34,11 @@ class VocabularyLoader:
 
     def load_custom_vocabulary_tables(self):
 
-        # patterns
-        VOCAB_FILE_PATTERN = '*_vocabulary.tsv'
-        CLASS_FILE_PATTERN = '*_concept_class.tsv'
-        CONCEPT_FILE_PATTERN = '*_concept.tsv'
-
         # TODO: quality checks: mandatory fields, dependencies
         # self.check_custom_vocabularies_format()
 
-        vocab_ids, vocab_files = self.get_custom_vocabulary_ids_and_files(VOCAB_FILE_PATTERN)
-        class_ids, class_files = self.get_custom_class_ids_and_files(CLASS_FILE_PATTERN)
+        vocab_ids, vocab_files = self.get_custom_vocabulary_ids_and_files()
+        class_ids, class_files = self.get_custom_class_ids_and_files()
 
         # drop older versions
         self.drop_custom_concepts(vocab_ids)
@@ -52,7 +47,7 @@ class VocabularyLoader:
         # load new versions
         self.load_custom_classes(class_ids, class_files)
         self.load_custom_vocabularies(vocab_ids, vocab_files)
-        self.load_custom_concepts(vocab_ids, CONCEPT_FILE_PATTERN)
+        self.load_custom_concepts(vocab_ids)
         # TODO: remove obsolete versions (i.e. cleanup in case of renaming of vocabs/classes);
         #  if the name has been changed, the previous drop won't find them;
         #  NOTE: for this to work, you need to keep a list of valid Athena vocabulary ids
@@ -64,12 +59,12 @@ class VocabularyLoader:
         valid_classes = self.get_list_of_valid_classes()
         self.drop_unused_custom_classes(valid_classes)
 
-    def get_custom_vocabulary_ids_and_files(self, file_pattern):
+    def get_custom_vocabulary_ids_and_files(self):
 
         vocab_ids = set()
         vocab_files = set()
 
-        for vocab_file in self.path_custom_vocabularies.glob(file_pattern):
+        for vocab_file in self._subset_custom_vocab_files('vocabulary'):
 
             df = pd.read_csv(vocab_file, sep='\t')
             for _, row in df.iterrows():
@@ -94,12 +89,12 @@ class VocabularyLoader:
                     .one_or_none()
             return False if not existing_record else True
 
-    def get_custom_class_ids_and_files(self, file_pattern):
+    def get_custom_class_ids_and_files(self):
 
         class_ids = set()
         class_files = set()
 
-        for class_file in self.path_custom_vocabularies.glob(file_pattern):
+        for class_file in self._subset_custom_vocab_files('concept_class'):
             df = pd.read_csv(class_file, sep='\t')
             for _, row in df.iterrows():
                 class_id = df['concept_class_id']
@@ -156,7 +151,7 @@ class VocabularyLoader:
             with self.db.session_scope() as session:
 
                 for class_file in class_files:
-                    df = pd.read_csv(self.path_custom_vocabularies / class_file, sep='\t')
+                    df = pd.read_csv(CUSTOM_VOCAB_DIR / class_file, sep='\t')
                     df = df[df['concept_class_id'].isin(class_ids)]
 
                     records = []
@@ -175,7 +170,7 @@ class VocabularyLoader:
             with self.db.session_scope() as session:
 
                 for vocab_file in vocab_files:
-                    df = pd.read_csv(self.path_custom_vocabularies / vocab_file, sep='\t')
+                    df = pd.read_csv(CUSTOM_VOCAB_DIR / vocab_file, sep='\t')
                     df = df[df['vocabulary_id'].isin(vocab_ids)]
 
                     records = []
@@ -189,13 +184,13 @@ class VocabularyLoader:
                         ))
                     session.add_all(records)
 
-    def load_custom_concepts(self, vocab_ids, concept_file_pattern):
+    def load_custom_concepts(self, vocab_ids):
 
         if vocab_ids:
 
             with self.db.session_scope() as session:
 
-                for concept_file in self.path_custom_vocabularies.glob(concept_file_pattern):
+                for concept_file in self._subset_custom_vocab_files('concept'):
                     df = pd.read_csv(concept_file, sep='\t')
                     df = df[df['vocabulary_id'].isin(vocab_ids)]
 
