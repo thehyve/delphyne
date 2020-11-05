@@ -62,8 +62,8 @@ class ConstraintManager:
                 elif not is_pk and drop_constraint:
                     constraints.append(constraint)
 
-            for index in table.indexes:
-                if drop_index:
+            if drop_index:
+                for index in table.indexes:
                     indexes.append(index)
 
         for index in indexes:
