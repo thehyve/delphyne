@@ -12,6 +12,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 from sqlalchemy_utils.functions import database_exists
 
+from .constraints import ConstraintManager
 from .session_tracker import SessionTracker
 from ..config.models import MainConfig
 from ..model.etl_stats import EtlTransformation
@@ -23,10 +24,11 @@ class Database:
     schema_translate_map: Dict = {}
 
     def __init__(self, uri: str, schema_translate_map: Dict[str, str], base):
+        Database.schema_translate_map = schema_translate_map
         self.engine = create_engine(uri, executemany_mode='values')
         self.base = base
+        self.constraint_manager = ConstraintManager(self)
         self._sessionmaker = sessionmaker(bind=self.engine, autoflush=False)
-        Database.schema_translate_map = schema_translate_map
 
     @classmethod
     def from_config(cls, config: MainConfig, base) -> Database:
