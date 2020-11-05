@@ -56,156 +56,156 @@ from src.omop_etl_wrapper.cdm.vocabularies import (
     BaseCohortDefinition,
 )
 
-Base_cdm_531 = declarative_base()
+Base = declarative_base()
 
 
-class Person(BasePersonCdm531, Base_cdm_531):
+class Person(BasePersonCdm531, Base):
     pass
 
 
-class Death(BaseDeathCdm531, Base_cdm_531):
+class Death(BaseDeathCdm531, Base):
     pass
 
 
-class Note(BaseNoteCdm531, Base_cdm_531):
+class Note(BaseNoteCdm531, Base):
     pass
 
 
-class Measurement(BaseMeasurementCdm531, Base_cdm_531):
+class Measurement(BaseMeasurementCdm531, Base):
     pass
 
 
-class NoteNlp(BaseNoteNlpCdm531, Base_cdm_531):
+class NoteNlp(BaseNoteNlpCdm531, Base):
     pass
 
 
-class Observation(BaseObservationCdm531, Base_cdm_531):
+class Observation(BaseObservationCdm531, Base):
     pass
 
 
-class Specimen(BaseSpecimenCdm531, Base_cdm_531):
+class Specimen(BaseSpecimenCdm531, Base):
     pass
 
 
-class StemTable(BaseStemTableCdm531, Base_cdm_531):
+class StemTable(BaseStemTableCdm531, Base):
     pass
 
 
-class VisitDetail(BaseVisitDetailCdm531, Base_cdm_531):
+class VisitDetail(BaseVisitDetailCdm531, Base):
     pass
 
 
-class ConditionOccurrence(BaseConditionOccurrenceCdm531, Base_cdm_531):
+class ConditionOccurrence(BaseConditionOccurrenceCdm531, Base):
     pass
 
 
-class DeviceExposure(BaseDeviceExposureCdm531, Base_cdm_531):
+class DeviceExposure(BaseDeviceExposureCdm531, Base):
     pass
 
 
-class DrugExposure(BaseDrugExposureCdm531, Base_cdm_531):
+class DrugExposure(BaseDrugExposureCdm531, Base):
     pass
 
 
-class FactRelationship(BaseFactRelationshipCdm531, Base_cdm_531):
+class FactRelationship(BaseFactRelationshipCdm531, Base):
     pass
 
 
-class ObservationPeriod(BaseObservationPeriodCdm531, Base_cdm_531):
+class ObservationPeriod(BaseObservationPeriodCdm531, Base):
     pass
 
 
-class ProcedureOccurrence(BaseProcedureOccurrenceCdm531, Base_cdm_531):
+class ProcedureOccurrence(BaseProcedureOccurrenceCdm531, Base):
     pass
 
 
-class VisitOccurrence(BaseVisitOccurrenceCdm531, Base_cdm_531):
+class VisitOccurrence(BaseVisitOccurrenceCdm531, Base):
     pass
 
 
-class Location(BaseLocationCdm531, Base_cdm_531):
+class Location(BaseLocationCdm531, Base):
     pass
 
 
-class CareSite(BaseCareSiteCdm531, Base_cdm_531):
+class CareSite(BaseCareSiteCdm531, Base):
     pass
 
 
-class Provider(BaseProviderCdm531, Base_cdm_531):
+class Provider(BaseProviderCdm531, Base):
     pass
 
 
-class Cost(BaseCostCdm531, Base_cdm_531):
+class Cost(BaseCostCdm531, Base):
     pass
 
 
-class PayerPlanPeriod(BasePayerPlanPeriodCdm531, Base_cdm_531):
+class PayerPlanPeriod(BasePayerPlanPeriodCdm531, Base):
     pass
 
 
-class Cohort(BaseCohortCdm531, Base_cdm_531):
+class Cohort(BaseCohortCdm531, Base):
     pass
 
 
-class DoseEra(BaseDoseEraCdm531, Base_cdm_531):
+class DoseEra(BaseDoseEraCdm531, Base):
     pass
 
 
-class DrugEra(BaseDrugEraCdm531, Base_cdm_531):
+class DrugEra(BaseDrugEraCdm531, Base):
     pass
 
 
-class ConditionEra(BaseConditionEraCdm531, Base_cdm_531):
+class ConditionEra(BaseConditionEraCdm531, Base):
     pass
 
 
-class CdmSource(BaseCdmSourceCdm531, Base_cdm_531):
+class CdmSource(BaseCdmSourceCdm531, Base):
     pass
 
 
-class Metadata(BaseMetadataCdm531, Base_cdm_531):
+class Metadata(BaseMetadataCdm531, Base):
     pass
 
 
-class Concept(BaseConcept, Base_cdm_531):
+class Concept(BaseConcept, Base):
     pass
 
 
-class ConceptAncestor(BaseConceptAncestor, Base_cdm_531):
+class ConceptAncestor(BaseConceptAncestor, Base):
     pass
 
 
-class ConceptClass(BaseConceptClass, Base_cdm_531):
+class ConceptClass(BaseConceptClass, Base):
     pass
 
 
-class ConceptRelationship(BaseConceptRelationship, Base_cdm_531):
+class ConceptRelationship(BaseConceptRelationship, Base):
     pass
 
 
-class ConceptSynonym(BaseConceptSynonym, Base_cdm_531):
+class ConceptSynonym(BaseConceptSynonym, Base):
     pass
 
 
-class DrugStrength(BaseDrugStrength, Base_cdm_531):
+class DrugStrength(BaseDrugStrength, Base):
     pass
 
 
-class Relationship(BaseRelationship, Base_cdm_531):
+class Relationship(BaseRelationship, Base):
     pass
 
 
-class SourceToConceptMap(BaseSourceToConceptMap, Base_cdm_531):
+class SourceToConceptMap(BaseSourceToConceptMap, Base):
     pass
 
 
-class Vocabulary(BaseVocabulary, Base_cdm_531):
+class Vocabulary(BaseVocabulary, Base):
     pass
 
 
-class Domain(BaseDomain, Base_cdm_531):
+class Domain(BaseDomain, Base):
     pass
 
 
-class CohortDefinition(BaseCohortDefinition, Base_cdm_531):
+class CohortDefinition(BaseCohortDefinition, Base):
     pass
