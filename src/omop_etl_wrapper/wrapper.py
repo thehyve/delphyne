@@ -30,16 +30,14 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
     """
     cdm = cdm
 
-    def __init__(self, config: MainConfig, base, cdm):
+    def __init__(self, config: MainConfig, cdm_):
         """
         :param config: MainConfig
             The run configuration as read from config.yml.
-        :param base: SQLAlchemy declarative Base
-            Base to which the CDM tables are bound via SQLAlchemy's
-            declarative model.
+        :param cdm_: Module containing the SQLAlchemy declarative Base
+            and the CDM tables.
         """
-        self.db = Database.from_config(config, base)
-        self.cdm = cdm
+        self.db = Database.from_config(config, cdm_.Base)
 
         if not self.db.can_connect(str(self.db.engine.url)):
             sys.exit()
@@ -51,7 +49,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
 
         self.etl_stats = EtlStats()
         self.source_data: Optional[SourceData] = self._set_source_data()
-        self.vocab_loader = VocabularyLoader(self.db, self.cdm)
+        self.vocab_loader = VocabularyLoader(self.db, cdm_)
         self.skip_custom_vocabulary_loading: bool = \
             config.run_options.skip_custom_vocabulary_loading
 
