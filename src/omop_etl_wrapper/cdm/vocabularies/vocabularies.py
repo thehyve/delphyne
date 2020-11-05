@@ -9,7 +9,7 @@ class BaseConcept:
     __tablename__ = 'concept'
     __table_args__ = {'schema': VOCAB_SCHEMA}
 
-    concept_id = Column(Integer, primary_key=True, unique=True)
+    concept_id = Column(Integer, primary_key=True)
     concept_name = Column(String(255), nullable=False)
 
     @declared_attr
@@ -71,7 +71,7 @@ class BaseConceptClass:
     __tablename__ = 'concept_class'
     __table_args__ = {'schema': VOCAB_SCHEMA}
 
-    concept_class_id = Column(String(20), primary_key=True, unique=True)
+    concept_class_id = Column(String(20), primary_key=True)
     concept_class_name = Column(String(255), nullable=False)
 
     @declared_attr
@@ -143,7 +143,7 @@ class BaseDomain:
     __tablename__ = 'domain'
     __table_args__ = {'schema': VOCAB_SCHEMA}
 
-    domain_id = Column(String(20), primary_key=True, unique=True)
+    domain_id = Column(String(20), primary_key=True)
     domain_name = Column(String(255), nullable=False)
 
     @declared_attr
@@ -215,7 +215,7 @@ class BaseRelationship:
     __tablename__ = 'relationship'
     __table_args__ = {'schema': VOCAB_SCHEMA}
 
-    relationship_id = Column(String(20), primary_key=True, unique=True)
+    relationship_id = Column(String(20), primary_key=True)
     relationship_name = Column(String(255), nullable=False)
     is_hierarchical = Column(String(1), nullable=False)
     defines_ancestry = Column(String(1), nullable=False)
@@ -279,7 +279,7 @@ class BaseVocabulary:
     __tablename__ = 'vocabulary'
     __table_args__ = {'schema': VOCAB_SCHEMA}
 
-    vocabulary_id = Column(String(20), primary_key=True, unique=True)
+    vocabulary_id = Column(String(20), primary_key=True)
     vocabulary_name = Column(String(255), nullable=False)
     vocabulary_reference = Column(String(255), nullable=False)
     vocabulary_version = Column(String(255))
