@@ -24,11 +24,6 @@ setup(
         "Programming Language :: Python :: 3",
     ],
     description="Wrapper for OMOP ETL projects",
-    entry_points={
-        "console_scripts": [
-            "omop_etl_wrapper=omop_etl_wrapper.cli:main",
-        ],
-    },
     install_requires=[
         "click >= 7.0",
         "psycopg2-binary >= 2.8",
