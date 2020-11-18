@@ -13,9 +13,6 @@ with open(os.path.join(here, 'src', 'omop_etl_wrapper', '_version.py')) as f:
 with open("README.md") as readme_file:
     readme = readme_file.read()
 
-with open('requirements.txt', 'r') as f:
-    required_packages = f.read().splitlines()
-
 setup(
     author="The Hyve",
     author_email="office@thehyve.nl",
@@ -32,7 +29,15 @@ setup(
             "omop_etl_wrapper=omop_etl_wrapper.cli:main",
         ],
     },
-    install_requires=required_packages,
+    install_requires=[
+        "click >= 7.0",
+        "psycopg2-binary >= 2.8",
+        "pydantic >= 1.7",
+        "SQLAlchemy >= 1.3",
+        "SQLAlchemy-Utils >= 0.36",
+        "pandas >= 1.0",
+        "PyYAML >= 5.3",
+    ],
     license="GNU General Public License v3",
     long_description=readme,
     long_description_content_type="text/markdown",
