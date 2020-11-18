@@ -37,7 +37,7 @@ pytest
 nox -s tests
 ```
 
-# Credits
+## Credits
 This package was created with Cookiecutter and the `cs01/cookiecutter-pypackage` project template.
 
 [Cookiecutter](https://github.com/audreyr/cookiecutter)
