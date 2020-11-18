@@ -15,13 +15,13 @@
 import csv
 import logging
 import os
-import subprocess
+from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
 from datetime import datetime
 from inspect import signature
 from pathlib import Path
-from typing import Callable, DefaultDict, Dict, Optional, List
-from abc import ABC, abstractmethod
+from typing import Callable, DefaultDict, Dict, List
+
 import itertools
 import pandas as pd
 from sqlalchemy.orm.session import Session

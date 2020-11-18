@@ -1085,7 +1085,6 @@ class BaseVisitOccurrenceCdm600:
     def preceding_visit_occurrence_id(cls):
         return Column(ForeignKey(f'{CDM_SCHEMA}.visit_occurrence.visit_occurrence_id'))
 
-
     @declared_attr
     def admitted_from_concept(cls):
         return relationship('Concept',

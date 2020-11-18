@@ -224,7 +224,7 @@ def test_read_csv_cache(source_file2: SourceFile):
 def test_read_csv_generator_not_subscriptable(source_file2: SourceFile):
     rows = source_file2.get_csv_as_generator_of_dicts()
     with pytest.raises(TypeError) as excinfo:
-        second_row = rows[1]
+        rows[1]  # try to access 2nd row directly
     assert "'generator' object is not subscriptable" in str(excinfo.value)
 
 
