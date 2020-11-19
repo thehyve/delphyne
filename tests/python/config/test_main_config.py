@@ -38,6 +38,12 @@ def test_missing_database_raises_validation_error(default_main_config: Dict):
     assert 'database' in str(error.value)
 
 
+def test_missing_database_password_set_to_empty_secret_string(default_main_config: Dict):
+    del default_main_config['database']['password']
+    c = MainConfig(**default_main_config)
+    assert c.database.password.get_secret_value() == ''
+
+
 def test_sql_parameter_value_empty_string(default_main_config: Dict):
     sql_parameters = {'var1': ''}
     default_main_config['sql_parameters'] = sql_parameters
