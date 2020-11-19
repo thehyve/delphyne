@@ -22,8 +22,8 @@ def string_stream_handler() -> logging.StreamHandler:
     logger.handlers = []
 
 
-def get_stringio_lines(stringio: io.StringIO) -> List[str]:
-    return stringio.getvalue().split('\n')
+def get_stringio_lines(string_io: io.StringIO) -> List[str]:
+    return string_io.getvalue().split('\n')
 
 
 def test_logging_context(string_stream_handler: logging.StreamHandler, caplog):
