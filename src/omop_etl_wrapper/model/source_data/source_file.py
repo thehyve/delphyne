@@ -31,7 +31,7 @@ class SourceFile:
         self._csv: List[OrderedDict] = []
 
     def __repr__(self):
-        return f'path={self.path}\n' + 'parameters='+str(self._params)
+        return f'path={self.path}\n' + 'parameters=' + str(self._params)
 
     @property
     def path(self) -> Path:

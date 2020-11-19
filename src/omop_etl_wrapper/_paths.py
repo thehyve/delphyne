@@ -18,4 +18,3 @@ LOG_OUTPUT_DIR = Path('./logs')
 # TODO: Add expected paths for:
 #  custom vocabularies dir
 #  omop vocabularies dir
-

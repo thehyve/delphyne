@@ -31,14 +31,14 @@ def test_db_does_not_exist(db_config, caplog):
 
 @pytest.mark.usefixtures("container")
 def test_connection_invalid(caplog):
-    uri = f'postgresql://postgres:secret@localhost:123456/postgres'
+    uri = 'postgresql://postgres:secret@localhost:123456/postgres'
     assert not Database.can_connect(uri)
     assert 'Database "postgres" does not exist' not in caplog.text
 
 
 @pytest.mark.usefixtures("test_db")
 def test_db_exists():
-    uri = f'postgresql://postgres:secret@localhost:7722/test_db'
+    uri = 'postgresql://postgres:secret@localhost:7722/test_db'
     assert Database.can_connect(uri)
 
 
