@@ -95,6 +95,19 @@ def test_source_file2_has_config_dtypes(source_file2: SourceFile):
     assert df.dtypes.to_dict() == expected_dtypes
 
 
+def test_source_file2_apply_dtypes_manually(source_file2: SourceFile):
+    df = source_file2.get_csv_as_df(apply_dtypes=False)
+    assert list(df.dtypes) == [dtype('O')] * 4
+    df = source_file2.apply_dtypes(df, errors='raise')
+    expected_dtypes = {
+        'column_a': dtype('O'),
+        'column_b': pd.Int64Dtype(),
+        'column_c': dtype('<M8[ns]'),
+        'column_d': dtype('float64'),
+    }
+    assert df.dtypes.to_dict() == expected_dtypes
+
+
 def test_source_file2_has_partial_dtypes(source_file2_partial_dtypes: SourceFile):
     """
     If for only a subset of the columns the dtypes were provided, those
