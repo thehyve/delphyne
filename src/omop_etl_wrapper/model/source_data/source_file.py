@@ -190,18 +190,33 @@ class SourceFile:
             raise ValueError(f'Cannot read {self._path.name}, missing required '
                              f'parameters: {", ".join(missing)}')
 
-    def _apply_dtypes(self, df: pd.DataFrame) -> pd.DataFrame:
+    def apply_dtypes(self, df: pd.DataFrame, **kwargs) -> pd.DataFrame:
+        """
+        Apply source config dtypes to a pandas DataFrame.
+
+        This method should only be used if dtypes cannot be applied
+        directly to the source_file, i.e. some manual preprocessing is
+        needed before they can safely be applied.
+
+        :param df: pd.DataFrame
+        :param kwargs:
+            Additional keyword arguments are passed on directly to
+            pandas.DataFrame.astype.
+        :return: pd.Dataframe
+        """
+        return self._apply_dtypes(df, **kwargs)
+
+    def _apply_dtypes(self, df: pd.DataFrame, **kwargs) -> pd.DataFrame:
         # Apply source_config dtypes to the columns in the DataFrame.
-        dtypes = self._params.get('dtypes', {})
-        if not dtypes:
+        if not self.dtypes:
             logger.warning(f'No dtypes were found in source config for {self._path}')
             return df
         logger.info('Applying dtypes')
         # The object dtype cannot be directly converted to Int64, so we
         # first convert to float64
-        int_cols = [col for col, dtype in dtypes.items() if dtype.startswith('Int')]
+        int_cols = [col for col, dtype in self.dtypes.items() if dtype.startswith('Int')]
         df[int_cols] = df[int_cols].astype('float64')
-        return df.astype(dtypes)
+        return df.astype(self.dtypes, **kwargs)
 
     def get_line_count(self) -> Optional[int]:
         """
