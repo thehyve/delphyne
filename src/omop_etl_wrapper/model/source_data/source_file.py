@@ -37,6 +37,16 @@ class SourceFile:
     def path(self) -> Path:
         return self._path
 
+    @property
+    def config(self) -> Dict:
+        """Read-only copy of config parameters."""
+        return deepcopy(self._params)
+
+    @property
+    def dtypes(self) -> Dict:
+        """Read-only copy of specified dtypes."""
+        return deepcopy(self._params.get('dtypes', {}))
+
     def _remove_cached_df(self) -> None:
         if self._df is not None:
             logger.info(f'Removing cached df of {self.path.name}')
@@ -259,7 +269,6 @@ class SourceFile:
             the csv module's DictReader.
         :return: List[OrderedDict]
         """
-
         if self._csv:
             csv_records = self._retrieve_cached_csv()
         else:
