@@ -7,6 +7,7 @@ from src.omop_etl_wrapper.log.log_formats import MESSAGE_ONLY
 from src.omop_etl_wrapper.log.logging_context import LoggingFormatContext
 
 logger = logging.getLogger('test_logger')
+logger.setLevel(logging.DEBUG)
 
 
 @pytest.fixture(scope='function')
@@ -29,11 +30,10 @@ def get_stringio_lines(string_io: io.StringIO) -> List[str]:
 def test_logging_context(string_stream_handler: logging.StreamHandler, caplog):
     """logging_context allows temporarily changing the log format."""
     dinosaur_format = logging.Formatter("🦕%(message)s🦕")
-    with caplog.at_level(logging.INFO):
-        logger.info('this has regular format')
-        with LoggingFormatContext(logger, dinosaur_format):
-            logger.info('THIS HAS AWESOME DINOSAUR FORMAT!')
-        logger.info('this has boring regular format again')
+    logger.info('this has regular format')
+    with LoggingFormatContext(logger, dinosaur_format):
+        logger.info('THIS HAS AWESOME DINOSAUR FORMAT!')
+    logger.info('this has boring regular format again')
     log_lines = get_stringio_lines(string_stream_handler.stream)
     assert log_lines[0] == 'INFO - this has regular format'
     assert log_lines[1] == '🦕THIS HAS AWESOME DINOSAUR FORMAT!🦕'
@@ -41,7 +41,6 @@ def test_logging_context(string_stream_handler: logging.StreamHandler, caplog):
 
 
 def test_log_format_message_only(caplog):
-    with caplog.at_level(logging.INFO):
-        logger.info('back in my day logging was just about the message')
-    expected = 'back in my day logging was just about the message'
-    assert MESSAGE_ONLY.format(caplog.records[0]) == expected
+    message = 'back in my day logging was just about the message'
+    logger.info('back in my day logging was just about the message')
+    assert MESSAGE_ONLY.format(caplog.records[0]) == message
