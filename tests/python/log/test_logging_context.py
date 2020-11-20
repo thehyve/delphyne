@@ -28,7 +28,8 @@ def get_stringio_lines(string_io: io.StringIO) -> List[str]:
 
 
 def test_logging_context(string_stream_handler: logging.StreamHandler, caplog):
-    """logging_context allows temporarily changing the log format."""
+    """LoggingFormatContext allows temporarily changing the log
+    format."""
     dinosaur_format = logging.Formatter("🦕%(message)s🦕")
     logger.info('this has regular format')
     with LoggingFormatContext(logger, dinosaur_format):
