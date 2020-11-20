@@ -208,8 +208,8 @@ class ConstraintManager:
         # Get a previously dropped constraint/index from the storage and
         # reapply it. If done successfully, remove it from the storage.
         with self._db.engine.connect().execution_options(**self._execution_options) as conn:
+            logger.debug(f'Adding {constraint.name}')
             try:
-                logger.debug(f'Adding {constraint.name}')
                 if isinstance(constraint, Index):
                     conn.execute(CreateIndex(constraint))
                 else:
@@ -252,8 +252,8 @@ class ConstraintManager:
         # Drop a constraint/index. If successfully dropped, keep it in
         # the storage.
         with self._db.engine.connect().execution_options(**self._execution_options) as conn:
+            logger.debug(f'Dropping {constraint.name}')
             try:
-                logger.debug(f'Dropping {constraint.name}')
                 if isinstance(constraint, Index):
                     conn.execute(DropIndex(constraint))
                 else:
