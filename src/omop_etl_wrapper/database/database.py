@@ -4,7 +4,7 @@ import logging
 from collections import Counter
 from contextlib import contextmanager
 from getpass import getpass
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable, Optional, Set
 
 from sqlalchemy import create_engine, event, MetaData
 from sqlalchemy.exc import OperationalError
@@ -28,6 +28,7 @@ class Database:
         self.engine = create_engine(uri, executemany_mode='values')
         self.base = base
         self.constraint_manager = ConstraintManager(self)
+        self._schemas = self._set_schemas()
         self._sessionmaker = sessionmaker(bind=self.engine, autoflush=False)
 
     @classmethod
@@ -71,6 +72,10 @@ class Database:
     def session(self) -> Session:
         logger.debug('Creating new session')
         return self._sessionmaker()
+
+    @property
+    def schemas(self) -> Set[str]:
+        return self._schemas.copy()
 
     def close_connection(self) -> None:
         self.engine.dispose()
@@ -161,15 +166,25 @@ class Database:
         return db_exists
 
     @property
-    def reflected_metadata(self) -> MetaData:
+    def _reflected_metadata(self) -> MetaData:
         """
         Get Metadata of the current state of tables in the database.
 
-        :return: SQLAlchemy Metadata
+        :return: SQLAlchemy MetaData
         """
         metadata = MetaData(bind=self.engine)
-        # TODO: schemas should be an instance property. see
-        #  _get_cdm_tables_to_drop in wrapper
-        for schema in set(self.schema_translate_map.values()):
+        for schema in self.schemas:
             metadata.reflect(schema=schema)
         return metadata
+
+    def _set_schemas(self) -> Set[str]:
+        schemas: Set[str] = set()
+        for table in self.base.metadata.tables.values():
+            raw_schema_value = getattr(table, 'schema', None)
+            if raw_schema_value is None:
+                continue
+            if raw_schema_value in self.schema_translate_map:
+                schemas.add(self.schema_translate_map[raw_schema_value])
+            else:
+                schemas.add(raw_schema_value)
+        return schemas
