@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from getpass import getpass
 from typing import Dict, Iterable, Optional
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, MetaData
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
@@ -159,3 +159,17 @@ class Database:
             db_name = uri.rsplit('/', 1)[-1]
             logger.error(f'Could not connect. Database "{db_name}" does not exist')
         return db_exists
+
+    @property
+    def reflected_metadata(self) -> MetaData:
+        """
+        Get Metadata of the current state of tables in the database.
+
+        :return: SQLAlchemy Metadata
+        """
+        metadata = MetaData(bind=self.engine)
+        # TODO: schemas should be an instance property. see
+        #  _get_cdm_tables_to_drop in wrapper
+        for schema in set(self.schema_translate_map.values()):
+            metadata.reflect(schema=schema)
+        return metadata
