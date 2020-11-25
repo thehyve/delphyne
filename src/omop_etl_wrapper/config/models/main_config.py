@@ -50,3 +50,16 @@ class MainConfig(BaseModel):
             if k == '' or v == '':
                 raise ValueError(f'Strings cannot be empty: {k}: {v}')
         return str_dict
+
+    @validator('schema_translate_map', 'sql_parameters')
+    def values_are_not_also_keys(cls,
+                                 str_dict: Optional[Dict[str, str]]
+                                 ) -> Optional[Dict[str, str]]:
+        # Make sure that a value is not used in another mapping as a
+        # key.
+        if str_dict is None:
+            return str_dict
+        for k, v in str_dict.items():
+            if v in str_dict and not v == k:
+                raise ValueError(f'Mapping value used as key: {v}')
+        return str_dict
