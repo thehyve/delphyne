@@ -9,17 +9,30 @@ class BaseCohortCdm531:
     __tablename__ = 'cohort'
     __table_args__ = {'schema': CDM_SCHEMA}
 
-    cohort_definition_id = Column(Integer, primary_key=True, nullable=False, index=True)
-    subject_id = Column(Integer, primary_key=True, nullable=False, index=True)
-    cohort_start_date = Column(Date, primary_key=True, nullable=False)
-    cohort_end_date = Column(Date, primary_key=True, nullable=False)
+    @declared_attr
+    def cohort_definition_id(cls):
+        return Column(Integer, primary_key=True, nullable=False, index=True)
+
+    @declared_attr
+    def subject_id(cls):
+        return Column(Integer, primary_key=True, nullable=False, index=True)
+
+    @declared_attr
+    def cohort_start_date(cls):
+        return Column(Date, primary_key=True, nullable=False)
+
+    @declared_attr
+    def cohort_end_date(cls):
+        return Column(Date, primary_key=True, nullable=False)
 
 
 class BaseConditionEraCdm531:
     __tablename__ = 'condition_era'
     __table_args__ = {'schema': CDM_SCHEMA}
 
-    condition_era_id = Column(Integer, primary_key=True)
+    @declared_attr
+    def condition_era_id(cls):
+        return Column(Integer, primary_key=True)
 
     @declared_attr
     def person_id(cls):
@@ -29,9 +42,17 @@ class BaseConditionEraCdm531:
     def condition_concept_id(cls):
         return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False, index=True)
 
-    condition_era_start_date = Column(Date, nullable=False)
-    condition_era_end_date = Column(Date, nullable=False)
-    condition_occurrence_count = Column(Integer)
+    @declared_attr
+    def condition_era_start_date(cls):
+        return Column(Date, nullable=False)
+
+    @declared_attr
+    def condition_era_end_date(cls):
+        return Column(Date, nullable=False)
+
+    @declared_attr
+    def condition_occurrence_count(cls):
+        return Column(Integer)
 
     @declared_attr
     def condition_concept(cls):
@@ -46,7 +67,9 @@ class BaseDoseEraCdm531:
     __tablename__ = 'dose_era'
     __table_args__ = {'schema': CDM_SCHEMA}
 
-    dose_era_id = Column(Integer, primary_key=True)
+    @declared_attr
+    def dose_era_id(cls):
+        return Column(Integer, primary_key=True)
 
     @declared_attr
     def person_id(cls):
@@ -60,9 +83,17 @@ class BaseDoseEraCdm531:
     def unit_concept_id(cls):
         return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
 
-    dose_value = Column(Numeric, nullable=False)
-    dose_era_start_date = Column(Date, nullable=False)
-    dose_era_end_date = Column(Date, nullable=False)
+    @declared_attr
+    def dose_value(cls):
+        return Column(Numeric, nullable=False)
+
+    @declared_attr
+    def dose_era_start_date(cls):
+        return Column(Date, nullable=False)
+
+    @declared_attr
+    def dose_era_end_date(cls):
+        return Column(Date, nullable=False)
 
     @declared_attr
     def drug_concept(cls):
@@ -81,7 +112,9 @@ class BaseDrugEraCdm531:
     __tablename__ = 'drug_era'
     __table_args__ = {'schema': CDM_SCHEMA}
 
-    drug_era_id = Column(Integer, primary_key=True)
+    @declared_attr
+    def drug_era_id(cls):
+        return Column(Integer, primary_key=True)
 
     @declared_attr
     def person_id(cls):
@@ -91,10 +124,21 @@ class BaseDrugEraCdm531:
     def drug_concept_id(cls):
         return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False, index=True)
 
-    drug_era_start_date = Column(Date, nullable=False)
-    drug_era_end_date = Column(Date, nullable=False)
-    drug_exposure_count = Column(Integer)
-    gap_days = Column(Integer)
+    @declared_attr
+    def drug_era_start_date(cls):
+        return Column(Date, nullable=False)
+
+    @declared_attr
+    def drug_era_end_date(cls):
+        return Column(Date, nullable=False)
+
+    @declared_attr
+    def drug_exposure_count(cls):
+        return Column(Integer)
+
+    @declared_attr
+    def gap_days(cls):
+        return Column(Integer)
 
     @declared_attr
     def drug_concept(cls):

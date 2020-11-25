@@ -10,27 +10,73 @@ class BasePayerPlanPeriodCdm531:
     __tablename__ = 'payer_plan_period'
     __table_args__ = {'schema': CDM_SCHEMA}
 
-    payer_plan_period_id = Column(Integer, primary_key=True)
+    @declared_attr
+    def payer_plan_period_id(cls):
+        return Column(Integer, primary_key=True)
 
     @declared_attr
     def person_id(cls):
         return Column(ForeignKey(f'{CDM_SCHEMA}.person.person_id'), nullable=False, index=True)
 
-    payer_plan_period_start_date = Column(Date, nullable=False)
-    payer_plan_period_end_date = Column(Date, nullable=False)
-    payer_concept_id = Column(Integer)
-    payer_source_value = Column(String(50))
-    payer_source_concept_id = Column(Integer)
-    plan_concept_id = Column(Integer)
-    plan_source_value = Column(String(50))
-    plan_source_concept_id = Column(Integer)
-    sponsor_concept_id = Column(Integer)
-    sponsor_source_value = Column(String(50))
-    sponsor_source_concept_id = Column(Integer)
-    family_source_value = Column(String(50))
-    stop_reason_concept_id = Column(Integer)
-    stop_reason_source_value = Column(String(50))
-    stop_reason_source_concept_id = Column(Integer)
+    @declared_attr
+    def payer_plan_period_start_date(cls):
+        return Column(Date, nullable=False)
+
+    @declared_attr
+    def payer_plan_period_end_date(cls):
+        return Column(Date, nullable=False)
+
+    @declared_attr
+    def payer_concept_id(cls):
+        return Column(Integer)
+
+    @declared_attr
+    def payer_source_value(cls):
+        return Column(String(50))
+
+    @declared_attr
+    def payer_source_concept_id(cls):
+        return Column(Integer)
+
+    @declared_attr
+    def plan_concept_id(cls):
+        return Column(Integer)
+
+    @declared_attr
+    def plan_source_value(cls):
+        return Column(String(50))
+
+    @declared_attr
+    def plan_source_concept_id(cls):
+        return Column(Integer)
+
+    @declared_attr
+    def sponsor_concept_id(cls):
+        return Column(Integer)
+
+    @declared_attr
+    def sponsor_source_value(cls):
+        return Column(String(50))
+
+    @declared_attr
+    def sponsor_source_concept_id(cls):
+        return Column(Integer)
+
+    @declared_attr
+    def family_source_value(cls):
+        return Column(String(50))
+
+    @declared_attr
+    def stop_reason_concept_id(cls):
+        return Column(Integer)
+
+    @declared_attr
+    def stop_reason_source_value(cls):
+        return Column(String(50))
+
+    @declared_attr
+    def stop_reason_source_concept_id(cls):
+        return Column(Integer)
 
     @declared_attr
     def person(cls):
@@ -41,40 +87,93 @@ class BaseCostCdm531:
     __tablename__ = 'cost'
     __table_args__ = {'schema': CDM_SCHEMA}
 
-    cost_id = Column(Integer, primary_key=True)
-    cost_event_id = Column(Integer, nullable=False)
-    cost_domain_id = Column(String(20), nullable=False)
-    cost_type_concept_id = Column(Integer, nullable=False)
+    @declared_attr
+    def cost_id(cls):
+        return Column(Integer, primary_key=True)
+
+    @declared_attr
+    def cost_event_id(cls):
+        return Column(Integer, nullable=False)
+
+    @declared_attr
+    def cost_domain_id(cls):
+        return Column(String(20), nullable=False)
+
+    @declared_attr
+    def cost_type_concept_id(cls):
+        return Column(Integer, nullable=False)
 
     @declared_attr
     def currency_concept_id(cls):
         return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
 
-    total_charge = Column(Numeric)
-    total_cost = Column(Numeric)
-    total_paid = Column(Numeric)
-    paid_by_payer = Column(Numeric)
-    paid_by_patient = Column(Numeric)
-    paid_patient_copay = Column(Numeric)
-    paid_patient_coinsurance = Column(Numeric)
-    paid_patient_deductible = Column(Numeric)
-    paid_by_primary = Column(Numeric)
-    paid_ingredient_cost = Column(Numeric)
-    paid_dispensing_fee = Column(Numeric)
+    @declared_attr
+    def total_charge(cls):
+        return Column(Numeric)
+
+    @declared_attr
+    def total_cost(cls):
+        return Column(Numeric)
+
+    @declared_attr
+    def total_paid(cls):
+        return Column(Numeric)
+
+    @declared_attr
+    def paid_by_payer(cls):
+        return Column(Numeric)
+
+    @declared_attr
+    def paid_by_patient(cls):
+        return Column(Numeric)
+
+    @declared_attr
+    def paid_patient_copay(cls):
+        return Column(Numeric)
+
+    @declared_attr
+    def paid_patient_coinsurance(cls):
+        return Column(Numeric)
+
+    @declared_attr
+    def paid_patient_deductible(cls):
+        return Column(Numeric)
+
+    @declared_attr
+    def paid_by_primary(cls):
+        return Column(Numeric)
+
+    @declared_attr
+    def paid_ingredient_cost(cls):
+        return Column(Numeric)
+
+    @declared_attr
+    def paid_dispensing_fee(cls):
+        return Column(Numeric)
 
     @declared_attr
     def payer_plan_period_id(cls):
         return Column(ForeignKey(f'{CDM_SCHEMA}.payer_plan_period.payer_plan_period_id'))
 
-    amount_allowed = Column(Numeric)
-    revenue_code_concept_id = Column(Integer)
-    reveue_code_source_value = Column(String(50))
+    @declared_attr
+    def amount_allowed(cls):
+        return Column(Numeric)
+
+    @declared_attr
+    def revenue_code_concept_id(cls):
+        return Column(Integer)
+
+    @declared_attr
+    def reveue_code_source_value(cls):
+        return Column(String(50))
 
     @declared_attr
     def drg_concept_id(cls):
         return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
 
-    drg_source_value = Column(String(3))
+    @declared_attr
+    def drg_source_value(cls):
+        return Column(String(3))
 
     @declared_attr
     def currency_concept(cls):
