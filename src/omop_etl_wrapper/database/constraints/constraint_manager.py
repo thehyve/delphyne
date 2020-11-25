@@ -227,7 +227,7 @@ class ConstraintManager:
         Add constraints/indexes on a CDM table.
 
         This method requires that the table is bound to your SQLAlchemy
-        Base and is present in the database.
+        Base and exists in the database.
 
         If some constraints are already present on the table before this
         method is called, they will remain active and not be added a
@@ -265,7 +265,7 @@ class ConstraintManager:
         Drop a single constraint by name.
 
         :param constraint_name: str
-            Name of the constraint as present in the database.
+            Name of the constraint as it exists in the database.
         :return: None
         """
         constraint = self._reflected_constraint_lookup.get(constraint_name)
@@ -280,7 +280,7 @@ class ConstraintManager:
         Drop a single index by name.
 
         :param index_name: str
-            Name of the index as present in the database.
+            Name of the index as it exists in the database.
         :return: None
         """
         index = self._reflected_constraint_lookup.get(index_name)
@@ -295,7 +295,7 @@ class ConstraintManager:
         Add a single constraint by name.
 
         :param constraint: str
-            Name of the constraint as present in the model.
+            Name of the constraint as it exists in the model.
         :return: None
         """
         self._add_constraint_or_index(constraint)
@@ -306,7 +306,7 @@ class ConstraintManager:
         Add a single index by name.
 
         :param index: str
-            Name of the index as present in the model.
+            Name of the index as it exists in the model.
         :return: None
         """
         self._add_constraint_or_index(index)
