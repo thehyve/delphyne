@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from functools import lru_cache, wraps
-from typing import TYPE_CHECKING, Union, Dict, List, Callable
+from typing import TYPE_CHECKING, Union, Dict, Callable
 
 from itertools import chain
 from sqlalchemy import Index, Table, PrimaryKeyConstraint, Constraint, MetaData
@@ -25,12 +25,48 @@ logger = logging.getLogger(__name__)
 ConstraintOrIndex = Union[Constraint, Index]
 
 
+def _is_non_pk_constraint(constraint: ConstraintOrIndex) -> bool:
+    # Return True if constraint is not an index or a PK
+    is_constraint = isinstance(constraint, Constraint)
+    is_pk = isinstance(constraint, PrimaryKeyConstraint)
+    if is_constraint and not is_pk:
+        return True
+    return False
+
+
 def _invalidate_db_cache(func: Callable) -> Callable:
+    # Decorator to invalidate cached derivatives of reflected MetaData
     @wraps(func)
     def wrapper_invalidate_db_cache(*args, **kwargs):
         ConstraintManager.invalidate_current_db_cache()
         return func(*args, **kwargs)
     return wrapper_invalidate_db_cache
+
+
+class _TargetModel:
+    """Lookup class for table properties of the target model."""
+    def __init__(self, metadata: MetaData):
+        self.table_lookup = {t.name: t for t in metadata.tables.values()}
+        self.constraint_lookup = self.create_constraint_lookup(metadata)
+        self.indexes = [c for c in self.constraint_lookup.values()
+                        if isinstance(c, Index)]
+        self.pks = [c for c in self.constraint_lookup.values()
+                    if isinstance(c, PrimaryKeyConstraint)]
+        # All non-pk model constraints
+        self.constraints = [c for c in self.constraint_lookup.values()
+                            if _is_non_pk_constraint(c)]
+
+    def is_model_table(self, table_name: str) -> bool:
+        # Check table exists within the CDM model MetaData instance
+        return table_name in self.table_lookup.keys()
+
+    @staticmethod
+    def create_constraint_lookup(metadata: MetaData) -> Dict[str, ConstraintOrIndex]:
+        lookup = dict()
+        for table in metadata.tables.values():
+            for constraint in chain(table.constraints, table.indexes):
+                lookup[constraint.name] = constraint
+        return lookup
 
 
 class ConstraintManager:
@@ -46,66 +82,23 @@ class ConstraintManager:
     def __init__(self, database: Database):
         self._db = database
         self._execution_options = {'schema_translate_map': self._db.schema_translate_map}
-
-        self._model_constraint_lookup = self._create_constraint_lookup(self._db.base.metadata)
-        self._model_indexes = [c for c in self._model_constraint_lookup.values()
-                               if isinstance(c, Index)]
-        self._model_pks = [c for c in self._model_constraint_lookup.values()
-                           if isinstance(c, PrimaryKeyConstraint)]
-        # All non-pk model constraints
-        self._model_constraints = [c for c in self._model_constraint_lookup.values()
-                                   if not (isinstance(c, Index)
-                                           or isinstance(c, PrimaryKeyConstraint))]
-        self._model_table_lookup = {t.name: t for t in self._db.base.metadata.tables.values()}
-
-    # @property
-    # @lru_cache()
-    # def _model_constraint_lookup(self) -> Dict[str, ConstraintOrIndex]:
-    #     return self._create_constraint_lookup(self._db.base.metadata)
+        self._model = _TargetModel(metadata=database.base.metadata)
 
     @property
     @lru_cache()
-    def _current_db_constraint_lookup(self) -> Dict[str, ConstraintOrIndex]:
-        return self._create_constraint_lookup(self._db.reflected_metadata)
-
-    # @property
-    # @lru_cache()
-    # def _model_indexes(self) -> List[Index]:
-    #     return [c for c in self._model_constraint_lookup.values()
-    #             if isinstance(c, Index)]
-    #
-    # @property
-    # @lru_cache()
-    # def _model_pks(self) -> List[PrimaryKeyConstraint]:
-    #     return [c for c in self._model_constraint_lookup.values()
-    #             if isinstance(c, PrimaryKeyConstraint)]
-    #
-    # @property
-    # @lru_cache()
-    # def _model_constraints(self) -> List[Constraint]:
-    #     # All non-pk model constraints
-    #     constraints = []
-    #     for c in self._model_constraint_lookup.values():
-    #         if isinstance(c, Index) or isinstance(c, PrimaryKeyConstraint):
-    #             continue
-    #         constraints.append(c)
-    #     return constraints
-
-    # @property
-    # @lru_cache()
-    # def _model_table_lookup(self) -> Dict[str, Table]:
-    #     return {t.name: t for t in self._db.base.metadata.tables.values()}
+    def _reflected_constraint_lookup(self) -> Dict[str, ConstraintOrIndex]:
+        return _TargetModel.create_constraint_lookup(self._db.reflected_metadata)
 
     @property
     @lru_cache()
-    def _current_db_table_lookup(self) -> Dict[str, Table]:
+    def _reflected_table_lookup(self) -> Dict[str, Table]:
         return {t.name: t for t in self._db.reflected_metadata.tables.values()}
 
     @staticmethod
     def invalidate_current_db_cache() -> None:
         logger.debug('Invalidating database tables cache')
-        ConstraintManager._current_db_table_lookup.fget.cache_clear()
-        ConstraintManager._current_db_constraint_lookup.fget.cache_clear()
+        ConstraintManager._reflected_table_lookup.fget.cache_clear()
+        ConstraintManager._reflected_constraint_lookup.fget.cache_clear()
 
     def drop_cdm_constraints(self,
                              drop_constraint: bool = True,
@@ -131,7 +124,7 @@ class ConstraintManager:
         logger.info('Dropping CDM constraints')
         constraints, pks, indexes = [], [], []
         for table in self._db.reflected_metadata.tables.values():
-            if table.name in VOCAB_TABLES or not self._is_model_table(table.name):
+            if table.name in VOCAB_TABLES or not self._model.is_model_table(table.name):
                 continue
 
             for constraint in table.constraints:
@@ -161,8 +154,10 @@ class ConstraintManager:
         CDM vocabulary table will be affected. If there are any
         additional tables in your database that are not bound to Base,
         they will not be affected by this method.
-        Constraints that are already present in any of the CDM tables
-        will be ignored.
+
+        If some constraints are already present before this method is
+        called, they will remain active and not be added a second time,
+        regardless of constraint names.
 
         :param add_constraint: bool, default True
             If True, add all FK, unique and check constraints.
@@ -175,11 +170,11 @@ class ConstraintManager:
         logger.info('Adding CDM constraints')
         constraints, pks, indexes = [], [], []
         if add_index:
-            indexes = self._model_indexes
+            indexes = self._model.indexes
         if add_pk:
-            pks = self._model_pks
+            pks = self._model.pks
         if add_constraint:
-            constraints = self._model_constraints
+            constraints = self._model.constraints
 
         for constraint in chain(indexes, pks, constraints):
             if constraint.table.name not in VOCAB_TABLES:
@@ -206,7 +201,10 @@ class ConstraintManager:
         :return: None
         """
         logger.info(f'Dropping constraints on table {table_name}')
-        table = self._get_db_table_by_name(table_name)
+        table = self._reflected_table_lookup.get(table_name)
+        if table is None:
+            raise KeyError(f'No table found in database with name "{table_name}"')
+
         if drop_index:
             for index in table.indexes:
                 self._drop_constraint_in_db(index)
@@ -231,6 +229,10 @@ class ConstraintManager:
         This method requires that the table is bound to your SQLAlchemy
         Base and is present in the database.
 
+        If some constraints are already present on the table before this
+        method is called, they will remain active and not be added a
+        second time, regardless of constraint names.
+
         :param table_name: str
             Name of the table, without schema name.
         :param add_constraint: bool, default True
@@ -242,23 +244,20 @@ class ConstraintManager:
         :return: None
         """
         logger.info(f'Adding constraints on table {table_name}')
-        if self._model_table_lookup.get(table_name) is None:
-            logger.warning(f'Table not found in model: "{table_name}"')
-            return
+        if not self._model.is_model_table(table_name):
+            raise KeyError(f'No table found in model with name "{table_name}"')
 
-        constraints = [c for c in self._model_constraint_lookup.values()
-                       if c.table.name == table_name]
+        table_constraints = [c for c in self._model.constraint_lookup.values()
+                             if c.table.name == table_name]
 
-        for constraint in constraints:
-            is_index = isinstance(constraint, Index)
-            is_pk = isinstance(constraint, PrimaryKeyConstraint)
-            if is_index and not add_index:
+        for constraint in table_constraints:
+            if isinstance(constraint, Index) and not add_index:
                 continue
-            if is_pk and not add_pk:
+            if isinstance(constraint, PrimaryKeyConstraint) and not add_pk:
                 continue
-            if not (is_index or is_pk) and not add_constraint:
+            if _is_non_pk_constraint(constraint) and not add_constraint:
                 continue
-            self._add_constraint_or_index(constraint.name)
+            self._add_constraint_in_db(constraint)
 
     @_invalidate_db_cache
     def drop_constraint(self, constraint_name: str) -> None:
@@ -269,7 +268,7 @@ class ConstraintManager:
             Name of the constraint as present in the database.
         :return: None
         """
-        constraint = self._current_db_constraint_lookup.get(constraint_name)
+        constraint = self._reflected_constraint_lookup.get(constraint_name)
         if constraint is None:
             raise ValueError(f'Constraint "{constraint_name}" not found')
         else:
@@ -284,7 +283,7 @@ class ConstraintManager:
             Name of the index as present in the database.
         :return: None
         """
-        index = self._current_db_constraint_lookup.get(index_name)
+        index = self._reflected_constraint_lookup.get(index_name)
         if index is None:
             raise ValueError(f'Index "{index_name}" not found')
         else:
@@ -313,14 +312,14 @@ class ConstraintManager:
         self._add_constraint_or_index(index)
 
     def _add_constraint_or_index(self, constraint_name: str) -> None:
-        constraint = self._model_constraint_lookup.get(constraint_name)
+        constraint = self._model.constraint_lookup.get(constraint_name)
         if constraint is None:
             raise ValueError(f'"{constraint_name}" not found')
         else:
             self._add_constraint_in_db(constraint)
 
     def _add_constraint_in_db(self, constraint: ConstraintOrIndex) -> None:
-        if self._constraint_already_present(constraint):
+        if self._constraint_already_active(constraint):
             return
         with self._db.engine.connect().execution_options(**self._execution_options) as conn:
             logger.debug(f'Adding {constraint.name}')
@@ -329,12 +328,12 @@ class ConstraintManager:
             else:
                 conn.execute(AddConstraint(constraint))
 
-    def _constraint_already_present(self, new_constraint: ConstraintOrIndex) -> bool:
+    def _constraint_already_active(self, new_constraint: ConstraintOrIndex) -> bool:
         base_message = f'Cannot add {type(new_constraint).__name__} "{new_constraint.name}"'
-        if new_constraint.name in self._current_db_constraint_lookup:
+        if new_constraint.name in self._reflected_constraint_lookup:
             logger.info(f'{base_message}, a relationship with this name already exists')
             return True
-        for constraint in self._current_db_constraint_lookup.values():
+        for constraint in self._reflected_constraint_lookup.values():
             if self._constraints_functionally_equal(constraint, new_constraint):
                 logger.info(f'{base_message}, a functional equivalent already exists '
                             f'with name "{constraint.name}"')
@@ -342,30 +341,18 @@ class ConstraintManager:
         return False
 
     def _drop_constraint_in_db(self, constraint: ConstraintOrIndex) -> None:
+        # SQLAlchemy sometimes detects empty constraint objects in
+        # reflected metadata. These cannot be dropped because they have
+        # no name and are therefore ignored here.
+        if constraint.name is None:
+            return
+
         with self._db.engine.connect().execution_options(**self._execution_options) as conn:
             logger.debug(f'Dropping {constraint.name}')
             if isinstance(constraint, Index):
                 conn.execute(DropIndex(constraint))
             else:
                 conn.execute(DropConstraint(constraint))
-
-    def _get_db_table_by_name(self, table_name: str) -> Table:
-        table = self._current_db_table_lookup.get(table_name)
-        if table is None:
-            raise KeyError(f'No table found in database with name "{table_name}"')
-        return table
-
-    def _is_model_table(self, table_name: str) -> bool:
-        # Check table exists within the CDM model MetaData instance
-        return table_name in self._model_table_lookup.keys()
-
-    @staticmethod
-    def _create_constraint_lookup(metadata: MetaData) -> Dict[str, ConstraintOrIndex]:
-        lookup = dict()
-        for table in metadata.tables.values():
-            for constraint in chain(table.constraints, table.indexes):
-                lookup[constraint.name] = constraint
-        return lookup
 
     @staticmethod
     def _constraints_functionally_equal(c1: ConstraintOrIndex,

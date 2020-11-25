@@ -166,7 +166,7 @@ class Database:
         return db_exists
 
     @property
-    def _reflected_metadata(self) -> MetaData:
+    def reflected_metadata(self) -> MetaData:
         """
         Get Metadata of the current state of tables in the database.
 
