@@ -50,8 +50,8 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         self.etl_stats = EtlStats()
         self.source_data: Optional[SourceData] = self._set_source_data()
         self.vocab_loader = VocabularyLoader(self.db, cdm_)
-        self.skip_custom_vocabulary_loading: bool = \
-            config.run_options.skip_custom_vocabulary_loading
+        self.load_custom_vocabs: bool = \
+            not config.run_options.skip_custom_vocabulary_loading
 
     def _set_source_data(self):
         if not SOURCE_DATA_CONFIG_PATH.exists():
@@ -65,9 +65,8 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         print('OMOP wrapper goes brrrrrrrr')
 
     def load_custom_vocabularies(self):
-        logger.info(f'Loading custom vocabulary tables: {not self.skip_custom_vocabulary_loading}')
-        if not self.skip_custom_vocabulary_loading:
-
+        logger.info(f'Loading custom vocabulary tables: {self.load_custom_vocabs}')
+        if self.load_custom_vocabs:
             self.vocab_loader.load_custom_vocabulary_tables()
 
     def load_stcm(self):
