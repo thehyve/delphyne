@@ -16,7 +16,7 @@ with open("README.md") as readme_file:
 setup(
     author="The Hyve",
     author_email="office@thehyve.nl",
-    python_requires=">=3.7",
+    python_requires=">=3.7.2",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
