@@ -15,13 +15,13 @@
 import csv
 import logging
 import os
-import subprocess
+from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
 from datetime import datetime
 from inspect import signature
 from pathlib import Path
-from typing import Callable, DefaultDict, Dict, Optional, List
-from abc import ABC, abstractmethod
+from typing import Callable, DefaultDict, Dict, List
+
 import itertools
 import pandas as pd
 from sqlalchemy.orm.session import Session
@@ -56,17 +56,6 @@ class OrmWrapper(ABC):
     @staticmethod
     def is_git_repo() -> bool:
         return os.path.exists('./.git')
-
-    @staticmethod
-    def get_git_tag_or_branch() -> Optional[str]:
-        """ Get the current git branch or tag using regular expressions
-            TODO: get this information from ./.git/HEAD and ./.git/refs/tags/
-        """
-        # Run 'git branch' command
-        try:
-            branch_str = str(subprocess.check_output(['git', 'branch']))
-        except subprocess.CalledProcessError:
-            return
 
     def execute_transformation(self, statement: Callable, bulk: bool = False) -> None:
         """

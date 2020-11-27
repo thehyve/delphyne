@@ -74,7 +74,7 @@ class RawSqlWrapper:
             Parameter name to value mapping
         :return: str
         """
-        replacement_dict = {'@'+key: value for key, value in sql_parameters.items()}
+        replacement_dict = {'@' + key: value for key, value in sql_parameters.items()}
         return replace_substrings(parameterized_query, replacement_dict)
 
     def _collect_transformation_statistics(self,

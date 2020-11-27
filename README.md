@@ -25,8 +25,19 @@ pip install .
 pip install -e '.[TEST]'
 ```
 
+## Tests
+Make sure Docker is running if you want to run the full test suite.
+Otherwise, tests that require it will be skipped.
 
-# Credits
+```sh
+# run tests in your current Python environment
+pytest
+
+# run tests for all supported Python versions
+nox -s tests
+```
+
+## Credits
 This package was created with Cookiecutter and the `cs01/cookiecutter-pypackage` project template.
 
 [Cookiecutter](https://github.com/audreyr/cookiecutter)
