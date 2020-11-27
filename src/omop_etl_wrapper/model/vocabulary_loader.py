@@ -1,5 +1,6 @@
 from pathlib import Path
-from typing import List
+from typing import List, Union
+from sqlalchemy.orm.exc import NoResultFound
 
 from .._paths import CUSTOM_VOCAB_DIR
 from ..database import Database
@@ -40,7 +41,7 @@ class VocabularyLoader:
 
         # get vocabularies and classes that need to be updated
         vocab_ids = self._get_new_custom_vocabulary_ids()
-        class_ids = self._get_custom_concept_class_ids()
+        class_ids = self._get_new_custom_concept_class_ids()
 
         # drop older version
         self._drop_custom_concepts(vocab_ids)
@@ -64,12 +65,14 @@ class VocabularyLoader:
                 vocab_id = row['vocabulary_id']
                 vocab_version = row['vocabulary_version']
 
+                old_vocab_version = self._get_old_vocab_version(vocab_id)
+
                 # skip loading if vocabulary version already present
-                if self._vocab_version_exists(vocab_id, vocab_version):
+                if vocab_version == old_vocab_version:
                     continue
 
-                logging.info(f'Found vocabulary: {vocab_id, vocab_version}')
-
+                logging.info(f'Found new vocabulary version: {vocab_id} : '
+                             f'{old_vocab_version} ->  {vocab_version}')
                 vocab_ids.add(vocab_id)
 
         if not vocab_ids:
@@ -77,17 +80,16 @@ class VocabularyLoader:
 
         return list(vocab_ids)
 
-    def _vocab_version_exists(self, vocab_id: str, vocab_version: str) -> bool:
+    def _get_old_vocab_version(self, vocab_id: str) -> Union[bool, None]:
 
         with self.db.session_scope() as session:
             existing_record = \
                 session.query(self._cdm.Vocabulary) \
                 .filter(self._cdm.Vocabulary.vocabulary_id == vocab_id) \
-                .filter(self._cdm.Vocabulary.vocabulary_version == vocab_version) \
                 .one_or_none()
-            return existing_record is not None
+            return existing_record.vocabulary_version if existing_record is not None else None
 
-    def _get_custom_concept_class_ids(self) -> List[str]:
+    def _get_new_custom_concept_class_ids(self) -> List[str]:
 
         logging.info('Looking for new custom class versions')
 
@@ -99,12 +101,14 @@ class VocabularyLoader:
                 class_id = row['concept_class_id']
                 class_name = row['concept_class_name']
 
+                old_class_name = self._get_old_class_version(class_id)
+
                 # skip loading if class version already present
-                if self._custom_class_exists(class_id, class_name):
+                if class_name == old_class_name:
                     continue
 
-                logging.info(f'Found class: {class_id, class_name}')
-
+                logging.info(f'Found new class name: {class_id} : '
+                             f'{old_class_name} ->  {class_name}')
                 class_ids.add(class_id)
 
         if not class_ids:
@@ -112,15 +116,14 @@ class VocabularyLoader:
 
         return list(class_ids)
 
-    def _custom_class_exists(self, class_id: str, class_name: str) -> bool:
+    def _get_old_class_version(self, class_id: str) -> Union[bool, None]:
 
         with self.db.session_scope() as session:
             existing_record = \
                 session.query(self._cdm.ConceptClass) \
                 .filter(self._cdm.ConceptClass.concept_class_id == class_id) \
-                .filter(self._cdm.ConceptClass.concept_class_name == class_name) \
                 .one_or_none()
-            return existing_record is not None
+            return existing_record.concept_class_name if existing_record is not None else None
 
     def _drop_custom_concepts(self, vocab_ids: List[str]) -> None:
 
