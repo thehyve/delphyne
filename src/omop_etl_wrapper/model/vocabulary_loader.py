@@ -32,22 +32,7 @@ class VocabularyLoader:
         # based on the file name conventions (e.g. "concept")
         return [f for f in self._custom_vocab_files if f.stem.endswith(omop_table)]
 
-    def _get_existing_vocab_versions(self) -> Dict[str,str]:
-        with self.db.session_scope() as session:
-            vocabs = session.query(self._cdm.Vocabulary).all()
-            return {v.vocabulary_id: v.vocabulary_version for v in vocabs}
-
-    def _get_existing_class_versions(self) -> Dict[str, Tuple[str,int]]:
-        with self.db.session_scope() as session:
-            classes = session.query(self._cdm.ConceptClass).all()
-            return {c.concept_class_id:
-                        (c.concept_class_name, c.concept_class_concept_id) for c in classes}
-
     def load_custom_vocabulary_tables(self) -> None:
-
-        # get all vocabularies and versions currently loaded in Vocabulary table
-        existing_vocabs = self._get_existing_vocab_versions()
-        existing_classes = self._get_existing_class_versions()
 
         # TODO: quality checks: mandatory fields, dependencies;
         #  warn if overriding standard Athena vocabulary name
