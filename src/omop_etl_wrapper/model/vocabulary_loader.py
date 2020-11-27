@@ -97,7 +97,7 @@ class VocabularyLoader:
                 vocab_version = row['vocabulary_version']
 
                 # skip loading if vocabulary version already present
-                if self._check_if_existing_vocab_version(vocab_id, vocab_version):
+                if self._vocab_version_exists(vocab_id, vocab_version):
                     continue
 
                 logging.info(f'Found vocabulary: {vocab_id, vocab_version}')
@@ -109,7 +109,7 @@ class VocabularyLoader:
 
         return list(vocab_ids)
 
-    def _check_if_existing_vocab_version(self, vocab_id: str, vocab_version: str) -> bool:
+    def _vocab_version_exists(self, vocab_id: str, vocab_version: str) -> bool:
 
         with self.db.session_scope() as session:
             existing_record = \
@@ -133,8 +133,8 @@ class VocabularyLoader:
                 class_concept_id = row['concept_class_concept_id']
 
                 # skip loading if class version already present
-                if self._check_if_existing_custom_class(class_id, class_name,
-                                                        int(class_concept_id)):
+                if self._custom_class_exists(class_id, class_name,
+                                             int(class_concept_id)):
                     continue
 
                 logging.info(f'Found class: {class_id, class_name, class_concept_id}')
@@ -146,8 +146,8 @@ class VocabularyLoader:
 
         return list(class_ids)
 
-    def _check_if_existing_custom_class(self, class_id: str, class_name: str,
-                                        class_concept_id: int) -> bool:
+    def _custom_class_exists(self, class_id: str, class_name: str,
+                             class_concept_id: int) -> bool:
 
         with self.db.session_scope() as session:
             existing_record = \
