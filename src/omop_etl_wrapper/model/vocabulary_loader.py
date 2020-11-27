@@ -1,12 +1,10 @@
 from pathlib import Path
 from typing import List, Union
-from sqlalchemy.orm.exc import NoResultFound
+import csv
 
 from .._paths import CUSTOM_VOCAB_DIR
 from ..database import Database
 from ..util.io import is_hidden
-import pandas as pd
-import numpy as np
 import logging
 
 
@@ -60,20 +58,21 @@ class VocabularyLoader:
 
         for vocab_file in self._subset_custom_vocab_files('vocabulary'):
 
-            df = pd.read_csv(vocab_file, sep='\t')
-            for _, row in df.iterrows():
-                vocab_id = row['vocabulary_id']
-                vocab_version = row['vocabulary_version']
+            with open(vocab_file) as f:
+                reader = csv.DictReader(f, delimiter='\t')
+                for row in reader:
+                    vocab_id = row['vocabulary_id']
+                    vocab_version = row['vocabulary_version']
 
-                old_vocab_version = self._get_old_vocab_version(vocab_id)
+                    old_vocab_version = self._get_old_vocab_version(vocab_id)
 
-                # skip loading if vocabulary version already present
-                if vocab_version == old_vocab_version:
-                    continue
+                    # skip loading if vocabulary version already present
+                    if vocab_version == old_vocab_version:
+                        continue
 
-                logging.info(f'Found new vocabulary version: {vocab_id} : '
-                             f'{old_vocab_version} ->  {vocab_version}')
-                vocab_ids.add(vocab_id)
+                    logging.info(f'Found new vocabulary version: {vocab_id} : '
+                                 f'{old_vocab_version} ->  {vocab_version}')
+                    vocab_ids.add(vocab_id)
 
         if not vocab_ids:
             logging.info('No new vocabulary version found')
@@ -96,20 +95,22 @@ class VocabularyLoader:
         class_ids = set()
 
         for class_file in self._subset_custom_vocab_files('concept_class'):
-            df = pd.read_csv(class_file, sep='\t')
-            for _, row in df.iterrows():
-                class_id = row['concept_class_id']
-                class_name = row['concept_class_name']
 
-                old_class_name = self._get_old_class_version(class_id)
+            with open(class_file) as f:
+                reader = csv.DictReader(f, delimiter='\t')
+                for row in reader:
+                    class_id = row['concept_class_id']
+                    class_name = row['concept_class_name']
 
-                # skip loading if class version already present
-                if class_name == old_class_name:
-                    continue
+                    old_class_name = self._get_old_class_version(class_id)
 
-                logging.info(f'Found new class name: {class_id} : '
-                             f'{old_class_name} ->  {class_name}')
-                class_ids.add(class_id)
+                    # skip loading if class version already present
+                    if class_name == old_class_name:
+                        continue
+
+                    logging.info(f'Found new class name: {class_id} : '
+                                 f'{old_class_name} ->  {class_name}')
+                    class_ids.add(class_id)
 
         if not class_ids:
             logging.info('No new class version found')
@@ -167,18 +168,20 @@ class VocabularyLoader:
 
             with self.db.session_scope() as session:
 
-                for class_file in self._subset_custom_vocab_files('concept_class'):
-                    df = pd.read_csv(class_file, sep='\t')
-                    df = df[df['concept_class_id'].isin(class_ids)]
+                records = []
 
-                    records = []
-                    for _, row in df.iterrows():
-                        records.append(self._cdm.ConceptClass(
-                            concept_class_id=row['concept_class_id'],
-                            concept_class_name=row['concept_class_name'],
-                            concept_class_concept_id=row['concept_class_concept_id']
-                        ))
-                    session.add_all(records)
+                for class_file in self._subset_custom_vocab_files('concept_class'):
+                    with open(class_file) as f:
+                        reader = csv.DictReader(f, delimiter='\t')
+                        for row in reader:
+                            if row['concept_class_id'] in class_ids:
+                                records.append(self._cdm.ConceptClass(
+                                    concept_class_id=row['concept_class_id'],
+                                    concept_class_name=row['concept_class_name'],
+                                    concept_class_concept_id=row['concept_class_concept_id']
+                                ))
+
+                session.add_all(records)
 
     def _load_custom_vocabularies(self, vocab_ids: List[str]) -> None:
 
@@ -189,20 +192,21 @@ class VocabularyLoader:
 
             with self.db.session_scope() as session:
 
-                for vocab_file in self._subset_custom_vocab_files('vocabulary'):
-                    df = pd.read_csv(vocab_file, sep='\t')
-                    df = df[df['vocabulary_id'].isin(vocab_ids)]
+                records = []
 
-                    records = []
-                    for _, row in df.iterrows():
-                        records.append(self._cdm.Vocabulary(
-                            vocabulary_id=row['vocabulary_id'],
-                            vocabulary_name=row['vocabulary_name'],
-                            vocabulary_reference=row['vocabulary_reference'],
-                            vocabulary_version=row['vocabulary_version'],
-                            vocabulary_concept_id=row['vocabulary_concept_id']
-                        ))
-                    session.add_all(records)
+                for vocab_file in self._subset_custom_vocab_files('vocabulary'):
+                    with open(vocab_file) as f:
+                        reader = csv.DictReader(f, delimiter='\t')
+                        for row in reader:
+                            if row['vocabulary_id'] in vocab_ids:
+                                records.append(self._cdm.Vocabulary(
+                                    vocabulary_id=row['vocabulary_id'],
+                                    vocabulary_name=row['vocabulary_name'],
+                                    vocabulary_reference=row['vocabulary_reference'],
+                                    vocabulary_version=row['vocabulary_version'],
+                                    vocabulary_concept_id=row['vocabulary_concept_id']
+                                ))
+                session.add_all(records)
 
     def _load_custom_concepts(self, vocab_ids: List[str]) -> None:
 
@@ -213,24 +217,24 @@ class VocabularyLoader:
 
             with self.db.session_scope() as session:
 
+                records = []
+
                 for concept_file in self._subset_custom_vocab_files('concept'):
 
-                    df = pd.read_csv(concept_file, sep='\t')
-                    df = df[df['vocabulary_id'].isin(vocab_ids)]
-                    df = df.replace({np.nan: None})
-
-                    records = []
-                    for _, row in df.iterrows():
-                        records.append(self._cdm.Concept(
-                            concept_id=row['concept_id'],
-                            concept_name=row['concept_name'],
-                            domain_id=row['domain_id'],
-                            vocabulary_id=row['vocabulary_id'],
-                            concept_class_id=row['concept_class_id'],
-                            standard_concept=row['standard_concept'],
-                            concept_code=row['concept_code'],
-                            valid_start_date=row['valid_start_date'],
-                            valid_end_date=row['valid_end_date'],
-                            invalid_reason=row['invalid_reason']
-                        ))
+                    with open(concept_file) as f:
+                        reader = csv.DictReader(f, delimiter='\t')
+                        for row in reader:
+                            if row['vocabulary_id'] in vocab_ids:
+                                records.append(self._cdm.Concept(
+                                    concept_id=row['concept_id'],
+                                    concept_name=row['concept_name'],
+                                    domain_id=row['domain_id'],
+                                    vocabulary_id=row['vocabulary_id'],
+                                    concept_class_id=row['concept_class_id'],
+                                    standard_concept=row['standard_concept'],
+                                    concept_code=row['concept_code'],
+                                    valid_start_date=row['valid_start_date'],
+                                    valid_end_date=row['valid_end_date'],
+                                    invalid_reason=row['invalid_reason']
+                                ))
                     session.add_all(records)
