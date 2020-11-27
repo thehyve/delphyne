@@ -98,14 +98,12 @@ class VocabularyLoader:
             for _, row in df.iterrows():
                 class_id = row['concept_class_id']
                 class_name = row['concept_class_name']
-                class_concept_id = row['concept_class_concept_id']
 
                 # skip loading if class version already present
-                if self._custom_class_exists(class_id, class_name,
-                                             int(class_concept_id)):
+                if self._custom_class_exists(class_id, class_name):
                     continue
 
-                logging.info(f'Found class: {class_id, class_name, class_concept_id}')
+                logging.info(f'Found class: {class_id, class_name}')
 
                 class_ids.add(class_id)
 
@@ -114,15 +112,13 @@ class VocabularyLoader:
 
         return list(class_ids)
 
-    def _custom_class_exists(self, class_id: str, class_name: str,
-                             class_concept_id: int) -> bool:
+    def _custom_class_exists(self, class_id: str, class_name: str) -> bool:
 
         with self.db.session_scope() as session:
             existing_record = \
                 session.query(self._cdm.ConceptClass) \
                 .filter(self._cdm.ConceptClass.concept_class_id == class_id) \
                 .filter(self._cdm.ConceptClass.concept_class_name == class_name) \
-                .filter(self._cdm.ConceptClass.concept_class_concept_id == class_concept_id) \
                 .one_or_none()
             return existing_record is not None
 
