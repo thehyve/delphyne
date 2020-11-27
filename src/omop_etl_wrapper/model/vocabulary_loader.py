@@ -49,12 +49,6 @@ class VocabularyLoader:
         existing_vocabs = self._get_existing_vocab_versions()
         existing_classes = self._get_existing_class_versions()
 
-        # TODO: implement to check for accidental overriding / leftover custom vocabularies
-        # get all standard Athena vocabulary names
-        standard_vocabs = self._get_set_of_valid_vocabularies()
-        # get all standard Athena class names
-        standard_classes = self._get_list_of_valid_classes()
-
         # TODO: quality checks: mandatory fields, dependencies;
         #  warn if overriding standard Athena vocabulary name
         # self.check_custom_vocabularies_format()
@@ -63,8 +57,6 @@ class VocabularyLoader:
         vocab_ids = self._get_new_custom_vocabulary_ids()
         class_ids = self._get_custom_concept_class_ids()
 
-        # TODO: remove/reapply constraints where needed
-        # TODO: drop/load custom vocabulary concept id, if != 0
         # drop older version
         self._drop_custom_concepts(vocab_ids)
         self._drop_custom_vocabularies(vocab_ids)
@@ -73,15 +65,6 @@ class VocabularyLoader:
         self._load_custom_classes(class_ids)
         self._load_custom_vocabularies(vocab_ids)
         self._load_custom_concepts(vocab_ids)
-        # TODO: remove obsolete versions (i.e. cleanup in case of renaming of vocabs/classes);
-        #  if the name has been changed, the previous drop won't find them;
-        #  NOTE: for this to work, you need to keep a list of valid Athena vocabulary ids
-        #  and check that no unknown vocabulary is present (not in Athena nor custom vocab files);
-        #  check if the cleanup is time-consuming, if so should preferably not be executed
-        #  every time (consider adding a configuration parameter)
-        self._drop_unused_custom_concepts(standard_vocabs)
-        self._drop_unused_custom_vocabularies(standard_vocabs)
-        self._drop_unused_custom_classes(standard_classes)
 
     def _get_new_custom_vocabulary_ids(self) -> List[str]:
 
@@ -267,20 +250,3 @@ class VocabularyLoader:
                             invalid_reason=row['invalid_reason']
                         ))
                     session.add_all(records)
-
-    def _get_set_of_valid_vocabularies(self) -> Set[str]:
-        vocab_ids = set()
-        return vocab_ids
-
-    def _get_list_of_valid_classes(self) -> Set[str]:
-        class_ids = set()
-        return class_ids
-
-    def _drop_unused_custom_concepts(self, vocab_ids: Set[str]) -> None:
-        pass
-
-    def _drop_unused_custom_vocabularies(self, vocab_ids: Set[str]) -> None:
-        pass
-
-    def _drop_unused_custom_classes(self, class_ids: Set[str]) -> None:
-        pass
