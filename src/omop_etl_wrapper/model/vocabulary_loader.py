@@ -117,7 +117,7 @@ class VocabularyLoader:
                     .filter(self._cdm.Vocabulary.vocabulary_id == vocab_id) \
                     .filter(self._cdm.Vocabulary.vocabulary_version == vocab_version) \
                     .one_or_none()
-            return False if not existing_record else True
+            return existing_record is not None
 
     def _get_custom_concept_class_ids(self) -> List[str]:
 
@@ -156,7 +156,7 @@ class VocabularyLoader:
                 .filter(self._cdm.ConceptClass.concept_class_name == class_name) \
                 .filter(self._cdm.ConceptClass.concept_class_concept_id == class_concept_id) \
                 .one_or_none()
-            return False if not existing_record else True
+            return existing_record is not None
 
     def _drop_custom_concepts(self, vocab_ids: List[str]) -> None:
 
