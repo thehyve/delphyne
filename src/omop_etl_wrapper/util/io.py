@@ -20,7 +20,6 @@ def is_hidden(path: Path) -> bool:
     """Return True if a path is hidden."""
     return path.name.startswith(('.', '~'))
 
-
 def get_file_line_count(file_path: Path, skip_header: bool = True) -> int:
     """
     Get the line count of a text (non-binary) file.
@@ -47,7 +46,3 @@ def get_file_checksum(path: Path) -> str:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
-
-
-def is_hidden(path: Path) -> bool:
-    return str(path).startswith(('.', '~$'))
