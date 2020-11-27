@@ -167,7 +167,7 @@ class VocabularyLoader:
             with self.db.session_scope() as session:
                 session.query(self._cdm.Concept) \
                     .filter(self._cdm.Concept.vocabulary_id.in_(vocab_ids)) \
-                    .delete(synchronize_session='fetch')
+                    .delete(synchronize_session=False)
 
     def _drop_custom_vocabularies(self, vocab_ids: List[str]) -> None:
 
@@ -178,7 +178,7 @@ class VocabularyLoader:
             with self.db.session_scope() as session:
                 session.query(self._cdm.Vocabulary) \
                     .filter(self._cdm.Vocabulary.vocabulary_id.in_(vocab_ids)) \
-                    .delete(synchronize_session='fetch')
+                    .delete(synchronize_session=False)
 
     def _drop_custom_classes(self, class_ids: List[str]) -> None:
 
@@ -189,7 +189,7 @@ class VocabularyLoader:
             with self.db.session_scope() as session:
                 session.query(self._cdm.ConceptClass) \
                     .filter(self._cdm.ConceptClass.concept_class_id.in_(class_ids)) \
-                    .delete(synchronize_session='fetch')
+                    .delete(synchronize_session=False)
 
     def _load_custom_classes(self, class_ids: List[str]) -> None:
 
