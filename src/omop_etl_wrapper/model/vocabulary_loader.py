@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Tuple, Set, Dict
+from typing import List
 
 from .._paths import CUSTOM_VOCAB_DIR
 from ..database import Database
@@ -82,9 +82,9 @@ class VocabularyLoader:
         with self.db.session_scope() as session:
             existing_record = \
                 session.query(self._cdm.Vocabulary) \
-                    .filter(self._cdm.Vocabulary.vocabulary_id == vocab_id) \
-                    .filter(self._cdm.Vocabulary.vocabulary_version == vocab_version) \
-                    .one_or_none()
+                .filter(self._cdm.Vocabulary.vocabulary_id == vocab_id) \
+                .filter(self._cdm.Vocabulary.vocabulary_version == vocab_version) \
+                .one_or_none()
             return existing_record is not None
 
     def _get_custom_concept_class_ids(self) -> List[str]:
@@ -169,7 +169,7 @@ class VocabularyLoader:
                     df = df[df['concept_class_id'].isin(class_ids)]
 
                     records = []
-                    for _,row in df.iterrows():
+                    for _, row in df.iterrows():
                         records.append(self._cdm.ConceptClass(
                             concept_class_id=row['concept_class_id'],
                             concept_class_name=row['concept_class_name'],
