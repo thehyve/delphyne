@@ -18,9 +18,6 @@ class VocabularyLoader:
         self._cdm = cdm
         self._custom_vocab_files = self._get_all_custom_vocab_files()
 
-        # Test for getting versions of loaded vocabularies
-        # print(self._get_loaded_vocab_versions())
-
     @staticmethod
     def _get_all_custom_vocab_files() -> List[Path]:
         return [f for f in CUSTOM_VOCAB_DIR.glob('*') if f.is_file()
