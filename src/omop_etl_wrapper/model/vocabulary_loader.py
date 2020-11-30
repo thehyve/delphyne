@@ -42,10 +42,6 @@ class VocabularyLoader:
         :return: None
         """
 
-        # TODO: quality checks: mandatory fields, dependencies;
-        #  warn if overriding standard Athena vocabulary name
-        # self.check_custom_vocabularies_format()
-
         # get vocabularies and classes that need to be updated
         vocab_ids = self._get_new_custom_vocabulary_ids()
         class_ids = self._get_new_custom_concept_class_ids()
