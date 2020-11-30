@@ -56,152 +56,152 @@ from src.omop_etl_wrapper.cdm.vocabularies import (
 )
 
 
-Base_cdm_600 = declarative_base()
+Base = declarative_base()
 
 
-class Person(BasePersonCdm600, Base_cdm_600):
+class Person(BasePersonCdm600, Base):
     pass
 
 
-class Note(BaseNoteCdm600, Base_cdm_600):
+class Note(BaseNoteCdm600, Base):
     pass
 
 
-class Measurement(BaseMeasurementCdm600, Base_cdm_600):
+class Measurement(BaseMeasurementCdm600, Base):
     pass
 
 
-class NoteNlp(BaseNoteNlpCdm600, Base_cdm_600):
+class NoteNlp(BaseNoteNlpCdm600, Base):
     pass
 
 
-class Observation(BaseObservationCdm600, Base_cdm_600):
+class Observation(BaseObservationCdm600, Base):
     pass
 
 
-class Specimen(BaseSpecimenCdm600, Base_cdm_600):
+class Specimen(BaseSpecimenCdm600, Base):
     pass
 
 
-class StemTable(BaseStemTableCdm600, Base_cdm_600):
+class StemTable(BaseStemTableCdm600, Base):
     pass
 
 
-class VisitDetail(BaseVisitDetailCdm600, Base_cdm_600):
+class VisitDetail(BaseVisitDetailCdm600, Base):
     pass
 
 
-class ConditionOccurrence(BaseConditionOccurrenceCdm600, Base_cdm_600):
+class ConditionOccurrence(BaseConditionOccurrenceCdm600, Base):
     pass
 
 
-class DeviceExposure(BaseDeviceExposureCdm600, Base_cdm_600):
+class DeviceExposure(BaseDeviceExposureCdm600, Base):
     pass
 
 
-class DrugExposure(BaseDrugExposureCdm600, Base_cdm_600):
+class DrugExposure(BaseDrugExposureCdm600, Base):
     pass
 
 
-class FactRelationship(BaseFactRelationshipCdm600, Base_cdm_600):
+class FactRelationship(BaseFactRelationshipCdm600, Base):
     pass
 
 
-class ObservationPeriod(BaseObservationPeriodCdm600, Base_cdm_600):
+class ObservationPeriod(BaseObservationPeriodCdm600, Base):
     pass
 
 
-class ProcedureOccurrence(BaseProcedureOccurrenceCdm600, Base_cdm_600):
+class ProcedureOccurrence(BaseProcedureOccurrenceCdm600, Base):
     pass
 
 
-class SurveyConduct(BaseSurveyConductCdm600, Base_cdm_600):
+class SurveyConduct(BaseSurveyConductCdm600, Base):
     pass
 
 
-class VisitOccurrence(BaseVisitOccurrenceCdm600, Base_cdm_600):
+class VisitOccurrence(BaseVisitOccurrenceCdm600, Base):
     pass
 
 
-class Cost(BaseCostCdm600, Base_cdm_600):
+class Cost(BaseCostCdm600, Base):
     pass
 
 
-class PayerPlanPeriod(BasePayerPlanPeriodCdm600, Base_cdm_600):
+class PayerPlanPeriod(BasePayerPlanPeriodCdm600, Base):
     pass
 
 
-class CdmSource(BaseCdmSourceCdm531, Base_cdm_600):
+class CdmSource(BaseCdmSourceCdm531, Base):
     pass
 
 
-class Metadata(BaseMetadataCdm531, Base_cdm_600):
+class Metadata(BaseMetadataCdm531, Base):
     pass
 
 
-class DoseEra(BaseDoseEraCdm600, Base_cdm_600):
+class DoseEra(BaseDoseEraCdm600, Base):
     pass
 
 
-class DrugEra(BaseDrugEraCdm600, Base_cdm_600):
+class DrugEra(BaseDrugEraCdm600, Base):
     pass
 
 
-class ConditionEra(BaseConditionEraCdm600, Base_cdm_600):
+class ConditionEra(BaseConditionEraCdm600, Base):
     pass
 
 
-class Location(BaseLocationCdm600, Base_cdm_600):
+class Location(BaseLocationCdm600, Base):
     pass
 
 
-class CareSite(BaseCareSiteCdm600, Base_cdm_600):
+class CareSite(BaseCareSiteCdm600, Base):
     pass
 
 
-class Provider(BaseProviderCdm600, Base_cdm_600):
+class Provider(BaseProviderCdm600, Base):
     pass
 
 
-class LocationHistory(BaseLocationHistoryCdm600, Base_cdm_600):
+class LocationHistory(BaseLocationHistoryCdm600, Base):
     pass
 
 
-class Concept(BaseConcept, Base_cdm_600):
+class Concept(BaseConcept, Base):
     pass
 
 
-class ConceptAncestor(BaseConceptAncestor, Base_cdm_600):
+class ConceptAncestor(BaseConceptAncestor, Base):
     pass
 
 
-class ConceptClass(BaseConceptClass, Base_cdm_600):
+class ConceptClass(BaseConceptClass, Base):
     pass
 
 
-class ConceptRelationship(BaseConceptRelationship, Base_cdm_600):
+class ConceptRelationship(BaseConceptRelationship, Base):
     pass
 
 
-class ConceptSynonym(BaseConceptSynonym, Base_cdm_600):
+class ConceptSynonym(BaseConceptSynonym, Base):
     pass
 
 
-class DrugStrength(BaseDrugStrength, Base_cdm_600):
+class DrugStrength(BaseDrugStrength, Base):
     pass
 
 
-class Relationship(BaseRelationship, Base_cdm_600):
+class Relationship(BaseRelationship, Base):
     pass
 
 
-class SourceToConceptMap(BaseSourceToConceptMap, Base_cdm_600):
+class SourceToConceptMap(BaseSourceToConceptMap, Base):
     pass
 
 
-class Vocabulary(BaseVocabulary, Base_cdm_600):
+class Vocabulary(BaseVocabulary, Base):
     pass
 
 
-class Domain(BaseDomain, Base_cdm_600):
+class Domain(BaseDomain, Base):
     pass
