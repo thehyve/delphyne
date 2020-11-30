@@ -16,5 +16,7 @@ SOURCE_DATA_CONFIG_PATH = Path('./config/source_config.yml')
 LOG_OUTPUT_DIR = Path('./logs')
 
 RESOURCES_DIR = Path('./resources')
+# Directory containing all source_to_concept_map files
 STCM_DIR = RESOURCES_DIR / 'source_to_concept'
+# Directory containing all custom vocabulary tables
 CUSTOM_VOCAB_DIR = RESOURCES_DIR / 'custom_vocabularies'
