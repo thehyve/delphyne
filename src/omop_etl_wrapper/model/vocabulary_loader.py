@@ -32,6 +32,18 @@ class VocabularyLoader:
         return [f for f in self._custom_vocab_files if f.stem.endswith(omop_table)]
 
     def load_custom_vocabulary_tables(self) -> None:
+        """
+        Loads custom vocabularies to the vocabulary schema.
+        More in detail:
+        1. Checks for the presence of custom vocabularies and
+        concept_classes at a predefined location
+        (resources/custom_vocabularies);
+        2. Checks if the version found in these tables is already
+        present in the database;
+        3. Deletes obsolete versions from the database;
+        4. Loads the new versions to the database.
+        :return: None
+        """
 
         # TODO: quality checks: mandatory fields, dependencies;
         #  warn if overriding standard Athena vocabulary name
@@ -51,6 +63,8 @@ class VocabularyLoader:
         self._load_custom_concepts(vocab_ids)
 
     def _get_new_custom_vocabulary_ids(self) -> List[str]:
+        # create a list of custom vocabulary ids from the custom vocabulary table if the same
+        # vocabulary version is not already present in the database
 
         logging.info('Looking for new custom vocabulary versions')
 
@@ -80,6 +94,8 @@ class VocabularyLoader:
         return list(vocab_ids)
 
     def _get_old_vocab_version(self, vocab_id: str) -> Union[bool, None]:
+        # For a given custom vocabulary id, retrieve the version already present in the database
+        # if available, otherwise None
 
         with self.db.session_scope() as session:
             existing_record = \
@@ -89,6 +105,8 @@ class VocabularyLoader:
             return existing_record.vocabulary_version if existing_record is not None else None
 
     def _get_new_custom_concept_class_ids(self) -> List[str]:
+        # create a list of custom concept_class ids from the custom class table if the same
+        # concept_class name is not already present in the database
 
         logging.info('Looking for new custom class versions')
 
@@ -118,6 +136,8 @@ class VocabularyLoader:
         return list(class_ids)
 
     def _get_old_class_version(self, class_id: str) -> Union[bool, None]:
+        # For a given custom concept_class id, retrieve the name already present in the database
+        # if available, otherwise None
 
         with self.db.session_scope() as session:
             existing_record = \
@@ -127,6 +147,7 @@ class VocabularyLoader:
             return existing_record.concept_class_name if existing_record is not None else None
 
     def _drop_custom_concepts(self, vocab_ids: List[str]) -> None:
+        # Drop concepts associated with a list of custom vocabulary ids from the database
 
         logging.info(f'Dropping old custom concepts: '
                      f'{True if vocab_ids else False}')
@@ -138,6 +159,7 @@ class VocabularyLoader:
                     .delete(synchronize_session=False)
 
     def _drop_custom_vocabularies(self, vocab_ids: List[str]) -> None:
+        # Drop a list of custom vocabulary ids from the database
 
         logging.info(f'Dropping old custom vocabulary versions: '
                      f'{True if vocab_ids else False}')
@@ -149,6 +171,7 @@ class VocabularyLoader:
                     .delete(synchronize_session=False)
 
     def _drop_custom_classes(self, class_ids: List[str]) -> None:
+        # Drop a list of custom concept_class ids from the database
 
         logging.info(f'Dropping old custom concept class versions: '
                      f'{True if class_ids else False}')
@@ -160,6 +183,7 @@ class VocabularyLoader:
                     .delete(synchronize_session=False)
 
     def _load_custom_classes(self, class_ids: List[str]) -> None:
+        # Load a list of custom concept_classes to the database
 
         logging.info(f'Loading new custom class versions: '
                      f'{True if class_ids else False}')
@@ -184,6 +208,7 @@ class VocabularyLoader:
                 session.add_all(records)
 
     def _load_custom_vocabularies(self, vocab_ids: List[str]) -> None:
+        # Load a list of custom vocabularies to the database
 
         logging.info(f'Loading new custom vocabulary versions: '
                      f'{True if vocab_ids else False}')
@@ -209,6 +234,7 @@ class VocabularyLoader:
                 session.add_all(records)
 
     def _load_custom_concepts(self, vocab_ids: List[str]) -> None:
+        # Load concept_ids associated with a list of custom vocabulary ids to the database
 
         logging.info(f'Loading new custom concept_ids: '
                      f'{True if vocab_ids else False}')
