@@ -216,9 +216,8 @@ class ConstraintManager:
             for constraint in table.constraints:
                 if not isinstance(constraint, PrimaryKeyConstraint):
                     self._drop_constraint_in_db(constraint)
-        if drop_pk:
-            if table.primary_key:
-                self._drop_constraint_in_db(table.primary_key)
+        if drop_pk and table.primary_key:
+            self._drop_constraint_in_db(table.primary_key)
 
     @_invalidate_db_cache
     def add_table_constraints(self,
@@ -255,11 +254,11 @@ class ConstraintManager:
                              if c.table.name == table_name]
 
         for constraint in table_constraints:
-            if isinstance(constraint, Index) and not add_index:
+            if not add_index and isinstance(constraint, Index):
                 continue
-            if isinstance(constraint, PrimaryKeyConstraint) and not add_pk:
+            if not add_pk and isinstance(constraint, PrimaryKeyConstraint):
                 continue
-            if _is_non_pk_constraint(constraint) and not add_constraint:
+            if not add_constraint and _is_non_pk_constraint(constraint):
                 continue
             self._add_constraint_in_db(constraint)
 
