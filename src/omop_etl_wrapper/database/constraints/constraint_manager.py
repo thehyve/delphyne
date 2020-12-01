@@ -122,6 +122,10 @@ class ConstraintManager:
         :return: None
         """
         logger.info('Dropping CDM constraints')
+        # Because we don't know in which order the table constraints can
+        # be dropped without violating one in the process, we first
+        # collect all of them, then drop them in the following order:
+        # indexes, non-pk constraints, pks.
         constraints, pks, indexes = [], [], []
         for table in self._db.reflected_metadata.tables.values():
             if table.name in VOCAB_TABLES or not self._model.is_model_table(table.name):
