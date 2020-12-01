@@ -1,4 +1,4 @@
-from sqlalchemy import (Column, Date, DateTime, Integer, String, Text)
+from sqlalchemy import Column, Date, DateTime, Integer, String, Text
 from sqlalchemy.ext.declarative import declared_attr
 
 from .._schema_placeholders import CDM_SCHEMA
