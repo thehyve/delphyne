@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Optional, List, Set
+from typing import Optional, List
 
 import sys
 from sqlalchemy import Table
@@ -13,6 +13,7 @@ from .config.models import MainConfig
 from .database import Database
 from .model.etl_stats import EtlStats
 from .model.orm_wrapper import OrmWrapper
+from .model.vocabulary_loader import VocabularyLoader
 from .model.raw_sql_wrapper import RawSqlWrapper
 from .model.source_data import SourceData
 from .util.io import read_yaml_file
@@ -29,15 +30,14 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
     """
     cdm = cdm
 
-    def __init__(self, config: MainConfig, base):
+    def __init__(self, config: MainConfig, cdm_):
         """
         :param config: MainConfig
             The run configuration as read from config.yml.
-        :param base: SQLAlchemy declarative Base
-            Base to which the CDM tables are bound via SQLAlchemy's
-            declarative model.
+        :param cdm_: Module containing the SQLAlchemy declarative Base
+            and the CDM tables.
         """
-        self.db = Database.from_config(config, base)
+        self.db = Database.from_config(config, cdm_.Base)
 
         if not self.db.can_connect(str(self.db.engine.url)):
             sys.exit()
@@ -49,6 +49,9 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
 
         self.etl_stats = EtlStats()
         self.source_data: Optional[SourceData] = self._set_source_data()
+        self.vocab_loader = VocabularyLoader(self.db, cdm_)
+        self.load_custom_vocabs: bool = \
+            not config.run_options.skip_custom_vocabulary_loading
 
     def _set_source_data(self):
         if not SOURCE_DATA_CONFIG_PATH.exists():
@@ -60,6 +63,11 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
 
     def run(self) -> None:
         print('OMOP wrapper goes brrrrrrrr')
+
+    def load_custom_vocabularies(self):
+        logger.info(f'Loading custom vocabulary tables: {self.load_custom_vocabs}')
+        if self.load_custom_vocabs:
+            self.vocab_loader.load_custom_vocabulary_tables()
 
     def load_stcm(self):
         """Insert all stcm csv files into the source_to_concept_map
@@ -121,28 +129,16 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         conn = conn.execution_options(schema_translate_map=self.db.schema_translate_map)
         self.db.base.metadata.create_all(bind=conn)
 
-    def _get_schemas_to_create(self) -> Set[str]:
-        schemas: Set[str] = set()
-        for table in self.db.base.metadata.tables.values():
-            placeholder_schema = getattr(table, 'schema', None)
-            if not placeholder_schema:
-                continue
-            if placeholder_schema in self.db.schema_translate_map:
-                schemas.add(self.db.schema_translate_map[placeholder_schema])
-            else:
-                schemas.add(placeholder_schema)
-        return schemas
-
     def create_schemas(self) -> None:
         """
-        Create the schemas as present in the schema_translate_map of
-        the config file and ORM table definitions (if they don't exist
-        already).
+        Create all schemas used in the SQLAlchemy data model.
+
+        If table definitions include schema names that are present in
+        the schema_translate_map, the mapped schema value is used.
+        Schemas that already exist remain untouched.
         """
-        conn = self.db.engine.connect()
-        schemas = self._get_schemas_to_create()
-        for schema_name in schemas:
-            if not conn.dialect.has_schema(conn, f'{schema_name}'):
-                logger.info(f'Creating schema: {schema_name}')
-                self.db.engine.execute(CreateSchema(f'{schema_name}'))
-                logger.info(f'Schema created: {schema_name}')
+        with self.db.engine.connect() as conn:
+            for schema_name in self.db.schemas:
+                if not conn.dialect.has_schema(conn, schema_name):
+                    logger.info(f'Creating schema: {schema_name}')
+                    self.db.engine.execute(CreateSchema(schema_name))

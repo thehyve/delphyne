@@ -13,7 +13,7 @@ from src.omop_etl_wrapper.util.io import read_yaml_file
 from src.omop_etl_wrapper.wrapper import Wrapper
 from time import sleep
 
-from .cdm import Base_cdm_531, Base_cdm_600
+from .cdm import cdm531, cdm600
 
 _HERE = Path(__file__).parent
 _PG11_DOCKER_FILE = _HERE / '../docker/postgres11'
@@ -111,14 +111,14 @@ def test_db(test_db_uri: str) -> None:
 @pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
 def wrapper_cdm531(default_main_config: MainConfig):
-    wrapper = Wrapper(default_main_config, Base_cdm_531)
+    wrapper = Wrapper(default_main_config, cdm531)
     yield wrapper
 
 
 @pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
 def wrapper_cdm600(default_main_config: MainConfig):
-    wrapper = Wrapper(default_main_config, Base_cdm_600)
+    wrapper = Wrapper(default_main_config, cdm600)
     yield wrapper
 
 

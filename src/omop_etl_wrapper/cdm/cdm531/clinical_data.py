@@ -822,7 +822,7 @@ class BasePersonCdm531:
 
     @declared_attr
     def person_id(cls):
-        return Column(Integer, primary_key=True, unique=True)
+        return Column(Integer, primary_key=True)
 
     @declared_attr
     def gender_concept_id(cls):

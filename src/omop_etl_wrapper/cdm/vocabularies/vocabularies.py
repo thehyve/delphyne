@@ -11,7 +11,7 @@ class BaseConcept:
 
     @declared_attr
     def concept_id(cls):
-        return Column(Integer, primary_key=True, unique=True)
+        return Column(Integer, primary_key=True)
 
     @declared_attr
     def concept_name(cls):
@@ -97,7 +97,7 @@ class BaseConceptClass:
 
     @declared_attr
     def concept_class_id(cls):
-        return Column(String(20), primary_key=True, unique=True)
+        return Column(String(20), primary_key=True)
 
     @declared_attr
     def concept_class_name(cls):
@@ -184,7 +184,7 @@ class BaseDomain:
 
     @declared_attr
     def domain_id(cls):
-        return Column(String(20), primary_key=True, unique=True)
+        return Column(String(20), primary_key=True)
 
     @declared_attr
     def domain_name(cls):
@@ -278,7 +278,7 @@ class BaseRelationship:
 
     @declared_attr
     def relationship_id(cls):
-        return Column(String(20), primary_key=True, unique=True)
+        return Column(String(20), primary_key=True)
 
     @declared_attr
     def relationship_name(cls):
@@ -368,7 +368,7 @@ class BaseVocabulary:
 
     @declared_attr
     def vocabulary_id(cls):
-        return Column(String(20), primary_key=True, unique=True)
+        return Column(String(20), primary_key=True)
 
     @declared_attr
     def vocabulary_name(cls):

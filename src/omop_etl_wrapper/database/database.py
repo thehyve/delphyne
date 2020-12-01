@@ -4,14 +4,15 @@ import logging
 from collections import Counter
 from contextlib import contextmanager
 from getpass import getpass
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable, Optional, Set
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, MetaData
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 from sqlalchemy_utils.functions import database_exists
 
+from .constraints import ConstraintManager
 from .session_tracker import SessionTracker
 from ..config.models import MainConfig
 from ..model.etl_stats import EtlTransformation
@@ -23,10 +24,12 @@ class Database:
     schema_translate_map: Dict = {}
 
     def __init__(self, uri: str, schema_translate_map: Dict[str, str], base):
+        Database.schema_translate_map = schema_translate_map
         self.engine = create_engine(uri, executemany_mode='values')
         self.base = base
+        self.constraint_manager = ConstraintManager(self)
+        self._schemas = self._set_schemas()
         self._sessionmaker = sessionmaker(bind=self.engine, autoflush=False)
-        Database.schema_translate_map = schema_translate_map
 
     @classmethod
     def from_config(cls, config: MainConfig, base) -> Database:
@@ -69,6 +72,10 @@ class Database:
     def session(self) -> Session:
         logger.debug('Creating new session')
         return self._sessionmaker()
+
+    @property
+    def schemas(self) -> Set[str]:
+        return self._schemas.copy()
 
     def close_connection(self) -> None:
         self.engine.dispose()
@@ -157,3 +164,27 @@ class Database:
             db_name = uri.rsplit('/', 1)[-1]
             logger.error(f'Could not connect. Database "{db_name}" does not exist')
         return db_exists
+
+    @property
+    def reflected_metadata(self) -> MetaData:
+        """
+        Get Metadata of the current state of tables in the database.
+
+        :return: SQLAlchemy MetaData
+        """
+        metadata = MetaData(bind=self.engine)
+        for schema in self.schemas:
+            metadata.reflect(schema=schema)
+        return metadata
+
+    def _set_schemas(self) -> Set[str]:
+        schemas: Set[str] = set()
+        for table in self.base.metadata.tables.values():
+            raw_schema_value = getattr(table, 'schema', None)
+            if raw_schema_value is None:
+                continue
+            if raw_schema_value in self.schema_translate_map:
+                schemas.add(self.schema_translate_map[raw_schema_value])
+            else:
+                schemas.add(raw_schema_value)
+        return schemas
