@@ -27,7 +27,7 @@ def get_stringio_lines(string_io: io.StringIO) -> List[str]:
     return string_io.getvalue().split('\n')
 
 
-def test_logging_context(string_stream_handler: logging.StreamHandler, caplog):
+def test_logging_context(string_stream_handler: logging.StreamHandler):
     """LoggingFormatContext allows temporarily changing the log
     format."""
     dinosaur_format = logging.Formatter("🦕%(message)s🦕")
