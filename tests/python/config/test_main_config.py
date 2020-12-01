@@ -38,6 +38,12 @@ def test_missing_database_raises_validation_error(default_main_config: Dict):
     assert 'database' in str(error.value)
 
 
+def test_missing_database_password_set_to_empty_secret_string(default_main_config: Dict):
+    del default_main_config['database']['password']
+    c = MainConfig(**default_main_config)
+    assert c.database.password.get_secret_value() == ''
+
+
 def test_sql_parameter_value_empty_string(default_main_config: Dict):
     sql_parameters = {'var1': ''}
     default_main_config['sql_parameters'] = sql_parameters
@@ -52,3 +58,17 @@ def test_sql_parameter_key_empty_string(default_main_config: Dict):
     with pytest.raises(ValidationError) as error:
         MainConfig(**default_main_config)
     assert "Strings cannot be empty: : val2" in str(error.value)
+
+
+def test_mapping_value_cannot_also_be_key_in_other_pair(default_main_config: Dict):
+    sql_parameters = {'key1': 'val1', 'val1': 'val2'}
+    default_main_config['sql_parameters'] = sql_parameters
+    with pytest.raises(ValidationError) as error:
+        MainConfig(**default_main_config)
+    assert "Mapping value used as key: val1" in str(error.value)
+
+
+def test_mapping_value_can_be_same_as_key_within_same_pair(default_main_config: Dict):
+    sql_parameters = {'key1': 'key1'}
+    default_main_config['sql_parameters'] = sql_parameters
+    MainConfig(**default_main_config)

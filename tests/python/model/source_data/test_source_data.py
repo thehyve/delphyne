@@ -25,3 +25,9 @@ def test_source_data_counts_are_collected(source_config: Dict):
     source_config['count_source_rows'] = True
     source_data = SourceData(source_config, EtlStats())
     assert len(source_data._etl_stats.sources) == 3
+
+
+def test_source_dir_property(source_data1: SourceData):
+    assert source_data1.source_dir.is_dir()
+    assert source_data1.source_dir.exists()
+    assert source_data1.source_dir.name == 'test_dir1'
