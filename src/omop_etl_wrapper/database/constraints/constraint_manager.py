@@ -264,6 +264,9 @@ class ConstraintManager:
         """
         Drop a single constraint by name.
 
+        This can be either a PK, FK, not null, unique or check
+        constraint.
+
         :param constraint_name: str
             Name of the constraint as it exists in the database.
         :return: None
@@ -293,6 +296,9 @@ class ConstraintManager:
     def add_constraint(self, constraint: str) -> None:
         """
         Add a single constraint by name.
+
+        This can be either a PK, FK, not null, unique or check
+        constraint.
 
         :param constraint: str
             Name of the constraint as it exists in the model.
