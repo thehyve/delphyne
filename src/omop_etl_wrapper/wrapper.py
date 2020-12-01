@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Optional, List, Set
+from typing import Optional, List
 
 import sys
 from sqlalchemy import Table
@@ -129,28 +129,16 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         conn = conn.execution_options(schema_translate_map=self.db.schema_translate_map)
         self.db.base.metadata.create_all(bind=conn)
 
-    def _get_schemas_to_create(self) -> Set[str]:
-        schemas: Set[str] = set()
-        for table in self.db.base.metadata.tables.values():
-            placeholder_schema = getattr(table, 'schema', None)
-            if not placeholder_schema:
-                continue
-            if placeholder_schema in self.db.schema_translate_map:
-                schemas.add(self.db.schema_translate_map[placeholder_schema])
-            else:
-                schemas.add(placeholder_schema)
-        return schemas
-
     def create_schemas(self) -> None:
         """
-        Create the schemas as present in the schema_translate_map of
-        the config file and ORM table definitions (if they don't exist
-        already).
+        Create all schemas used in the SQLAlchemy data model.
+
+        If table definitions include schema names that are present in
+        the schema_translate_map, the mapped schema value is used.
+        Schemas that already exist remain untouched.
         """
-        conn = self.db.engine.connect()
-        schemas = self._get_schemas_to_create()
-        for schema_name in schemas:
-            if not conn.dialect.has_schema(conn, f'{schema_name}'):
-                logger.info(f'Creating schema: {schema_name}')
-                self.db.engine.execute(CreateSchema(f'{schema_name}'))
-                logger.info(f'Schema created: {schema_name}')
+        with self.db.engine.connect() as conn:
+            for schema_name in self.db.schemas:
+                if not conn.dialect.has_schema(conn, schema_name):
+                    logger.info(f'Creating schema: {schema_name}')
+                    self.db.engine.execute(CreateSchema(schema_name))
