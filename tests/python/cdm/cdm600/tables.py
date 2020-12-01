@@ -37,9 +37,9 @@ from src.omop_etl_wrapper.cdm.cdm600.derived_elements import (
     BaseConditionEraCdm600,
 )
 
-from src.omop_etl_wrapper.cdm.cdm531.metadata import (
-    BaseCdmSourceCdm531,
-    BaseMetadataCdm531,
+from src.omop_etl_wrapper.cdm.metadata import (
+    BaseMetadata,
+    BaseCdmSource,
 )
 
 from src.omop_etl_wrapper.cdm.vocabularies import (
@@ -131,11 +131,11 @@ class PayerPlanPeriod(BasePayerPlanPeriodCdm600, Base):
     pass
 
 
-class CdmSource(BaseCdmSourceCdm531, Base):
+class CdmSource(BaseCdmSource, Base):
     pass
 
 
-class Metadata(BaseMetadataCdm531, Base):
+class Metadata(BaseMetadata, Base):
     pass
 
 

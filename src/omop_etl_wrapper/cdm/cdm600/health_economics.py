@@ -10,14 +10,21 @@ class BaseCostCdm600:
     __tablename__ = 'cost'
     __table_args__ = {'schema': CDM_SCHEMA}
 
-    cost_id = Column(BigInteger, primary_key=True)
+    @declared_attr
+    def cost_id(cls):
+        return Column(BigInteger, primary_key=True)
 
     @declared_attr
     def person_id(cls):
         return Column(ForeignKey(f'{CDM_SCHEMA}.person.person_id'), nullable=False, index=True)
 
-    cost_event_id = Column(BigInteger, nullable=False)
-    cost_event_field_concept_id = Column(Integer, nullable=False)
+    @declared_attr
+    def cost_event_id(cls):
+        return Column(BigInteger, nullable=False)
+
+    @declared_attr
+    def cost_event_field_concept_id(cls):
+        return Column(Integer, nullable=False)
 
     @declared_attr
     def cost_concept_id(cls):
@@ -31,10 +38,21 @@ class BaseCostCdm600:
     def currency_concept_id(cls):
         return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
 
-    cost = Column(Numeric)
-    incurred_date = Column(Date, nullable=False)
-    billed_date = Column(Date)
-    paid_date = Column(Date)
+    @declared_attr
+    def cost(cls):
+        return Column(Numeric)
+
+    @declared_attr
+    def incurred_date(cls):
+        return Column(Date, nullable=False)
+
+    @declared_attr
+    def billed_date(cls):
+        return Column(Date)
+
+    @declared_attr
+    def paid_date(cls):
+        return Column(Date)
 
     @declared_attr
     def revenue_code_concept_id(cls):
@@ -44,14 +62,21 @@ class BaseCostCdm600:
     def drg_concept_id(cls):
         return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
 
-    cost_source_value = Column(String(50))
+    @declared_attr
+    def cost_source_value(cls):
+        return Column(String(50))
 
     @declared_attr
     def cost_source_concept_id(cls):
         return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
 
-    revenue_code_source_value = Column(String(50))
-    drg_source_value = Column(String(3))
+    @declared_attr
+    def revenue_code_source_value(cls):
+        return Column(String(50))
+
+    @declared_attr
+    def drg_source_value(cls):
+        return Column(String(3))
 
     @declared_attr
     def payer_plan_period_id(cls):
@@ -94,7 +119,9 @@ class BasePayerPlanPeriodCdm600:
     __tablename__ = 'payer_plan_period'
     __table_args__ = {'schema': CDM_SCHEMA}
 
-    payer_plan_period_id = Column(BigInteger, primary_key=True)
+    @declared_attr
+    def payer_plan_period_id(cls):
+        return Column(BigInteger, primary_key=True)
 
     @declared_attr
     def person_id(cls):
@@ -104,8 +131,13 @@ class BasePayerPlanPeriodCdm600:
     def contract_person_id(cls):
         return Column(ForeignKey(f'{CDM_SCHEMA}.person.person_id'))
 
-    payer_plan_period_start_date = Column(Date, nullable=False)
-    payer_plan_period_end_date = Column(Date, nullable=False)
+    @declared_attr
+    def payer_plan_period_start_date(cls):
+        return Column(Date, nullable=False)
+
+    @declared_attr
+    def payer_plan_period_end_date(cls):
+        return Column(Date, nullable=False)
 
     @declared_attr
     def payer_concept_id(cls):
@@ -127,32 +159,45 @@ class BasePayerPlanPeriodCdm600:
     def stop_reason_concept_id(cls):
         return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
 
-    payer_source_value = Column(String(50))
+    @declared_attr
+    def payer_source_value(cls):
+        return Column(String(50))
 
     @declared_attr
     def payer_source_concept_id(cls):
         return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
 
-    plan_source_value = Column(String(50))
+    @declared_attr
+    def plan_source_value(cls):
+        return Column(String(50))
 
     @declared_attr
     def plan_source_concept_id(cls):
         return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
 
-    contract_source_value = Column(String(50))
+    @declared_attr
+    def contract_source_value(cls):
+        return Column(String(50))
 
     @declared_attr
     def contract_source_concept_id(cls):
         return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
 
-    sponsor_source_value = Column(String(50))
+    @declared_attr
+    def sponsor_source_value(cls):
+        return Column(String(50))
 
     @declared_attr
     def sponsor_source_concept_id(cls):
         return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
 
-    family_source_value = Column(String(50))
-    stop_reason_source_value = Column(String(50))
+    @declared_attr
+    def family_source_value(cls):
+        return Column(String(50))
+
+    @declared_attr
+    def stop_reason_source_value(cls):
+        return Column(String(50))
 
     @declared_attr
     def stop_reason_source_concept_id(cls):

@@ -37,9 +37,9 @@ from src.omop_etl_wrapper.cdm.cdm531.derived_elements import (
     BaseConditionEraCdm531,
 )
 
-from src.omop_etl_wrapper.cdm.cdm531.metadata import (
-    BaseMetadataCdm531,
-    BaseCdmSourceCdm531,
+from src.omop_etl_wrapper.cdm.metadata import (
+    BaseMetadata,
+    BaseCdmSource,
 )
 
 from src.omop_etl_wrapper.cdm.vocabularies import (
@@ -159,11 +159,11 @@ class ConditionEra(BaseConditionEraCdm531, Base):
     pass
 
 
-class CdmSource(BaseCdmSourceCdm531, Base):
+class CdmSource(BaseCdmSource, Base):
     pass
 
 
-class Metadata(BaseMetadataCdm531, Base):
+class Metadata(BaseMetadata, Base):
     pass
 
 
