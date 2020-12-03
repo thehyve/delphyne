@@ -28,3 +28,9 @@ def test_show_warning_when_source_dir_is_empty(source_config: Dict,
     source_config['source_files'] = {}
     SourceConfig(**source_config)
     assert 'No source files were found at' in caplog.text
+
+
+def test_additional_file_defaults_are_allowed(source_config: Dict):
+    source_config['file_defaults']['escapechar'] = '🐝'
+    sc = SourceConfig(**source_config)
+    assert sc.file_defaults['escapechar'] == '🐝'
