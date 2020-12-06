@@ -277,7 +277,7 @@ class ConstraintManager:
         """
         constraint = self._reflected_constraint_lookup.get(constraint_name)
         if constraint is None:
-            raise ValueError(f'Constraint "{constraint_name}" not found')
+            raise KeyError(f'Constraint "{constraint_name}" not found')
         else:
             self._drop_constraint_in_db(constraint)
 
@@ -292,7 +292,7 @@ class ConstraintManager:
         """
         index = self._reflected_constraint_lookup.get(index_name)
         if index is None:
-            raise ValueError(f'Index "{index_name}" not found')
+            raise KeyError(f'Index "{index_name}" not found')
         else:
             self._drop_constraint_in_db(index)
 
@@ -324,7 +324,7 @@ class ConstraintManager:
     def _add_constraint_or_index(self, constraint_name: str) -> None:
         constraint = self._model.constraint_lookup.get(constraint_name)
         if constraint is None:
-            raise ValueError(f'"{constraint_name}" not found')
+            raise KeyError(f'"{constraint_name}" not found')
         else:
             self._add_constraint_in_db(constraint)
 
