@@ -1,4 +1,7 @@
+from sqlalchemy import MetaData
 from sqlalchemy.ext.declarative import declarative_base
+
+from src.omop_etl_wrapper.database.constraints import NAMING_CONVENTION
 
 from src.omop_etl_wrapper.cdm.cdm600.clinical_data import (
     BasePersonCdm600,
@@ -57,6 +60,7 @@ from src.omop_etl_wrapper.cdm.vocabularies import (
 
 
 Base = declarative_base()
+Base.metadata = MetaData(naming_convention=NAMING_CONVENTION)
 
 
 class Person(BasePersonCdm600, Base):
