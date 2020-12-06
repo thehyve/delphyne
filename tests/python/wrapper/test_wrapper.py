@@ -3,10 +3,9 @@ from sqlalchemy import inspect
 from src.omop_etl_wrapper import Wrapper
 from src.omop_etl_wrapper.database.database import Database
 
-from ..conftest import running_locally, docker_daemon_is_running
+from tests.python.conftest import docker_not_available
 
-docker_not_available = (running_locally() and not docker_daemon_is_running())
-pytestmark = pytest.mark.skipif(condition=docker_not_available,
+pytestmark = pytest.mark.skipif(condition=docker_not_available(),
                                 reason='Docker daemon is not running')
 
 

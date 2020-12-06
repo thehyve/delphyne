@@ -53,6 +53,10 @@ def docker_daemon_is_running() -> bool:
     return True
 
 
+def docker_not_available() -> bool:
+    return running_locally() and not docker_daemon_is_running()
+
+
 def postgres_is_ready() -> bool:
     ready = False
     try:
