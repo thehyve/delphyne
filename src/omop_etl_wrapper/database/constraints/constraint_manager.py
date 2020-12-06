@@ -82,7 +82,6 @@ class ConstraintManager:
     """
     def __init__(self, database: Database):
         self._db = database
-        self._execution_options = {'schema_translate_map': self._db.schema_translate_map}
         self._model = _TargetModel(metadata=database.base.metadata)
 
     @property
@@ -331,7 +330,7 @@ class ConstraintManager:
     def _add_constraint_in_db(self, constraint: ConstraintOrIndex) -> None:
         if self._constraint_already_active(constraint):
             return
-        with self._db.engine.connect().execution_options(**self._execution_options) as conn:
+        with self._db.engine.connect() as conn:
             logger.debug(f'Adding {constraint.name}')
             if isinstance(constraint, Index):
                 conn.execute(CreateIndex(constraint))
@@ -362,7 +361,7 @@ class ConstraintManager:
         if constraint.name is None:
             return
 
-        with self._db.engine.connect().execution_options(**self._execution_options) as conn:
+        with self._db.engine.connect() as conn:
             logger.debug(f'Dropping {constraint.name}')
             if isinstance(constraint, Index):
                 conn.execute(DropIndex(constraint))
