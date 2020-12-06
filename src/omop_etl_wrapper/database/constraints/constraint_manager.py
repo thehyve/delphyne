@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from copy import copy
 from functools import lru_cache, wraps
 from typing import TYPE_CHECKING, Union, Dict, Callable
 
@@ -335,7 +336,12 @@ class ConstraintManager:
             if isinstance(constraint, Index):
                 conn.execute(CreateIndex(constraint))
             else:
-                conn.execute(AddConstraint(constraint))
+                # We add a copy instead of the original constraint.
+                # Otherwise, when you later call metadata.create_all to
+                # create tables, SQLAlchemy thinks the constraints have
+                # already been created and skips them.
+                c = copy(constraint)
+                conn.execute(AddConstraint(c))
 
     def _constraint_already_active(self, new_constraint: ConstraintOrIndex) -> bool:
         base_message = f'Cannot add {type(new_constraint).__name__} "{new_constraint.name}"'
@@ -350,8 +356,8 @@ class ConstraintManager:
         return False
 
     def _drop_constraint_in_db(self, constraint: ConstraintOrIndex) -> None:
-        # SQLAlchemy sometimes detects empty constraint objects in
-        # reflected metadata. These cannot be dropped because they have
+        # SQLAlchemy reflects empty PK objects in tables that don't have
+        # a PK (anymore). These cannot be dropped because they have
         # no name and are therefore ignored here.
         if constraint.name is None:
             return
