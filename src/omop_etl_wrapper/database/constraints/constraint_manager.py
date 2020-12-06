@@ -44,11 +44,19 @@ def _invalidate_db_cache(func: Callable) -> Callable:
     return wrapper_invalidate_db_cache
 
 
+def _create_constraint_lookup(metadata: MetaData) -> Dict[str, ConstraintOrIndex]:
+    lookup = dict()
+    for table in metadata.tables.values():
+        for constraint in chain(table.constraints, table.indexes):
+            lookup[constraint.name] = constraint
+    return lookup
+
+
 class _TargetModel:
     """Lookup class for table properties of the target model."""
     def __init__(self, metadata: MetaData):
         self.table_lookup = {t.name: t for t in metadata.tables.values()}
-        self.constraint_lookup = self.create_constraint_lookup(metadata)
+        self.constraint_lookup = _create_constraint_lookup(metadata)
         self.indexes = [c for c in self.constraint_lookup.values()
                         if isinstance(c, Index)]
         self.pks = [c for c in self.constraint_lookup.values()
@@ -60,14 +68,6 @@ class _TargetModel:
     def is_model_table(self, table_name: str) -> bool:
         # Check table exists within the CDM model MetaData instance
         return table_name in self.table_lookup.keys()
-
-    @staticmethod
-    def create_constraint_lookup(metadata: MetaData) -> Dict[str, ConstraintOrIndex]:
-        lookup = dict()
-        for table in metadata.tables.values():
-            for constraint in chain(table.constraints, table.indexes):
-                lookup[constraint.name] = constraint
-        return lookup
 
 
 class ConstraintManager:
@@ -88,7 +88,7 @@ class ConstraintManager:
     @property
     @lru_cache()
     def _reflected_constraint_lookup(self) -> Dict[str, ConstraintOrIndex]:
-        return _TargetModel.create_constraint_lookup(self._db.reflected_metadata)
+        return _create_constraint_lookup(self._db.reflected_metadata)
 
     @property
     @lru_cache()
