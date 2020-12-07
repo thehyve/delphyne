@@ -5,28 +5,34 @@ import csv
 from .._paths import CUSTOM_VOCAB_DIR
 from ..database import Database
 from ..util.io import is_hidden
+from .table_manager import VocabManager
 import logging
 
 
 logger = logging.getLogger(__name__)
 
 
-class VocabularyLoader:
+class VocabularyLoader(VocabManager):
     def __init__(self, db: Database, cdm):
         self.db = db
-
         self._cdm = cdm
-        self._custom_vocab_files = self._get_all_custom_vocab_files()
+        self._custom_vocab_files = self._subset_custom_table_files('vocabulary')
+        self._custom_concept_files = self._subset_custom_table_files('concept')
+        self._custom_class_files = self._subset_custom_table_files('concept_class')
+
+        super().__init__(db=self.db, cdm=self._cdm,
+                                     custom_vocab_files=self._custom_vocab_files)
 
     @staticmethod
-    def _get_all_custom_vocab_files() -> List[Path]:
+    def _get_all_custom_table_files() -> List[Path]:
         return [f for f in CUSTOM_VOCAB_DIR.glob('*') if f.is_file()
                 and not is_hidden(f)]
 
-    def _subset_custom_vocab_files(self, omop_table: str) -> List[Path]:
+    def _subset_custom_table_files(self, omop_table: str) -> List[Path]:
         # get custom vocab files for a specific vocabulary target table
         # based on the file name conventions (e.g. "concept")
-        return [f for f in self._custom_vocab_files if f.stem.endswith(omop_table)]
+        custom_table_files = self._get_all_custom_table_files()
+        return [f for f in custom_table_files if f.stem.endswith(omop_table)]
 
     def load_custom_vocabulary_tables(self) -> None:
         """
@@ -55,48 +61,6 @@ class VocabularyLoader:
         self._load_custom_vocabularies(vocab_ids)
         self._load_custom_concepts(vocab_ids)
 
-    def _get_new_custom_vocabulary_ids(self) -> List[str]:
-        # create a list of custom vocabulary ids from the custom vocabulary table if the same
-        # vocabulary version is not already present in the database
-
-        logging.info('Looking for new custom vocabulary versions')
-
-        vocab_ids = set()
-
-        for vocab_file in self._subset_custom_vocab_files('vocabulary'):
-
-            with open(vocab_file) as f:
-                reader = csv.DictReader(f, delimiter='\t')
-                for row in reader:
-                    vocab_id = row['vocabulary_id']
-                    vocab_version = row['vocabulary_version']
-
-                    old_vocab_version = self._get_old_vocab_version(vocab_id)
-
-                    # skip loading if vocabulary version already present
-                    if vocab_version == old_vocab_version:
-                        continue
-
-                    logging.info(f'Found new vocabulary version: {vocab_id} : '
-                                 f'{old_vocab_version} ->  {vocab_version}')
-                    vocab_ids.add(vocab_id)
-
-        if not vocab_ids:
-            logging.info('No new vocabulary version found')
-
-        return list(vocab_ids)
-
-    def _get_old_vocab_version(self, vocab_id: str) -> Union[bool, None]:
-        # For a given custom vocabulary id, retrieve the version already present in the database
-        # if available, otherwise None
-
-        with self.db.session_scope() as session:
-            existing_record = \
-                session.query(self._cdm.Vocabulary) \
-                .filter(self._cdm.Vocabulary.vocabulary_id == vocab_id) \
-                .one_or_none()
-            return existing_record.vocabulary_version if existing_record is not None else None
-
     def _get_new_custom_concept_class_ids(self) -> List[str]:
         # create a list of custom concept_class ids from the custom class table if the same
         # concept_class name is not already present in the database
@@ -105,7 +69,7 @@ class VocabularyLoader:
 
         class_ids = set()
 
-        for class_file in self._subset_custom_vocab_files('concept_class'):
+        for class_file in self._custom_class_files:
 
             with open(class_file) as f:
                 reader = csv.DictReader(f, delimiter='\t')
@@ -151,18 +115,6 @@ class VocabularyLoader:
                     .filter(self._cdm.Concept.vocabulary_id.in_(vocab_ids)) \
                     .delete(synchronize_session=False)
 
-    def _drop_custom_vocabularies(self, vocab_ids: List[str]) -> None:
-        # Drop a list of custom vocabulary ids from the database
-
-        logging.info(f'Dropping old custom vocabulary versions: '
-                     f'{True if vocab_ids else False}')
-
-        if vocab_ids:
-            with self.db.session_scope() as session:
-                session.query(self._cdm.Vocabulary) \
-                    .filter(self._cdm.Vocabulary.vocabulary_id.in_(vocab_ids)) \
-                    .delete(synchronize_session=False)
-
     def _drop_custom_classes(self, class_ids: List[str]) -> None:
         # Drop a list of custom concept_class ids from the database
 
@@ -187,7 +139,7 @@ class VocabularyLoader:
 
                 records = []
 
-                for class_file in self._subset_custom_vocab_files('concept_class'):
+                for class_file in self._custom_class_files:
                     with open(class_file) as f:
                         reader = csv.DictReader(f, delimiter='\t')
                         for row in reader:
@@ -198,32 +150,6 @@ class VocabularyLoader:
                                     concept_class_concept_id=row['concept_class_concept_id']
                                 ))
 
-                session.add_all(records)
-
-    def _load_custom_vocabularies(self, vocab_ids: List[str]) -> None:
-        # Load a list of custom vocabularies to the database
-
-        logging.info(f'Loading new custom vocabulary versions: '
-                     f'{True if vocab_ids else False}')
-
-        if vocab_ids:
-
-            with self.db.session_scope() as session:
-
-                records = []
-
-                for vocab_file in self._subset_custom_vocab_files('vocabulary'):
-                    with open(vocab_file) as f:
-                        reader = csv.DictReader(f, delimiter='\t')
-                        for row in reader:
-                            if row['vocabulary_id'] in vocab_ids:
-                                records.append(self._cdm.Vocabulary(
-                                    vocabulary_id=row['vocabulary_id'],
-                                    vocabulary_name=row['vocabulary_name'],
-                                    vocabulary_reference=row['vocabulary_reference'],
-                                    vocabulary_version=row['vocabulary_version'],
-                                    vocabulary_concept_id=row['vocabulary_concept_id']
-                                ))
                 session.add_all(records)
 
     def _load_custom_concepts(self, vocab_ids: List[str]) -> None:
@@ -238,7 +164,7 @@ class VocabularyLoader:
 
                 records = []
 
-                for concept_file in self._subset_custom_vocab_files('concept'):
+                for concept_file in self._custom_concept_files:
 
                     with open(concept_file) as f:
                         reader = csv.DictReader(f, delimiter='\t')
