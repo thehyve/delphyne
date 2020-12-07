@@ -13,7 +13,7 @@ from .config.models import MainConfig
 from .database import Database
 from .model.etl_stats import EtlStats
 from .model.orm_wrapper import OrmWrapper
-from .model.vocab_manager import CustomVocabularyLoader
+from .model.vocab_manager import VocabManager
 from .model.raw_sql_wrapper import RawSqlWrapper
 from .model.source_data import SourceData
 from .util.io import read_yaml_file
@@ -49,9 +49,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
 
         self.etl_stats = EtlStats()
         self.source_data: Optional[SourceData] = self._set_source_data()
-        self.vocab_loader = CustomVocabularyLoader(self.db, cdm_)
-        self.load_custom_vocabs: bool = \
-            not config.run_options.skip_custom_vocabulary_loading
+        self.vocab_manager = VocabManager(self.db, cdm_, config)
 
     def _set_source_data(self):
         if not SOURCE_DATA_CONFIG_PATH.exists():
@@ -63,11 +61,6 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
 
     def run(self) -> None:
         print('OMOP wrapper goes brrrrrrrr')
-
-    def load_custom_vocabularies(self):
-        logger.info(f'Loading custom vocabulary tables: {self.load_custom_vocabs}')
-        if self.load_custom_vocabs:
-            self.vocab_loader.load_custom_vocabulary_tables()
 
     def load_stcm(self):
         """Insert all stcm csv files into the source_to_concept_map

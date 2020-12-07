@@ -1,10 +1,9 @@
+import csv
+import logging
 from pathlib import Path
 from typing import List, Union
-import csv
 
-from ...database import Database
-import logging
-
+from omop_etl_wrapper.database import Database
 
 logger = logging.getLogger(__name__)
 
