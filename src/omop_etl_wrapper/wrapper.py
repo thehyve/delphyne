@@ -13,7 +13,7 @@ from .config.models import MainConfig
 from .database import Database
 from .model.etl_stats import EtlStats
 from .model.orm_wrapper import OrmWrapper
-from .model.vocabulary_loader import VocabularyLoader
+from .model.vocab_manager import VocabularyLoader
 from .model.raw_sql_wrapper import RawSqlWrapper
 from .model.source_data import SourceData
 from .util.io import read_yaml_file
