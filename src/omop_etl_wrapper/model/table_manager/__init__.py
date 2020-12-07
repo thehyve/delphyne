@@ -1,0 +1,1 @@
+from .vocabulary_manager import VocabManager
