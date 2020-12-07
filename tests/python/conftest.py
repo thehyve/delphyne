@@ -6,6 +6,7 @@ from typing import Dict
 import docker
 import psycopg2
 import pytest
+from docker.errors import DockerException
 from sqlalchemy import create_engine
 from sqlalchemy_utils import create_database, drop_database
 from src.omop_etl_wrapper.config.models import MainConfig
@@ -41,6 +42,19 @@ def running_locally() -> bool:
     if 'RUNNING_CI' in os.environ:
         return False
     return True
+
+
+def docker_daemon_is_running() -> bool:
+    try:
+        client = docker.from_env()
+        client.info()
+    except (ConnectionRefusedError, DockerException):
+        return False
+    return True
+
+
+def docker_not_available() -> bool:
+    return running_locally() and not docker_daemon_is_running()
 
 
 def postgres_is_ready() -> bool:
@@ -110,16 +124,16 @@ def test_db(test_db_uri: str) -> None:
 
 @pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
-def wrapper_cdm531(default_main_config: MainConfig):
+def wrapper_cdm531(default_main_config: MainConfig) -> Wrapper:
     wrapper = Wrapper(default_main_config, cdm531)
-    yield wrapper
+    return wrapper
 
 
 @pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
-def wrapper_cdm600(default_main_config: MainConfig):
+def wrapper_cdm600(default_main_config: MainConfig) -> Wrapper:
     wrapper = Wrapper(default_main_config, cdm600)
-    yield wrapper
+    return wrapper
 
 
 @pytest.fixture(scope="session")

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from copy import copy
 from functools import lru_cache, wraps
 from typing import TYPE_CHECKING, Union, Dict, Callable
 
@@ -43,11 +44,19 @@ def _invalidate_db_cache(func: Callable) -> Callable:
     return wrapper_invalidate_db_cache
 
 
+def _create_constraint_lookup(metadata: MetaData) -> Dict[str, ConstraintOrIndex]:
+    lookup = dict()
+    for table in metadata.tables.values():
+        for constraint in chain(table.constraints, table.indexes):
+            lookup[constraint.name] = constraint
+    return lookup
+
+
 class _TargetModel:
     """Lookup class for table properties of the target model."""
     def __init__(self, metadata: MetaData):
         self.table_lookup = {t.name: t for t in metadata.tables.values()}
-        self.constraint_lookup = self.create_constraint_lookup(metadata)
+        self.constraint_lookup = _create_constraint_lookup(metadata)
         self.indexes = [c for c in self.constraint_lookup.values()
                         if isinstance(c, Index)]
         self.pks = [c for c in self.constraint_lookup.values()
@@ -59,14 +68,6 @@ class _TargetModel:
     def is_model_table(self, table_name: str) -> bool:
         # Check table exists within the CDM model MetaData instance
         return table_name in self.table_lookup.keys()
-
-    @staticmethod
-    def create_constraint_lookup(metadata: MetaData) -> Dict[str, ConstraintOrIndex]:
-        lookup = dict()
-        for table in metadata.tables.values():
-            for constraint in chain(table.constraints, table.indexes):
-                lookup[constraint.name] = constraint
-        return lookup
 
 
 class ConstraintManager:
@@ -81,13 +82,12 @@ class ConstraintManager:
     """
     def __init__(self, database: Database):
         self._db = database
-        self._execution_options = {'schema_translate_map': self._db.schema_translate_map}
         self._model = _TargetModel(metadata=database.base.metadata)
 
     @property
     @lru_cache()
     def _reflected_constraint_lookup(self) -> Dict[str, ConstraintOrIndex]:
-        return _TargetModel.create_constraint_lookup(self._db.reflected_metadata)
+        return _create_constraint_lookup(self._db.reflected_metadata)
 
     @property
     @lru_cache()
@@ -276,7 +276,7 @@ class ConstraintManager:
         """
         constraint = self._reflected_constraint_lookup.get(constraint_name)
         if constraint is None:
-            raise ValueError(f'Constraint "{constraint_name}" not found')
+            raise KeyError(f'Constraint "{constraint_name}" not found')
         else:
             self._drop_constraint_in_db(constraint)
 
@@ -291,7 +291,7 @@ class ConstraintManager:
         """
         index = self._reflected_constraint_lookup.get(index_name)
         if index is None:
-            raise ValueError(f'Index "{index_name}" not found')
+            raise KeyError(f'Index "{index_name}" not found')
         else:
             self._drop_constraint_in_db(index)
 
@@ -323,19 +323,24 @@ class ConstraintManager:
     def _add_constraint_or_index(self, constraint_name: str) -> None:
         constraint = self._model.constraint_lookup.get(constraint_name)
         if constraint is None:
-            raise ValueError(f'"{constraint_name}" not found')
+            raise KeyError(f'"{constraint_name}" not found')
         else:
             self._add_constraint_in_db(constraint)
 
     def _add_constraint_in_db(self, constraint: ConstraintOrIndex) -> None:
         if self._constraint_already_active(constraint):
             return
-        with self._db.engine.connect().execution_options(**self._execution_options) as conn:
+        with self._db.engine.connect() as conn:
             logger.debug(f'Adding {constraint.name}')
             if isinstance(constraint, Index):
                 conn.execute(CreateIndex(constraint))
             else:
-                conn.execute(AddConstraint(constraint))
+                # We add a copy instead of the original constraint.
+                # Otherwise, when you later call metadata.create_all to
+                # create tables, SQLAlchemy thinks the constraints have
+                # already been created and skips them.
+                c = copy(constraint)
+                conn.execute(AddConstraint(c))
 
     def _constraint_already_active(self, new_constraint: ConstraintOrIndex) -> bool:
         base_message = f'Cannot add {type(new_constraint).__name__} "{new_constraint.name}"'
@@ -350,13 +355,13 @@ class ConstraintManager:
         return False
 
     def _drop_constraint_in_db(self, constraint: ConstraintOrIndex) -> None:
-        # SQLAlchemy sometimes detects empty constraint objects in
-        # reflected metadata. These cannot be dropped because they have
+        # SQLAlchemy reflects empty PK objects in tables that don't have
+        # a PK (anymore). These cannot be dropped because they have
         # no name and are therefore ignored here.
         if constraint.name is None:
             return
 
-        with self._db.engine.connect().execution_options(**self._execution_options) as conn:
+        with self._db.engine.connect() as conn:
             logger.debug(f'Dropping {constraint.name}')
             if isinstance(constraint, Index):
                 conn.execute(DropIndex(constraint))

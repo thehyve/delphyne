@@ -25,7 +25,10 @@ class Database:
 
     def __init__(self, uri: str, schema_translate_map: Dict[str, str], base):
         Database.schema_translate_map = schema_translate_map
-        self.engine = create_engine(uri, executemany_mode='values')
+        self.engine = create_engine(uri, executemany_mode='values',
+                                    execution_options={
+                                        "schema_translate_map": schema_translate_map
+                                    })
         self.base = base
         self.constraint_manager = ConstraintManager(self)
         self._schemas = self._set_schemas()
@@ -106,9 +109,7 @@ class Database:
         session_id = id(session)
         if metadata is not None:
             SessionTracker.sessions[session_id] = metadata
-        session.connection(execution_options={
-            "schema_translate_map": self.schema_translate_map
-        })
+
         try:
             yield session
             session.commit()

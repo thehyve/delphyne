@@ -118,16 +118,14 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         logger.info('Dropping OMOP CDM (non-vocabulary) tables if existing')
         if tables_to_drop is None:
             tables_to_drop = self._get_cdm_tables_to_drop()
-        conn = self.db.engine.connect()
-        conn = conn.execution_options(schema_translate_map=self.db.schema_translate_map)
-        self.db.base.metadata.drop_all(bind=conn, tables=tables_to_drop)
+        with self.db.engine.connect() as conn:
+            self.db.base.metadata.drop_all(bind=conn, tables=tables_to_drop)
 
     def create_cdm(self) -> None:
         """Create all OMOP CDM tables as defined in base.metadata."""
         logger.info('Creating OMOP CDM (non-vocabulary) tables')
-        conn = self.db.engine.connect()
-        conn = conn.execution_options(schema_translate_map=self.db.schema_translate_map)
-        self.db.base.metadata.create_all(bind=conn)
+        with self.db.engine.connect() as conn:
+            self.db.base.metadata.create_all(bind=conn)
 
     def create_schemas(self) -> None:
         """
