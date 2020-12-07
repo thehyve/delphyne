@@ -20,6 +20,7 @@ def is_hidden(path: Path) -> bool:
     """Return True if a path is hidden."""
     return path.name.startswith(('.', '~'))
 
+
 def get_file_line_count(file_path: Path, skip_header: bool = True) -> int:
     """
     Get the line count of a text (non-binary) file.
