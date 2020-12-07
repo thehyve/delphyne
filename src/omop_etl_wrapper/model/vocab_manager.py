@@ -11,7 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class VocabularyLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
+class CustomVocabularyLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
     def __init__(self, db: Database, cdm):
         self.db = db
         self._cdm = cdm

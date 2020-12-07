@@ -13,7 +13,7 @@ from .config.models import MainConfig
 from .database import Database
 from .model.etl_stats import EtlStats
 from .model.orm_wrapper import OrmWrapper
-from .model.vocab_manager import VocabularyLoader
+from .model.vocab_manager import CustomVocabularyLoader
 from .model.raw_sql_wrapper import RawSqlWrapper
 from .model.source_data import SourceData
 from .util.io import read_yaml_file
@@ -49,7 +49,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
 
         self.etl_stats = EtlStats()
         self.source_data: Optional[SourceData] = self._set_source_data()
-        self.vocab_loader = VocabularyLoader(self.db, cdm_)
+        self.vocab_loader = CustomVocabularyLoader(self.db, cdm_)
         self.load_custom_vocabs: bool = \
             not config.run_options.skip_custom_vocabulary_loading
 
