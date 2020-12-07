@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class ClassManager:
+class BaseClassManager:
     """
     Collects functions that interact with the Concept Class table.
     """

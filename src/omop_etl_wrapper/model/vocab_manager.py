@@ -4,14 +4,14 @@ from typing import List
 from .._paths import CUSTOM_VOCAB_DIR
 from ..database import Database
 from ..util.io import is_hidden
-from .table_manager import VocabManager, ClassManager, ConceptManager
+from .base_manager import BaseVocabManager, BaseClassManager, BaseConceptManager
 import logging
 
 
 logger = logging.getLogger(__name__)
 
 
-class VocabularyLoader(VocabManager, ClassManager, ConceptManager):
+class VocabularyLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
     def __init__(self, db: Database, cdm):
         self.db = db
         self._cdm = cdm
@@ -19,12 +19,12 @@ class VocabularyLoader(VocabManager, ClassManager, ConceptManager):
         self._custom_concept_files = self._subset_custom_table_files('concept')
         self._custom_class_files = self._subset_custom_table_files('concept_class')
 
-        VocabManager.__init__(self, db=self.db, cdm=self._cdm,
-                              custom_vocab_files=self._custom_vocab_files)
-        ClassManager.__init__(self, db=self.db, cdm=self._cdm,
-                              custom_class_files=self._custom_class_files)
-        ConceptManager.__init__(self, db=self.db, cdm=self._cdm,
-                                custom_concept_files=self._custom_concept_files)
+        BaseVocabManager.__init__(self, db=self.db, cdm=self._cdm,
+                                  custom_vocab_files=self._custom_vocab_files)
+        BaseClassManager.__init__(self, db=self.db, cdm=self._cdm,
+                                  custom_class_files=self._custom_class_files)
+        BaseConceptManager.__init__(self, db=self.db, cdm=self._cdm,
+                                    custom_concept_files=self._custom_concept_files)
 
     @staticmethod
     def _get_all_custom_table_files() -> List[Path]:

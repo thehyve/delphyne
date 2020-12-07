@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class VocabManager:
+class BaseVocabManager:
     """
     Collects functions that interact with the Vocabulary table.
     """
