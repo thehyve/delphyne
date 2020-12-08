@@ -3,6 +3,13 @@ from typing import Dict, Optional
 import pandas as pd
 
 
+def is_null(value) -> bool:
+    if pd.isnull(value) or not value:
+        return True
+    else:
+        return False
+
+
 def replace_substrings(string: str, mapping: Dict[str, str]) -> str:
     """
     Replace substrings in string, based on the items in mapping.
