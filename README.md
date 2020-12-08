@@ -4,6 +4,8 @@
   <img src="https://github.com/thehyve/omop-etl-wrapper/workflows/build/badge.svg" /></a>
   <a href="https://pypi.python.org/pypi/omop_etl_wrapper">
   <img src="https://img.shields.io/pypi/v/omop_etl_wrapper.svg" /></a>
+  <a href="https://codecov.io/gh/thehyve/omop-etl-wrapper">
+  <img src="https://codecov.io/gh/thehyve/omop-etl-wrapper/branch/master/graph/badge.svg?token=48Z1TCIU8R"/></a>
 </p>
 Wrapper for OMOP ETL projects
 

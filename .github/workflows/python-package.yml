@@ -52,4 +52,15 @@ jobs:
         # Environment variable for tests to know if running in CI environment
         RUNNING_CI: true
       run: |
-        pytest -vs
+        pytest -vs --cov-report=xml --cov=src
+    - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          file: ./coverage.xml
+#          directory: ./coverage/reports/
+#          flags: unittests
+#          env_vars: OS,PYTHON
+          name: codecov-umbrella
+          fail_ci_if_error: false
+          path_to_write_report: ./coverage/codecov_report.txt
+          verbose: true
