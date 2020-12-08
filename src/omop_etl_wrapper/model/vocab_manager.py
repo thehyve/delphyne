@@ -1,8 +1,8 @@
 import logging
 
 from .custom_vocab import CustomVocabLoader
-from .stcm import StcmLoader
 from .etl_stats import EtlStats
+from .stcm import StcmLoader
 from ..config.models import MainConfig
 from ..database import Database
 
@@ -35,7 +35,7 @@ class VocabManager:
             self._custom_vocab_loader.load_custom_vocabulary_tables()
 
     def load_stcm(self):
-        """Load all STCM files into the source_to_concept_map table."""
+        """Load STCM files into the source_to_concept_map table."""
         logger.info(f'Loading source_to_concept_map files: {self._load_stcm}')
         if self._load_stcm:
             self._stcm_loader.load_stcm()

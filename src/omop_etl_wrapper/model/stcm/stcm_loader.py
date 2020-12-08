@@ -134,13 +134,6 @@ class StcmLoader:
                 r.stcm_version = self._new_stcm_versions[vocab_id]
                 session.add(r)
 
-    # def truncate_stcm_tables(self):
-    #     """Delete all records in the source_to_concept_map table."""
-    #     # TODO: truncate version table as well
-    #     logger.info('Truncating STCM table')
-    #     with self._db.session_scope() as session:
-    #         session.query(self._cdm.SourceToConceptMap).delete()
-
     def _load_stcm_from_file(self, stcm_file: Path) -> None:
         """
         Insert STCM file into the STCM vocabulary table and add

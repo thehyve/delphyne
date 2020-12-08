@@ -6,16 +6,16 @@ import sys
 from sqlalchemy import Table
 from sqlalchemy.schema import CreateSchema
 
-from ._paths import STCM_DIR, SOURCE_DATA_CONFIG_PATH
+from ._paths import SOURCE_DATA_CONFIG_PATH
 from .cdm import vocabularies as cdm
 from .cdm._schema_placeholders import VOCAB_SCHEMA
 from .config.models import MainConfig
 from .database import Database
 from .model.etl_stats import EtlStats
 from .model.orm_wrapper import OrmWrapper
-from .model.vocab_manager import VocabManager
 from .model.raw_sql_wrapper import RawSqlWrapper
 from .model.source_data import SourceData
+from .model.vocab_manager import VocabManager
 from .util.io import read_yaml_file
 
 logger = logging.getLogger(__name__)
