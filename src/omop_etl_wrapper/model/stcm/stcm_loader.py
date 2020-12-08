@@ -105,7 +105,7 @@ class StcmLoader:
     def _get_stcm_file_vocab_id(self, stcm_file: Path) -> Optional[str]:
         stem_name = stcm_file.stem
         if stem_name.endswith('_stcm'):
-            vocab_id = stem_name.rsplit('_')[0]
+            vocab_id = stem_name.rsplit('_', 1)[0]
             if vocab_id in self._new_stcm_versions:
                 return vocab_id
         return None
