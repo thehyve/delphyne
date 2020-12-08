@@ -16,6 +16,7 @@ from .model.orm_wrapper import OrmWrapper
 from .model.vocabulary_loader import VocabularyLoader
 from .model.raw_sql_wrapper import RawSqlWrapper
 from .model.source_data import SourceData
+from .model.mapping import CodeMapper
 from .util.io import read_yaml_file
 
 logger = logging.getLogger(__name__)
@@ -50,6 +51,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         self.etl_stats = EtlStats()
         self.source_data: Optional[SourceData] = self._set_source_data()
         self.vocab_loader = VocabularyLoader(self.db, cdm_)
+        self.code_mapper = CodeMapper(self.db, cdm_)
         self.load_custom_vocabs: bool = \
             not config.run_options.skip_custom_vocabulary_loading
 
