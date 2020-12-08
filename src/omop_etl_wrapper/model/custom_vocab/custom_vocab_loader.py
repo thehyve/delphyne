@@ -1,12 +1,11 @@
+import logging
 from pathlib import Path
 from typing import List
 
-from omop_etl_wrapper._paths import CUSTOM_VOCAB_DIR
-from omop_etl_wrapper.database import Database
-from omop_etl_wrapper.util.io import is_hidden
 from .base_manager import BaseVocabManager, BaseClassManager, BaseConceptManager
-import logging
-
+from ..._paths import CUSTOM_VOCAB_DIR
+from ...database import Database
+from ...util.io import is_hidden
 
 logger = logging.getLogger(__name__)
 
@@ -38,19 +37,6 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         return [f for f in custom_table_files if f.stem.endswith(omop_table)]
 
     def load_custom_vocabulary_tables(self) -> None:
-        """
-        Loads custom vocabularies to the vocabulary schema.
-        More in detail:
-        1. Checks for the presence of custom vocabularies and
-        concept_classes at a predefined folder location;
-        2. Compares the version of custom vocabularies and
-        concept_classes in the folder to that of custom vocabularies
-        and tables already present in the database;
-        3. Deletes obsolete versions from the database;
-        4. Loads the new versions to the database.
-        :return: None
-        """
-
         # get vocabularies and classes that need to be updated
         vocab_ids = self._get_new_custom_vocabulary_ids()
         class_ids = self._get_new_custom_concept_class_ids()

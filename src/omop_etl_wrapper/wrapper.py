@@ -49,7 +49,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
 
         self.etl_stats = EtlStats()
         self.source_data: Optional[SourceData] = self._set_source_data()
-        self.vocab_manager = VocabManager(self.db, cdm_, config)
+        self.vocab_manager = VocabManager(self.db, cdm_, config, self.etl_stats)
 
     def _set_source_data(self):
         if not SOURCE_DATA_CONFIG_PATH.exists():
@@ -61,17 +61,6 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
 
     def run(self) -> None:
         print('OMOP wrapper goes brrrrrrrr')
-
-    def load_stcm(self):
-        """Insert all stcm csv files into the source_to_concept_map
-        table."""
-        logger.info('Loading STCM files')
-        if not STCM_DIR.exists():
-            raise FileNotFoundError(f'{str(STCM_DIR.resolve())} folder not found')
-        # TODO: support multiple file extensions
-        stcm_files = STCM_DIR.glob('*.csv')
-        for stcm_file in stcm_files:
-            self.load_source_to_concept_map_from_csv(stcm_file)
 
     def stem_table_to_domains(self) -> None:
         """

@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 from typing import List
 
-from omop_etl_wrapper.database import Database
+from ....database import Database
 
 logger = logging.getLogger(__name__)
 
