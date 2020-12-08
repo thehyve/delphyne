@@ -51,7 +51,7 @@ class StcmLoader:
 
         stcm_files = self._get_stcm_files()
         for stcm_file in stcm_files:
-            if not self._must_be_loaded(stcm_file):
+            if not self._must_be_parsed(stcm_file):
                 logger.info(f'Skipping file {stcm_file.name} as this STCM file '
                             f'has no new version available.')
                 continue
@@ -94,7 +94,7 @@ class StcmLoader:
                          f'Run create_all to ensure all required tables are present.')
             raise
 
-    def _must_be_loaded(self, stcm_file: Path) -> bool:
+    def _must_be_parsed(self, stcm_file: Path) -> bool:
         stcm_file_vocab_id = self._get_stcm_file_vocab_id(stcm_file)
         if stcm_file_vocab_id is None:
             return True
