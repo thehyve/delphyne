@@ -42,14 +42,14 @@ setup(
     long_description_content_type="text/markdown",
     package_data={"omop_etl_wrapper": ["py.typed"]},
     include_package_data=True,
-    keywords="omop_etl_wrapper",
+    keywords="omop-etl-wrapper",
     name="omop_etl_wrapper",
     package_dir={"": "src"},
     packages=find_packages(include=["src/omop_etl_wrapper", "src/omop_etl_wrapper.*"]),
     extras_require={
         "TEST": ["pytest", "docker", "nox", "flake8"],
     },
-    url="https://github.com/thehyve/omop_etl_wrapper",
+    url="https://github.com/thehyve/omop-etl-wrapper",
     version=version['__version__'],
     zip_safe=False,
 )
