@@ -161,26 +161,30 @@ class CodeMapper:
         ICD10), creates a dictionary of mappings from the non-standard
         vocabulary codes to standard OMOP concept_ids (typically
         SNOMED); the results can be restricted to a specific list of
-        vocabulary codes to save memory.
+        source vocabulary codes to save memory.
 
-        Source (non-standard) code matches can be filtered
-        by invalid_reason and standard_concept values;
+        Source (non-standard) codes can be filtered by invalid_reason
+        and standard_concept values;
         target (standard) concept_ids are always standard and valid.
         Note that multiple mappings from non-standard codes
         to standard concept_ids are possible.
-        Returns a dictionary with the results of the mapping.
+
+        Returns a dictionary with source codes as keys, and mappings in
+        the form of CodeMapping objects as values.
 
         :param vocabulary_id: List[str] or str
             Valid OMOP vocabulary_id(s)
         :param restrict_to_codes: List[str], default None
             Subset of vocabulary codes to retrieve mappings for
         :param invalid_reason: List[str] or str, default None
-            Any of 'U', 'D', 'R', 'NONE'
+            Any of 'U', 'D', 'R', 'NULL'
         :param standard_concept: List[str] or str, default None
-            Any of 'S', 'C', 'NONE' (list or string)
+            Any of 'S', 'C', 'NULL'
         :param remove_dot_from_codes: bool, default False
-            For e.g. icd9 and icd10 the source codes do not contain the
-            dot separator
+            If e.g. ICD9 and ICD10 source codes do not contain the
+            dot separator; note in this case "restrict_to_codes" will
+            be applied AFTER retrieving all ICD9/10 mappings from
+            the OMOP vocabularies!
         :return: MappingDict
         """
 
@@ -202,16 +206,16 @@ class CodeMapper:
             source_filters.append(source.vocabulary_id.in_(vocabulary_id))
         elif type(vocabulary_id) == str:
             source_filters.append(source.vocabulary_id == vocabulary_id)
-        # invalid reason: either list, str (incl. NULL), or None (filter
-        # is not applied)
+        # invalid reason: either list, str (incl. "NULL"),
+        # or None (filter is not applied)
         if type(invalid_reason) == list:
             source_filters.append(source.invalid_reason.in_(invalid_reason))
         elif invalid_reason == 'NULL':
             source_filters.append(source.invalid_reason is None)
         elif type(invalid_reason) == str:
             source_filters.append(source.invalid_reason == invalid_reason)
-        # standard concept: either list, str (incl. NULL), or None
-        # (filter is not applied)
+        # standard concept: either list, str (incl. "NULL"),
+        # or None (filter is not applied)
         if type(standard_concept) == list:
             source_filters.append(source.standard_concept.in_(standard_concept))
         elif standard_concept == 'NULL':
