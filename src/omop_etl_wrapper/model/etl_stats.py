@@ -83,7 +83,10 @@ class EtlTransformation(_AbstractEtlBase):
         return f'{self.name} ({self.duration})'
 
     def to_dict(self) -> Dict:
-        """Return dict with empty Counters as None, otherwise convert to string."""
+        """
+        Return dict with empty Counters as None, otherwise convert to
+        string.
+        """
         d = copy.deepcopy(super().to_dict())
         for key, value in d.items():
             if isinstance(value, Counter):
@@ -97,12 +100,14 @@ class EtlTransformation(_AbstractEtlBase):
 
 class EtlStats:
     """
-    Stores ETL statistics:
-     - list of transformations executed with script name, target table, start time,
-     end time, status (exceptions) and number of affected rows
-     - list of source tables with file/tablename and raw input row counts
-     - list of OMOP target tables with tablename and output row counts
-     - list of temporary/intermediate tables with tablename and row counts
+    Storage class for ETL statistics.
+
+    Can contain:
+     - list of transformations executed with script name, target table,
+       start time, end time, status (exceptions) and number of affected
+       rows.
+     - list of source tables with file/tablename and raw input row
+       counts
     Output is an ETL summary report.
     """
     def __init__(self):
