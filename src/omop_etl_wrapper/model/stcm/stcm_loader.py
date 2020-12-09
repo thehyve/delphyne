@@ -41,7 +41,7 @@ class StcmLoader:
             records = session.query(self._cdm.Vocabulary.vocabulary_id).all()
             return {vocabulary_id for vocabulary_id, in records}
 
-    def load_stcm(self):
+    def load_stcm(self) -> None:
         logger.info('Loading STCM files')
         if not STCM_DIR.exists():
             raise FileNotFoundError(f'{STCM_DIR.resolve()} folder not found')
@@ -84,7 +84,7 @@ class StcmLoader:
                     raise ValueError(f'{STCM_VERSION_FILE.name} may not contain empty values')
                 self._new_stcm_versions[vocab_id] = version
 
-    def _check_stcm_version_table_exists(self):
+    def _check_stcm_version_table_exists(self) -> None:
         metadata = MetaData(bind=self._db.engine)
         schema = self._db.schema_translate_map.get(VOCAB_SCHEMA)
         try:
@@ -120,7 +120,7 @@ class StcmLoader:
             q = q.filter(stcm_table.source_vocabulary_id.in_(self._stcm_vocabs_to_update))
             q.delete(synchronize_session=False)
 
-    def _update_stcm_version_table(self):
+    def _update_stcm_version_table(self) -> None:
         with self._db.session_scope() as session:
             stcm_version_table = self._cdm.SourceToConceptMapVersion
             q = session.query(stcm_version_table)
