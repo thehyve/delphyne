@@ -153,7 +153,7 @@ class CodeMapper:
             vocabulary_id: Union[str, List[str]],
             restrict_to_codes: Optional[List[str]] = None,
             invalid_reason: Optional[Union[str, List[str]]] = None,
-            standard_concept: Optional[Union[str, List[Union[str, int]]]] = None,
+            standard_concept: Optional[Union[str, List[str]]] = None,
             remove_dot_from_codes: bool = False
     ) -> MappingDict:
         """
