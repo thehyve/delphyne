@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, Union, List, Set, Dict
+from typing import Optional, Union, List, Set, Dict, NamedTuple
 
 import pandas as pd
 from sqlalchemy import and_
@@ -10,6 +10,20 @@ from sqlalchemy.orm import aliased
 from ...util.helper import is_null_or_falsy
 
 logger = logging.getLogger(__name__)
+
+
+# only needed for type checking of SQLAlchemy query result
+class Record(NamedTuple):
+    source_concept_code: str
+    source_concept_id: int
+    source_concept_name: str
+    source_invalid_reason: str
+    source_standard_concept: str
+    source_vocabulary_id: str
+    target_concept_code: str
+    target_concept_id: int
+    target_concept_name: str
+    target_vocabulary_id: str
 
 
 class CodeMapping:
@@ -50,25 +64,52 @@ class MappingDict:
         self.mapping_dict: Dict[str, List[CodeMapping]] = {}
 
     @classmethod
+    def from_records(cls, records: List[Record]) -> MappingDict:
+
+        mapping_dict_from_records = cls()
+        mapping_dict = {}
+
+        for record in records:
+            code = record.source_concept_code
+            target_concept_id = record.target_concept_id if record.target_concept_id else 0
+            mapping = CodeMapping()
+            mapping.source_concept_code = code
+            mapping.source_concept_id = record.source_concept_id
+            mapping.source_concept_name = record.source_concept_name
+            mapping.source_vocabulary_id = record.source_vocabulary_id
+            mapping.source_standard_concept = record.source_standard_concept
+            mapping.source_invalid_reason = record.source_invalid_reason
+            mapping.target_concept_code = record.target_concept_code
+            mapping.target_concept_id = target_concept_id
+            mapping.target_concept_name = record.target_concept_name
+            mapping.target_vocabulary_id = record.target_vocabulary_id
+
+            mapping_dict[code] = mapping_dict.get(code, []) + [mapping]
+
+        mapping_dict_from_records.mapping_dict = mapping_dict
+
+        return mapping_dict_from_records
+
+    @classmethod
     def from_mapping_df(cls, mapping_df: pd.DataFrame) -> MappingDict:
 
         mapping_dict_from_df = cls()
         mapping_dict = {}
 
         for _, row in mapping_df.iterrows():
-            code = row['source.concept_code']
-            target_concept_id = row['target.concept_id'] if row['target.concept_id'] else 0
+            code = row['source_concept_code']
+            target_concept_id = row['target_concept_id'] if row['target_concept_id'] else 0
             mapping = CodeMapping()
             mapping.source_concept_code = code
-            mapping.source_concept_id = row['source.concept_id']
-            mapping.source_concept_name = row['source.concept_name']
-            mapping.source_vocabulary_id = row['source.vocabulary_id']
-            mapping.source_standard_concept = row['source.standard_concept']
-            mapping.source_invalid_reason = row['source.invalid_reason']
-            mapping.target_concept_code = row['target.concept_code']
+            mapping.source_concept_id = row['source_concept_id']
+            mapping.source_concept_name = row['source_concept_name']
+            mapping.source_vocabulary_id = row['source_vocabulary_id']
+            mapping.source_standard_concept = row['source_standard_concept']
+            mapping.source_invalid_reason = row['source_invalid_reason']
+            mapping.target_concept_code = row['target_concept_code']
             mapping.target_concept_id = target_concept_id
-            mapping.target_concept_name = row['target.concept_name']
-            mapping.target_vocabulary_id = row['target.vocabulary_id']
+            mapping.target_concept_name = row['target_concept_name']
+            mapping.target_vocabulary_id = row['target_vocabulary_id']
 
             mapping_dict[code] = mapping_dict.get(code, []) + [mapping]
 
@@ -230,16 +271,16 @@ class CodeMapper:
 
         with self.db.session_scope() as session:
             records = session.query(
-                source.concept_code.label('source.concept_code'),
-                source.concept_id.label('source.concept_id'),
-                source.concept_name.label('source.concept_name'),
-                source.vocabulary_id.label('source.vocabulary_id'),
-                source.standard_concept.label('source.standard_concept'),
-                source.invalid_reason.label('source.invalid_reason'),
-                target.concept_code.label('target.concept_code'),
-                target.concept_id.label('target.concept_id'),
-                target.concept_name.label('target.concept_name'),
-                target.vocabulary_id.label('target.vocabulary_id')) \
+                source.concept_code.label('source_concept_code'),
+                source.concept_id.label('source_concept_id'),
+                source.concept_name.label('source_concept_name'),
+                source.vocabulary_id.label('source_vocabulary_id'),
+                source.standard_concept.label('source_standard_concept'),
+                source.invalid_reason.label('source_invalid_reason'),
+                target.concept_code.label('target_concept_code'),
+                target.concept_id.label('target_concept_id'),
+                target.concept_name.label('target_concept_name'),
+                target.vocabulary_id.label('target_vocabulary_id')) \
                 .outerjoin(self.cdm.ConceptRelationship,
                            and_(source.concept_id == self.cdm.ConceptRelationship.concept_id_1,
                                 self.cdm.ConceptRelationship.relationship_id == 'Maps to')) \
@@ -250,8 +291,7 @@ class CodeMapper:
                 .filter(and_(*source_filters)) \
                 .all()
 
-        mapping_df = pd.DataFrame(records, dtype='object')
-        mapping_dict = MappingDict.from_mapping_df(mapping_df)
+        mapping_dict = MappingDict.from_records(records)
 
         if remove_dot_from_codes:
             mapping_dict.remove_dot_from_code()
