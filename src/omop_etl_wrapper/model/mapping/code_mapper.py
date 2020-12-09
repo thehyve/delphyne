@@ -1,16 +1,18 @@
 from __future__ import annotations
+
+import logging
+from typing import Optional, Union, List, Dict
+
 import pandas as pd
 from sqlalchemy import and_
 from sqlalchemy.orm import aliased
-from typing import Optional, Union, List, Dict
-import logging
+
 from ...util.helper import is_null
 
 logger = logging.getLogger(__name__)
 
 
 class CodeMapping:
-
     def __init__(self):
         self.source_concept_code = None
         self.source_concept_id = None
@@ -76,8 +78,10 @@ class MappingDict:
 
     def remove_dot_from_code(self) -> None:
         """
-        Mainly for ICD9 and ICD10 codes that are recorded in the source without a dot.
-        :return:
+        Mainly for ICD9 and ICD10 codes that are recorded in the source
+        without a dot.
+
+        :return: None
         """
         new_mapping_dict = {}
         for key in self.mapping_dict:
@@ -88,27 +92,31 @@ class MappingDict:
 
     def lookup(self, code: str,
                first_only: bool = False,
-               target_concept_id_only: bool = False) \
-            -> Union[List[str], List[CodeMapping], str, CodeMapping]:
-
+               target_concept_id_only: bool = False,
+               ) -> Union[List[str], List[CodeMapping], str, CodeMapping]:
         """
-        Given a valid vocabulary code, retrieves a list of all corresponding
-        standard concept_ids from the stored mapping dictionary.
+        Given a valid vocabulary code, retrieves a list of all
+        corresponding standard concept_ids from the stored mapping
+        dictionary.
+
         Optionally, you can restrict the results to the first
         available match. For reviewing purposes, you can also opt to
         retrieve the full mapping information as a CodeMapping object.
         Match for source and standard: list of one or more CodeMappings
-        Match for source (no standard): list of one CodeMapping, target_concept_id = 0
+        Match for source (no standard): list of one CodeMapping,
+        target_concept_id = 0.
         No Match (code not found): list of one CodeMapping,
         source_concept_id = 0, target_concept_id = 0.
-        :param code: string representing the code to lookup
-        :param first_only: if True, return the first available match
-        only (default False)
-        :param target_concept_id_only: if True, return the target_concept_id only
-        :return: a single match or list of matches, either standard
-        concept_ids (string) or CodeMapping objects
-        """
 
+        :param code: str
+            Representing the code to lookup
+        :param first_only: bool, default False
+            If True, return the first available match only
+        :param target_concept_id_only: bool, default False
+            If True, return the target_concept_id only
+        :return: A single match or list of matches, either standard
+            concept_ids (string) or CodeMapping objects
+        """
         if not self.mapping_dict:
             logger.debug('Trying to retrieve a mapping from an empty dictionary!')
 
@@ -137,7 +145,6 @@ class MappingDict:
 class CodeMapper:
 
     def __init__(self, database, cdm):
-
         self.db = database
         self.cdm = cdm
 
@@ -147,31 +154,38 @@ class CodeMapper:
             restrict_to_codes: Optional[List[str]] = None,
             invalid_reason: Optional[Union[str, List[str]]] = None,
             standard_concept: Optional[Union[str, List[Union[str, int]]]] = None,
-            remove_dot_from_codes: bool = False) \
-            -> MappingDict:
-
+            remove_dot_from_codes: bool = False
+    ) -> MappingDict:
         """
-        Given one or more non-standard vocabulary names (e.g. Read, ICD10),
-        creates a dictionary of mappings from the non-standard vocabulary codes
-        to standard OMOP concept_ids (typically SNOMED);
-        the results can be restricted to a specific list of vocabulary codes to save memory.
+        Given one or more non-standard vocabulary names (e.g. Read,
+        ICD10), creates a dictionary of mappings from the non-standard
+        vocabulary codes to standard OMOP concept_ids (typically
+        SNOMED); the results can be restricted to a specific list of
+        vocabulary codes to save memory.
+
         Source (non-standard) code matches can be filtered
         by invalid_reason and standard_concept values;
         target (standard) concept_ids are always standard and valid.
         Note that multiple mappings from non-standard codes
         to standard concept_ids are possible.
         Returns a dictionary with the results of the mapping.
-        :param vocabulary_id: valid OMOP vocabulary_id(s) (list or string)
-        :param restrict_to_codes: (optional) subset of vocabulary codes
-        to retrieve mappings for(list)
-        :param invalid_reason: (optional) any of 'U', 'D', 'R', 'NONE' (list or string)
-        :param standard_concept: (optional) any of 'S', 'C', 'NONE' (list or string)
-        :param remove_dot_from_codes: for e.g. icd9 and icd10 the source codes
-        do not contain the dot separator
+
+        :param vocabulary_id: List[str] or str
+            Valid OMOP vocabulary_id(s)
+        :param restrict_to_codes: List[str], default None
+            Subset of vocabulary codes to retrieve mappings for
+        :param invalid_reason: List[str] or str, default None
+            Any of 'U', 'D', 'R', 'NONE'
+        :param standard_concept: List[str] or str, default None
+            Any of 'S', 'C', 'NONE' (list or string)
+        :param remove_dot_from_codes: bool, default False
+            For e.g. icd9 and icd10 the source codes do not contain the
+            dot separator
         :return: MappingDict
         """
 
-        # make sure restrict to codes contains unique and not null elements
+        # make sure restrict to codes contains unique and not null
+        # elements
         if restrict_to_codes:
             restrict_to_codes = list(filter(lambda x: not is_null(x), set(restrict_to_codes)))
 
@@ -187,22 +201,25 @@ class CodeMapper:
             source_filters.append(source.vocabulary_id.in_(vocabulary_id))
         elif type(vocabulary_id) == str:
             source_filters.append(source.vocabulary_id == vocabulary_id)
-        # invalid reason: either list, str (incl. NULL), or None (filter is not applied)
+        # invalid reason: either list, str (incl. NULL), or None (filter
+        # is not applied)
         if type(invalid_reason) == list:
             source_filters.append(source.invalid_reason.in_(invalid_reason))
         elif invalid_reason == 'NULL':
-            source_filters.append(source.invalid_reason == None)
+            source_filters.append(source.invalid_reason is None)
         elif type(invalid_reason) == str:
             source_filters.append(source.invalid_reason == invalid_reason)
-        # standard concept: either list, str (incl. NULL), or None (filter is not applied)
+        # standard concept: either list, str (incl. NULL), or None
+        # (filter is not applied)
         if type(standard_concept) == list:
             source_filters.append(source.standard_concept.in_(standard_concept))
         elif standard_concept == 'NULL':
-            source_filters.append(source.standard_concept == None)
+            source_filters.append(source.standard_concept is None)
         elif type(standard_concept) == str:
             source_filters.append(source.standard_concept == standard_concept)
 
-        # if restricted_to_codes do not contain a dot, the restriction in query will not work
+        # if restricted_to_codes do not contain a dot, the restriction
+        # in query will not work
         if not remove_dot_from_codes and restrict_to_codes:
             source_filters.append(source.concept_code.in_(restrict_to_codes))
 
@@ -224,7 +241,7 @@ class CodeMapper:
                 .outerjoin(target,
                            and_(self.cdm.ConceptRelationship.concept_id_2 == target.concept_id,
                                 target.standard_concept == 'S',
-                                target.invalid_reason == None)) \
+                                target.invalid_reason is None)) \
                 .filter(and_(*source_filters)) \
                 .all()
 
@@ -234,14 +251,15 @@ class CodeMapper:
         if remove_dot_from_codes:
             mapping_dict.remove_dot_from_code()
 
-            # If dot removed from codes, the restriction was not applied at the query
+            # If dot removed from codes, the restriction was not applied
+            # at the query
             if restrict_to_codes:
                 to_delete = set(mapping_dict.mapping_dict.keys()).difference(restrict_to_codes)
                 for key in to_delete:
                     del mapping_dict.mapping_dict[key]
 
         if not mapping_dict.mapping_dict:
-            logger.warning(f'No mapping found, mapping dictionary empty')
+            logger.warning('No mapping found, mapping dictionary empty')
 
         if restrict_to_codes:
             not_found = set(restrict_to_codes) - set(mapping_dict.mapping_dict.keys())
