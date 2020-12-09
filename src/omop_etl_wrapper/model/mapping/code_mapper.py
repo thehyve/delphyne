@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, Union, List, Dict
+from typing import Optional, Union, List, Set, Dict
 
 import pandas as pd
 from sqlalchemy import and_
@@ -151,7 +151,7 @@ class CodeMapper:
     def generate_code_mapping_dictionary(
             self,
             vocabulary_id: Union[str, List[str]],
-            restrict_to_codes: Optional[List[str]] = None,
+            restrict_to_codes: Optional[Union[List[str], Set[str]]] = None,
             invalid_reason: Optional[Union[str, List[str]]] = None,
             standard_concept: Optional[Union[str, List[str]]] = None,
             remove_dot_from_codes: bool = False
