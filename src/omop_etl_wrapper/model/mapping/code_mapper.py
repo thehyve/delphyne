@@ -184,10 +184,11 @@ class CodeMapper:
         :return: MappingDict
         """
 
-        # make sure restrict to codes contains unique and not null
-        # elements
         if restrict_to_codes:
-            restrict_to_codes = list(filter(lambda x: not is_null_or_falsy(x), set(restrict_to_codes)))
+            # remove redundant codes
+            restrict_to_codes = list(set(restrict_to_codes))
+            # remove invalid codes
+            restrict_to_codes = [code for code in restrict_to_codes if not is_null_or_falsy(code)]
 
         logger.info(f'Building mapping dictionary for vocabularies: {vocabulary_id}')
 
