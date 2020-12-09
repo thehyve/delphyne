@@ -35,13 +35,13 @@ class CodeMapping:
 
     def __str__(self):
         # note: omitting standard concept and invalid reason
-        return f'{self.source_concept_code} ' \
-               f'({self.source_vocabulary_id}) ' \
-               f'"{self.source_concept_name}" => ' \
-               f'concept_id: {self.target_concept_id}, ' \
-               f'concept_code: {self.target_concept_code}, ' \
-               f'concept_name: "{self.target_concept_name}", ' \
-               f'vocabulary_id: {self.target_vocabulary_id}'
+        return (f'{self.source_concept_code} '
+                f'({self.source_vocabulary_id}) '
+                f'"{self.source_concept_name}" => '
+                f'concept_id: {self.target_concept_id}, '
+                f'concept_code: {self.target_concept_code}, '
+                f'concept_name: "{self.target_concept_name}", '
+                f'vocabulary_id: {self.target_vocabulary_id}')
 
 
 class MappingDict:
