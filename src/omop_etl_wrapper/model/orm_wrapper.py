@@ -111,8 +111,7 @@ class OrmWrapper(ABC):
             SQLAlchemy vocabulary table class
         :return: None
         """
-        # Note: inserts are one-by-one, so can be slow for large
-        # vocabulary files
+        # Note: inserts are one-by-one, so can be slow for large vocabulary files
         transformation_metadata = EtlTransformation(name=f'load_vocab_{source_file.name}')
         with source_file.open('r') as f_in, \
                 self.db.session_scope(metadata=transformation_metadata) as session:
