@@ -7,7 +7,7 @@ import pandas as pd
 from sqlalchemy import and_
 from sqlalchemy.orm import aliased
 
-from ...util.helper import is_null
+from ...util.helper import is_null_or_falsy
 
 logger = logging.getLogger(__name__)
 
@@ -187,7 +187,7 @@ class CodeMapper:
         # make sure restrict to codes contains unique and not null
         # elements
         if restrict_to_codes:
-            restrict_to_codes = list(filter(lambda x: not is_null(x), set(restrict_to_codes)))
+            restrict_to_codes = list(filter(lambda x: not is_null_or_falsy(x), set(restrict_to_codes)))
 
         logger.info(f'Building mapping dictionary for vocabularies: {vocabulary_id}')
 

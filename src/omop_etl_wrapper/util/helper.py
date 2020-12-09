@@ -3,7 +3,7 @@ from typing import Dict, Optional
 import pandas as pd
 
 
-def is_null(value) -> bool:
+def is_null_or_falsy(value) -> bool:
     if pd.isnull(value) or not value:
         return True
     else:
