@@ -4,11 +4,16 @@ from copy import copy
 
 class LoggingFormatContext:
     """
-    Use in a 'with' statement to temporarily use a different logging format.
+    Context manager for a different logging format.
+
+    Use in a 'with' statement to temporarily use a different logging
+    format for currently active handlers.
+
     :param logger: Logger
-        the default logger instance that will temporarily be modified
+        The default logger instance that will temporarily be modified
     :param new_formatter: Formatter
-        logging Formatter instance that will be applied to the handlers in the logger
+        Logging Formatter instance that will be applied to the handlers
+        in the logger
     """
     def __init__(self, logger: Logger, new_formatter: Formatter):
         self.logger = logger

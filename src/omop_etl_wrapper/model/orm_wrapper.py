@@ -92,7 +92,8 @@ class OrmWrapper(ABC):
                                             transformation_metadata: EtlTransformation
                                             ) -> None:
         # As SQLAlchemy's before_flush listener doesn't work in bulk
-        # mode, only deleted and new objects in the record list are counted
+        # mode, only deleted and new objects in the record list are
+        # counted
         dc = Counter(Database.get_record_targets(session.deleted))
         transformation_metadata.deletion_counts = dc
         ic = Counter(Database.get_record_targets(records_to_insert))
@@ -110,7 +111,8 @@ class OrmWrapper(ABC):
             SQLAlchemy vocabulary table class
         :return: None
         """
-        # Note: inserts are one-by-one, so can be slow for large vocabulary files
+        # Note: inserts are one-by-one, so can be slow for large
+        # vocabulary files
         transformation_metadata = EtlTransformation(name=f'load_vocab_{source_file.name}')
         with source_file.open('r') as f_in, \
                 self.db.session_scope(metadata=transformation_metadata) as session:

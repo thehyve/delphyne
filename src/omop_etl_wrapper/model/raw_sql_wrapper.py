@@ -101,7 +101,8 @@ class RawSqlWrapper:
         :param query: str
             The SQL query to be parsed for a target table
         :return target table: str
-            The target table as present in the query. If not found return '?'
+            The target table as present in the query. If not found
+            return '?'
         """
         match = re.search(r'^\s*((?:INSERT )?INTO|CREATE TABLE|DELETE\s+FROM|UPDATE)\s+(.+?)\s',
                           query,
