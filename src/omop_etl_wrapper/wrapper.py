@@ -48,17 +48,22 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         super(OrmWrapper, self).__init__(database=self.db, config=config)
 
         self.etl_stats = EtlStats()
-        self.source_data: Optional[SourceData] = self._set_source_data()
+        source_data_path = config.source_data_folder
+        self.source_data: Optional[SourceData] = self._set_source_data(source_data_path)
         self.vocab_loader = VocabularyLoader(self.db, cdm_)
-        self.load_custom_vocabs: bool = \
-            not config.run_options.skip_custom_vocabulary_loading
+        self.load_custom_vocabs: bool = not config.run_options.skip_custom_vocabulary_loading
 
-    def _set_source_data(self):
+    def _set_source_data(self, source_data_path: Optional[Path]):
+        if source_data_path is None:
+            logger.info(f'No source_data_folder provided in config file, '
+                        f'assuming no source data files are present')
+            return None
         if not SOURCE_DATA_CONFIG_PATH.exists():
             logger.info(f'No source data config file found at {SOURCE_DATA_CONFIG_PATH}, '
                         f'assuming no source data files are present')
             return None
         source_config = read_yaml_file(SOURCE_DATA_CONFIG_PATH)
+        source_config['source_data_folder'] = source_data_path
         return SourceData(source_config, self.etl_stats)
 
     def run(self) -> None:

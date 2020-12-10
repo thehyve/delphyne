@@ -1,9 +1,8 @@
 from typing import Optional, Dict
 
-from pydantic import BaseModel, validator, SecretStr
+from pydantic import BaseModel, validator, SecretStr, DirectoryPath
 
 from ...cdm._schema_placeholders import VOCAB_SCHEMA, CDM_SCHEMA
-
 
 _REQUIRED_SCHEMAS = [VOCAB_SCHEMA, CDM_SCHEMA]
 
@@ -31,6 +30,7 @@ class _RunOptions(BaseModel):
 
 class MainConfig(BaseModel):
     database: _DataBase
+    source_data_folder: Optional[DirectoryPath]
     schema_translate_map: Dict[str, str]
     run_options: _RunOptions
     sql_parameters: Optional[Dict[str, str]]
