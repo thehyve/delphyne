@@ -189,11 +189,6 @@ class CodeMapper:
             Any of 'U', 'D', 'R', 'NULL'
         :param standard_concept: List[str] or str, default None
             Any of 'S', 'C', 'NULL'
-        :param remove_dot_from_codes: bool, default False
-            If e.g. ICD9 and ICD10 source codes do not contain the
-            dot separator; note in this case "restrict_to_codes" will
-            be applied AFTER retrieving all ICD9/10 mappings from
-            the OMOP vocabularies!
         :return: MappingDict
         """
 
@@ -258,10 +253,10 @@ class CodeMapper:
 
         mapping_dict = MappingDict.from_records(records)
 
-        if not mapping_dict.mapping_dict:
-            logger.warning('No mapping found, mapping dictionary empty')
         # no need to write out all unmapped codes
         # if we already know mapping dict is empty
+        if not mapping_dict.mapping_dict:
+            logger.warning('No mapping found, mapping dictionary empty')
         elif restrict_to_codes:
             not_found = set(restrict_to_codes) - set(mapping_dict.mapping_dict.keys())
             if not_found:
