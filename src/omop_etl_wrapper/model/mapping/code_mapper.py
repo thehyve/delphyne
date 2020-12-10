@@ -123,7 +123,8 @@ class MappingDict:
         if not code or pd.isna(code):
             mappings = [CodeMapping.create_mapping_for_no_match(code)]
         else:
-            mappings = self.mapping_dict.get(code, [])  # full CodeMapping object
+            # full CodeMapping object
+            mappings = self.mapping_dict.get(code, [])
 
         if not mappings:
             logger.debug(f'No mapping available for {code}')
@@ -153,8 +154,7 @@ class CodeMapper:
             vocabulary_id: Union[str, List[str]],
             restrict_to_codes: Optional[Union[List[str], Set[str]]] = None,
             invalid_reason: Optional[Union[str, List[str]]] = None,
-            standard_concept: Optional[Union[str, List[str]]] = None,
-            remove_dot_from_codes: bool = False
+            standard_concept: Optional[Union[str, List[str]]] = None
     ) -> MappingDict:
         """
         Given one or more non-standard vocabulary names (e.g. Read,
@@ -222,10 +222,7 @@ class CodeMapper:
             source_filters.append(source.standard_concept is None)
         elif type(standard_concept) == str:
             source_filters.append(source.standard_concept == standard_concept)
-
-        # if restricted_to_codes do not contain a dot, the restriction
-        # in query will not work
-        if not remove_dot_from_codes and restrict_to_codes:
+        if restrict_to_codes:
             source_filters.append(source.concept_code.in_(restrict_to_codes))
 
         with self.db.session_scope() as session:
@@ -252,20 +249,11 @@ class CodeMapper:
 
         mapping_dict = MappingDict.from_records(records)
 
-        if remove_dot_from_codes:
-            mapping_dict.remove_dot_from_code()
-
-            # If dot removed from codes, the restriction was not applied
-            # at the query
-            if restrict_to_codes:
-                to_delete = set(mapping_dict.mapping_dict.keys()).difference(restrict_to_codes)
-                for key in to_delete:
-                    del mapping_dict.mapping_dict[key]
-
         if not mapping_dict.mapping_dict:
             logger.warning('No mapping found, mapping dictionary empty')
-
-        if restrict_to_codes:
+        # no need to write out all unmapped codes
+        # if we already know mapping dict is empty
+        elif restrict_to_codes:
             not_found = set(restrict_to_codes) - set(mapping_dict.mapping_dict.keys())
             if not_found:
                 logger.warning(f'No mapping to standard concept_id could be generated for '
