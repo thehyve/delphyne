@@ -129,7 +129,7 @@ class MappingDict:
         if not self.mapping_dict:
             logger.debug('Trying to retrieve a mapping from an empty dictionary!')
 
-        if not code or pd.isna(code):
+        if is_null_or_falsy(code):
             mappings = [CodeMapping.create_mapping_for_no_match(code)]
         else:
             # full CodeMapping object
