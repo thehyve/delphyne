@@ -90,20 +90,6 @@ class MappingDict:
 
         return mapping_dict_from_records
 
-    def remove_dot_from_code(self) -> None:
-        """
-        Mainly for ICD9 and ICD10 codes that are recorded in the source
-        without a dot.
-
-        :return: None
-        """
-        new_mapping_dict = {}
-        for key in self.mapping_dict:
-            value = self.mapping_dict.get(key)
-            key_no_dot = key.replace('.', '')
-            new_mapping_dict[key_no_dot] = value
-        self.mapping_dict = new_mapping_dict
-
     def lookup(self, code: str,
                first_only: bool = False,
                target_concept_id_only: bool = False,
