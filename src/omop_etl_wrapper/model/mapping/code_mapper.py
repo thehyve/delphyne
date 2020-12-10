@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 from typing import Optional, Union, List, Set, Dict, NamedTuple
 
-import pandas as pd
 from sqlalchemy import and_
 from sqlalchemy.orm import aliased
 
@@ -99,53 +98,52 @@ class MappingDict:
 
         return mapping_dict_from_records
 
-    def lookup(self, code: str,
+    def lookup(self,
+               source_concept_code: str,
                first_only: bool = False,
                target_concept_id_only: bool = False,
                ) -> Union[List[str], List[CodeMapping], str, CodeMapping]:
         """
-        Given a valid vocabulary code, retrieves a list of all
-        corresponding standard concept_ids from the stored mapping
+        Given a valid OMOP vocabulary concept code, retrieves a list of
+        all mappings (as CodeMapping objects) from the stored mapping
         dictionary.
 
         Optionally, you can restrict the results to the first
-        available match. For reviewing purposes, you can also opt to
-        retrieve the full mapping information as a CodeMapping object.
-        Match for source and standard: list of one or more CodeMappings
-        Match for source (no standard): list of one CodeMapping,
+        available match only, and/or to target concept_id only
+        (instead of full CodeMapping objects).
+        If both source code and target concept_id found: returns one or
+        more mappings;
+        if only source code is found: returns a single mapping with
         target_concept_id = 0.
-        No Match (code not found): list of one CodeMapping,
-        source_concept_id = 0, target_concept_id = 0.
+        if source code is not found: returns a single mapping with
+        source_concept_id = 0 and target_concept_id = 0.
 
-        :param code: str
-            Representing the code to lookup
+        :param source_concept_code: str
+            Representing the source code to lookup
         :param first_only: bool, default False
             If True, return the first available match only
         :param target_concept_id_only: bool, default False
-            If True, return the target_concept_id only
+            If True, return the target_concept_id only (as string)
         :return: A single match or list of matches, either standard
             concept_ids (string) or CodeMapping objects
         """
-        if not self.mapping_dict:
-            logger.debug('Trying to retrieve a mapping from an empty dictionary!')
 
-        if is_null_or_falsy(code):
-            mappings = [CodeMapping.create_mapping_for_no_match(code)]
-        else:
-            # full CodeMapping object
-            mappings = self.mapping_dict.get(code, [])
+        # full CodeMapping object
+        mappings = self.mapping_dict.get(source_concept_code, [])
+
+        if not self.mapping_dict:
+            logger.warning('Trying to retrieve mappings from an empty dictionary!')
 
         if not mappings:
-            logger.debug(f'No mapping available for {code}')
-            mappings = [CodeMapping.create_mapping_for_no_match(code)]
+            logger.debug(f'No mapping available for {source_concept_code}')
+            mappings = [CodeMapping.create_mapping_for_no_match(source_concept_code)]
 
         if target_concept_id_only:
-            # standard concept_id only
             mappings = [mapping.target_concept_id for mapping in mappings]
 
         if first_only:
             if len(mappings) > 1:
-                logger.debug(f'Multiple mappings available for {code}, '
+                logger.debug(f'Multiple mappings available for {source_concept_code}, '
                              f'returning only first.')
             return mappings[0]
 
