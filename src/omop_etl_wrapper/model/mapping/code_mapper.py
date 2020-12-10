@@ -90,33 +90,6 @@ class MappingDict:
 
         return mapping_dict_from_records
 
-    @classmethod
-    def from_mapping_df(cls, mapping_df: pd.DataFrame) -> MappingDict:
-
-        mapping_dict_from_df = cls()
-        mapping_dict = {}
-
-        for _, row in mapping_df.iterrows():
-            code = row['source_concept_code']
-            target_concept_id = row['target_concept_id'] if row['target_concept_id'] else 0
-            mapping = CodeMapping()
-            mapping.source_concept_code = code
-            mapping.source_concept_id = row['source_concept_id']
-            mapping.source_concept_name = row['source_concept_name']
-            mapping.source_vocabulary_id = row['source_vocabulary_id']
-            mapping.source_standard_concept = row['source_standard_concept']
-            mapping.source_invalid_reason = row['source_invalid_reason']
-            mapping.target_concept_code = row['target_concept_code']
-            mapping.target_concept_id = target_concept_id
-            mapping.target_concept_name = row['target_concept_name']
-            mapping.target_vocabulary_id = row['target_vocabulary_id']
-
-            mapping_dict[code] = mapping_dict.get(code, []) + [mapping]
-
-        mapping_dict_from_df.mapping_dict = mapping_dict
-
-        return mapping_dict_from_df
-
     def remove_dot_from_code(self) -> None:
         """
         Mainly for ICD9 and ICD10 codes that are recorded in the source
