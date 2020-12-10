@@ -65,6 +65,15 @@ class MappingDict:
 
     @classmethod
     def from_records(cls, records: List[Record]) -> MappingDict:
+        """
+        Create MappingDict from a list of results from a SQLAlchemy
+        query compliant with the required Record format. The method
+        also works on a list of named tuples as long as they have the
+        required Record fields.
+        :param records: a list of named tuples compliant with the Record
+            format, e.g. as the result of a SQLAlchemy query.
+        :return:
+        """
 
         mapping_dict_from_records = cls()
         mapping_dict = {}
