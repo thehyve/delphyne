@@ -1,4 +1,5 @@
 [flake8]
 max-line-length = 99
+max-doc-length = 72
 ignore = E501, E203, F401
 exclude = _version.py
