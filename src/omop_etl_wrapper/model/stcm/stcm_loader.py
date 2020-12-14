@@ -82,6 +82,9 @@ class StcmLoader:
                 version = line['stcm_version']
                 if not vocab_id or not version:
                     raise ValueError(f'{STCM_VERSION_FILE.name} may not contain empty values')
+                if vocab_id not in self._loaded_vocabulary_ids:
+                    raise ValueError(f'{vocab_id} is not present in the vocabulary table. '
+                                     f'Make sure to add it as a custom vocabulary.')
                 self._new_stcm_versions[vocab_id] = version
 
     def _check_stcm_version_table_exists(self) -> None:
