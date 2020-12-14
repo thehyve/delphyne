@@ -71,7 +71,7 @@ class MappingDict:
         required Record fields.
         :param records: a list of named tuples compliant with the Record
             format, e.g. as the result of a SQLAlchemy query.
-        :return:
+        :return: a MappingDict object.
         """
 
         mapping_dict_from_records = cls()
@@ -114,7 +114,7 @@ class MappingDict:
         If both source code and target concept_id found: returns one or
         more mappings;
         if only source code is found: returns a single mapping with
-        target_concept_id = 0.
+        target_concept_id = 0;
         if source code is not found: returns a single mapping with
         source_concept_id = 0 and target_concept_id = 0.
 
@@ -251,11 +251,9 @@ class CodeMapper:
 
         mapping_dict = MappingDict.from_records(records)
 
-        # no need to write out all unmapped codes
-        # if we already know mapping dict is empty
         if not mapping_dict.mapping_dict:
-            logger.warning('No mapping found, mapping dictionary empty')
-        elif restrict_to_codes:
+            logger.warning('No mapping found, mapping dictionary empty!')
+        if restrict_to_codes:
             not_found = set(restrict_to_codes) - set(mapping_dict.mapping_dict.keys())
             if not_found:
                 logger.warning(f'No mapping to standard concept_id could be generated for '
