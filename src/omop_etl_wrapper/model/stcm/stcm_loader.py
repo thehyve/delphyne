@@ -138,15 +138,6 @@ class StcmLoader:
                 session.add(r)
 
     def _load_stcm_from_file(self, stcm_file: Path) -> None:
-        """
-        Insert STCM file into the STCM vocabulary table and add
-        contents to stcm_lookup.
-
-        :param stcm_file: Path
-            Separated values file with header matching the CDM STCM
-            columns
-        :return: None
-        """
         logger.info(f'Loading STCM file: {stcm_file.name}')
         transformation_metadata = EtlTransformation(name=f'load_{stcm_file.stem}')
         with self._db.session_scope(metadata=transformation_metadata) as session, \
