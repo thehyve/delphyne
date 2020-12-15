@@ -18,5 +18,7 @@ LOG_OUTPUT_DIR = Path('./logs')
 RESOURCES_DIR = Path('./resources')
 # Directory containing all source_to_concept_map files
 STCM_DIR = RESOURCES_DIR / 'source_to_concept'
+# File containing the versioning info of the STCM mappings
+STCM_VERSION_FILE = STCM_DIR / 'stcm_versions.tsv'
 # Directory containing all custom vocabulary tables
 CUSTOM_VOCAB_DIR = RESOURCES_DIR / 'custom_vocabularies'
