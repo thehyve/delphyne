@@ -39,9 +39,9 @@ class CodeMapping:
         self.target_vocabulary_id = None
 
     @classmethod
-    def create_mapping_for_no_match(cls, source_concept_code) -> CodeMapping:
+    def create_mapping_for_no_match(cls, source_code) -> CodeMapping:
         mapping = cls()
-        mapping.source_concept_code = source_concept_code
+        mapping.source_concept_code = source_code
         mapping.source_concept_id = 0
         mapping.target_concept_id = 0
         return mapping
@@ -99,7 +99,7 @@ class MappingDict:
         return mapping_dict_from_records
 
     def lookup(self,
-               source_concept_code: str,
+               source_code: str,
                first_only: bool = False,
                target_concept_id_only: bool = False,
                ) -> Union[List[str], List[CodeMapping], str, CodeMapping]:
@@ -118,7 +118,7 @@ class MappingDict:
         if source code is not found: returns a single mapping with
         source_concept_id = 0 and target_concept_id = 0.
 
-        :param source_concept_code: str
+        :param source_code: str
             Representing the source code to lookup
         :param first_only: bool, default False
             If True, return the first available match only
@@ -129,21 +129,21 @@ class MappingDict:
         """
 
         # full CodeMapping object
-        mappings = self.mapping_dict.get(source_concept_code, [])
+        mappings = self.mapping_dict.get(source_code, [])
 
         if not self.mapping_dict:
             logger.warning('Trying to retrieve mappings from an empty dictionary!')
 
         if not mappings:
-            logger.debug(f'No mapping available for {source_concept_code}')
-            mappings = [CodeMapping.create_mapping_for_no_match(source_concept_code)]
+            logger.debug(f'No mapping available for {source_code}')
+            mappings = [CodeMapping.create_mapping_for_no_match(source_code)]
 
         if target_concept_id_only:
             mappings = [mapping.target_concept_id for mapping in mappings]
 
         if first_only:
             if len(mappings) > 1:
-                logger.debug(f'Multiple mappings available for {source_concept_code}, '
+                logger.debug(f'Multiple mappings available for {source_code}, '
                              f'returning only first.')
             return mappings[0]
 
