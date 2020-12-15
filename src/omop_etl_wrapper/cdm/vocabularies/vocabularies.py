@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric, String, Text
-from sqlalchemy.orm import relationship
+import datetime
+
+from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric, String, Text, DateTime
 from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.orm import relationship
 
 from .._schema_placeholders import VOCAB_SCHEMA
 
@@ -430,3 +432,20 @@ class BaseCohortDefinition:
     @declared_attr
     def subject_concept(cls):
         return relationship('Concept', primaryjoin='CohortDefinition.subject_concept_id == Concept.concept_id')
+
+
+class BaseSourceToConceptMapVersion:
+    __tablename__ = 'source_to_concept_map_version'
+    __table_args__ = {'schema': VOCAB_SCHEMA}
+
+    @declared_attr
+    def source_vocabulary_id(cls):
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.vocabulary.vocabulary_id'), primary_key=True)
+
+    @declared_attr
+    def stcm_version(cls):
+        return Column(String(255), nullable=False)
+
+    @declared_attr
+    def last_upload_date(cls):
+        return Column(DateTime, nullable=False, default=datetime.datetime.utcnow)

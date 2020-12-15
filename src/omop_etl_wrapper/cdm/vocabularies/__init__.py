@@ -10,4 +10,5 @@ from .vocabularies import (
     BaseDrugStrength,
     BaseRelationship,
     BaseCohortDefinition,
+    BaseSourceToConceptMapVersion,
 )

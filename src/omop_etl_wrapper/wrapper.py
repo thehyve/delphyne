@@ -6,16 +6,16 @@ import sys
 from sqlalchemy import Table
 from sqlalchemy.schema import CreateSchema
 
-from ._paths import STCM_DIR, SOURCE_DATA_CONFIG_PATH
+from ._paths import SOURCE_DATA_CONFIG_PATH
 from .cdm import vocabularies as cdm
 from .cdm._schema_placeholders import VOCAB_SCHEMA
 from .config.models import MainConfig
 from .database import Database
 from .model.etl_stats import EtlStats
 from .model.orm_wrapper import OrmWrapper
-from .model.vocabulary_loader import VocabularyLoader
 from .model.raw_sql_wrapper import RawSqlWrapper
 from .model.source_data import SourceData
+from .model.vocab_manager import VocabManager
 from .model.mapping import CodeMapper
 from .util.io import read_yaml_file
 
@@ -49,38 +49,28 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         super(OrmWrapper, self).__init__(database=self.db, config=config)
 
         self.etl_stats = EtlStats()
-        self.source_data: Optional[SourceData] = self._set_source_data()
-        self.vocab_loader = VocabularyLoader(self.db, cdm_)
-        self.code_mapper = CodeMapper(self.db, cdm_)
-        self.load_custom_vocabs: bool = \
-            not config.run_options.skip_custom_vocabulary_loading
 
-    def _set_source_data(self):
+        source_data_path = config.source_data_folder
+        self.source_data: Optional[SourceData] = self._set_source_data(source_data_path)
+        
+        self.vocab_manager = VocabManager(self.db, cdm_, config, self.etl_stats)
+        self.code_mapper = CodeMapper(self.db, cdm_)
+
+    def _set_source_data(self, source_data_path: Optional[Path]):
+        if source_data_path is None:
+            logger.info(f'No source_data_folder provided in config file, '
+                        f'assuming no source data files are present')
+            return None
         if not SOURCE_DATA_CONFIG_PATH.exists():
             logger.info(f'No source data config file found at {SOURCE_DATA_CONFIG_PATH}, '
                         f'assuming no source data files are present')
             return None
         source_config = read_yaml_file(SOURCE_DATA_CONFIG_PATH)
+        source_config['source_data_folder'] = source_data_path
         return SourceData(source_config, self.etl_stats)
 
     def run(self) -> None:
         print('OMOP wrapper goes brrrrrrrr')
-
-    def load_custom_vocabularies(self):
-        logger.info(f'Loading custom vocabulary tables: {self.load_custom_vocabs}')
-        if self.load_custom_vocabs:
-            self.vocab_loader.load_custom_vocabulary_tables()
-
-    def load_stcm(self):
-        """Insert all stcm csv files into the source_to_concept_map
-        table."""
-        logger.info('Loading STCM files')
-        if not STCM_DIR.exists():
-            raise FileNotFoundError(f'{str(STCM_DIR.resolve())} folder not found')
-        # TODO: support multiple file extensions
-        stcm_files = STCM_DIR.glob('*.csv')
-        for stcm_file in stcm_files:
-            self.load_source_to_concept_map_from_csv(stcm_file)
 
     def stem_table_to_domains(self) -> None:
         """
