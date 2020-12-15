@@ -104,9 +104,8 @@ class MappingDict:
                target_concept_id_only: bool = False,
                ) -> Union[List[str], List[CodeMapping], str, CodeMapping]:
         """
-        Given a valid OMOP vocabulary concept code, retrieves a list of
-        all mappings (as CodeMapping objects) from the stored mapping
-        dictionary.
+        Given a source concept_code, retrieves a list of mappings to
+        standard_concept_id from the stored mapping dictionary.
 
         Optionally, you can restrict the results to the first
         available match only, and/or to target concept_id only
@@ -124,6 +123,7 @@ class MappingDict:
             If True, return the first available match only
         :param target_concept_id_only: bool, default False
             If True, return the target_concept_id only (as string)
+
         :return: A single match or list of matches, either standard
             concept_ids (string) or CodeMapping objects
         """
@@ -164,29 +164,32 @@ class CodeMapper:
             standard_concept: Optional[Union[str, List[str]]] = None
     ) -> MappingDict:
         """
-        Given one or more non-standard vocabulary names (e.g. Read,
-        ICD10), creates a dictionary of mappings from the non-standard
-        vocabulary codes to standard OMOP concept_ids (typically
-        SNOMED); the results can be restricted to a specific list of
-        source vocabulary codes to save memory.
+        Creates a dictionary of mappings from non-standard concept_codes
+        to standard concept_ids for the specified OMOP vocabularies.
 
-        Source (non-standard) codes can be filtered by invalid_reason
-        and standard_concept values;
-        target (standard) concept_ids are always standard and valid.
-        Note that multiple mappings from non-standard codes
-        to standard concept_ids are possible.
+        Accepts one or more non-standard OMOP vocabulary names (e.g.
+        Read, ICD10); the lookup can be restricted to a specific list of
+        source concept_codes within the specified vocabularies to save
+        memory.
 
-        Returns a dictionary with source codes as keys, and mappings in
-        the form of CodeMapping objects as values.
+        Source concept_codes can be additionally filtered by
+        invalid_reason and standard_concept values; target (standard)
+        concept_ids are always standard and valid.
+        Note that multiple mappings from non-standard codes to standard
+        concept_id are possible.
+
+        Returns a dictionary with source concept_codes as keys, and
+        mappings (in the form of CodeMapping objects) as values.
 
         :param vocabulary_id: List[str] or str
-            Valid OMOP vocabulary_id(s)
+            Valid non-standard OMOP vocabulary_id(s)
         :param restrict_to_codes: List[str], default None
             Subset of vocabulary codes to retrieve mappings for
         :param invalid_reason: List[str] or str, default None
             Any of 'U', 'D', 'R', 'NULL'
         :param standard_concept: List[str] or str, default None
             Any of 'S', 'C', 'NULL'
+
         :return: MappingDict
         """
 
