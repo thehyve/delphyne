@@ -1,5 +1,6 @@
 import csv
 import logging
+from collections import Counter
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
@@ -145,10 +146,16 @@ class StcmLoader:
         with self._db.session_scope(metadata=transformation_metadata) as session, \
                 stcm_file.open('r') as f_in:
             rows = csv.DictReader(f_in)
+            ignored_vocabs = Counter()
+            unrecognized_vocabs = Counter()
 
             for i, row in enumerate(rows, start=2):
                 source_vocabulary_id = row['source_vocabulary_id']
+                if source_vocabulary_id not in self._provided_stcm_versions:
+                    unrecognized_vocabs.update([source_vocabulary_id])
+                    continue
                 if source_vocabulary_id not in self._stcm_vocabs_to_update:
+                    ignored_vocabs.update([source_vocabulary_id])
                     continue
                 # Skip unmapped records
                 target_concept_id = int(row['target_concept_id'])
@@ -161,3 +168,13 @@ class StcmLoader:
 
             transformation_metadata.end = datetime.now()
             self._etl_stats.add_transformation(transformation_metadata)
+
+            if unrecognized_vocabs:
+                logger.warning(f'Skipped records with source_vocabulary_id values that '
+                               f'were not present in {STCM_VERSION_FILE.name}: '
+                               f'{unrecognized_vocabs.most_common()}')
+
+            if ignored_vocabs:
+                logger.info(f'Skipped records with source_vocabulary_id values that '
+                            f'were already loaded under the current version: '
+                            f'{ignored_vocabs.most_common()}')
