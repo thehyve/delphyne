@@ -16,6 +16,7 @@ from .model.orm_wrapper import OrmWrapper
 from .model.raw_sql_wrapper import RawSqlWrapper
 from .model.source_data import SourceData
 from .model.vocab_manager import VocabManager
+from .model.mapping import CodeMapper
 from .util.io import read_yaml_file
 
 logger = logging.getLogger(__name__)
@@ -53,6 +54,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         self.source_data: Optional[SourceData] = self._set_source_data(source_data_path)
         
         self.vocab_manager = VocabManager(self.db, cdm_, config, self.etl_stats)
+        self.code_mapper = CodeMapper(self.db, cdm_)
 
     def _set_source_data(self, source_data_path: Optional[Path]):
         if source_data_path is None:
