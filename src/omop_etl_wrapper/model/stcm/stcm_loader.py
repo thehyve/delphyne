@@ -25,13 +25,15 @@ class StcmLoader:
         self._db = db
         self._cdm = cdm
         self._etl_stats = etl_stats
+        # STCM versions previously loaded into the db
         self._loaded_stcm_versions: Dict[str, str] = {}
-        self._new_stcm_versions: Dict[str, str] = {}
+        # Newly provided STCM versions from stcm_versions.tsv
+        self._provided_stcm_versions: Dict[str, str] = {}
 
     @property
     @lru_cache()
     def _stcm_vocabs_to_update(self) -> Set[str]:
-        return {vocab_id for vocab_id, version in self._new_stcm_versions.items()
+        return {vocab_id for vocab_id, version in self._provided_stcm_versions.items()
                 if version != self._loaded_stcm_versions.get(vocab_id)}
 
     @property
@@ -85,7 +87,7 @@ class StcmLoader:
                 if vocab_id not in self._loaded_vocabulary_ids:
                     raise ValueError(f'{vocab_id} is not present in the vocabulary table. '
                                      f'Make sure to add it as a custom vocabulary.')
-                self._new_stcm_versions[vocab_id] = version
+                self._provided_stcm_versions[vocab_id] = version
 
     def _check_stcm_version_table_exists(self) -> None:
         metadata = MetaData(bind=self._db.engine)
@@ -109,7 +111,7 @@ class StcmLoader:
         stem_name = stcm_file.stem
         if stem_name.endswith('_stcm'):
             vocab_id = stem_name.rsplit('_', 1)[0]
-            if vocab_id in self._new_stcm_versions:
+            if vocab_id in self._provided_stcm_versions:
                 return vocab_id
         return None
 
@@ -134,7 +136,7 @@ class StcmLoader:
             for vocab_id in self._stcm_vocabs_to_update:
                 r = self._cdm.SourceToConceptMapVersion()
                 r.source_vocabulary_id = vocab_id
-                r.stcm_version = self._new_stcm_versions[vocab_id]
+                r.stcm_version = self._provided_stcm_versions[vocab_id]
                 session.add(r)
 
     def _load_stcm_from_file(self, stcm_file: Path) -> None:
