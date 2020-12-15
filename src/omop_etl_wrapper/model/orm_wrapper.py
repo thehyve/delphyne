@@ -12,18 +12,15 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-import csv
 import logging
 import os
 from abc import ABC, abstractmethod
-from collections import Counter, defaultdict
+from collections import Counter
 from datetime import datetime
+from functools import lru_cache
 from inspect import signature
-from pathlib import Path
-from typing import Callable, DefaultDict, Dict, List
+from typing import Callable, List
 
-import itertools
-import pandas as pd
 from sqlalchemy.orm.session import Session
 
 from .etl_stats import EtlTransformation, EtlStats
@@ -40,9 +37,6 @@ class OrmWrapper(ABC):
     def __init__(self, database: Database):
         self.db = database
         self.etl_stats = EtlStats()
-
-        # {source_vocabulary_id: {source_code: target_concept_id}}
-        self._stcm_lookup: DefaultDict[str, Dict[str, int]] = defaultdict(dict)
 
     @property
     @abstractmethod
@@ -99,95 +93,20 @@ class OrmWrapper(ABC):
         ic = Counter(Database.get_record_targets(records_to_insert))
         transformation_metadata.insertion_counts = ic
 
-    def load_vocab_records_from_csv(self, source_file: Path, target_table) -> None:
-        """
-        Insert or update records in an OMOP vocabulary table, based on
-        the contents of a csv file.
-
-        :param source_file: Path
-            csv file with header containing records of an OMOP
-            vocabulary table
-        :param target_table:
-            SQLAlchemy vocabulary table class
-        :return: None
-        """
-        # Note: inserts are one-by-one, so can be slow for large vocabulary files
-        transformation_metadata = EtlTransformation(name=f'load_vocab_{source_file.name}')
-        with source_file.open('r') as f_in, \
-                self.db.session_scope(metadata=transformation_metadata) as session:
-            rows = csv.DictReader(f_in)
-            for row in rows:
-                pk_col: str = target_table.__table__.primary_key.columns.values()[0].name
-                record = session.query(target_table).get(row[pk_col])
-                if not record:
-                    record = target_table()
-
-                # Set all variables
-                for key, value in row.items():
-                    setattr(record, key, value if value else None)
-
-                session.add(record)
-            transformation_metadata.end = datetime.now()
-        self.etl_stats.add_transformation(transformation_metadata)
-
-    def truncate_stcm_table(self):
-        """Delete all records in the source_to_concept_map table."""
-        logger.info('Truncating STCM table')
-        with self.db.session_scope() as session:
-            session.query(self.cdm.SourceToConceptMap).delete()
-
-    def load_source_to_concept_map_from_csv(self, source_file: Path) -> None:
-        """
-        Insert STCM csv file into the STCM vocabulary table and add
-        contents to stcm_lookup.
-
-        :param source_file: Path
-            csv file with header matching the CDM STCM columns
-        :return: None
-        """
-        logger.info(f'Loading source to concept file: {str(source_file)}')
-        transformation_metadata = EtlTransformation(name=f'load_{source_file.stem}')
-        with self.db.session_scope(metadata=transformation_metadata) as session, source_file.open('r') as f_in:
-            rows = csv.DictReader(f_in)
-
-            first_row = next(rows)
-            source_vocab = session.query(self.cdm.Vocabulary).get(first_row['source_vocabulary_id'])
-
-            if not source_vocab:
-                session.add(self.cdm.Vocabulary(
-                    vocabulary_id=first_row['source_vocabulary_id'],
-                    vocabulary_name=first_row['source_vocabulary_id'].replace('_', ' '),
-                    vocabulary_reference='Active Biotech',
-                    vocabulary_concept_id=0,
-                ))
-
-            for row in itertools.chain([first_row], rows):
-                source_code = row['source_code']
-                source_vocabulary_id = row['source_vocabulary_id']
-                target_concept_id = int(row['target_concept_id'])
-                # Skip unmapped records
-                if target_concept_id == 0:
-                    continue
-                self._stcm_lookup[source_vocabulary_id][source_code] = target_concept_id
-                session.add(self.cdm.SourceToConceptMap(**row))
-
-            transformation_metadata.end = datetime.now()
-            self.etl_stats.add_transformation(transformation_metadata)
-
+    @lru_cache(maxsize=50000)
     def lookup_stcm(self, source_vocabulary_id: str, source_code: str) -> int:
         """
-        Get the target_concept_id for a given source code from the STCM.
+        Query the STCM table to get the target_concept_id.
 
         :param source_vocabulary_id: str
         :param source_code: str
         :return: int
             target_concept_id if present, otherwise 0
         """
-        if source_vocabulary_id not in self._stcm_lookup:
-            logger.warning('source_vocabulary "{}" not found'.format(source_vocabulary_id))
-            return 0
-
-        if pd.isnull(source_code):
-            return 0
-
-        return self._stcm_lookup[source_vocabulary_id].get(source_code, 0)
+        with self.db.session_scope() as session:
+            q = session.query(self.cdm.SourceToConceptMap)
+            result = q.filter_by(source_vocabulary_id=source_vocabulary_id,
+                                 source_code=source_code).one_or_none()
+            if result is None:
+                return 0
+            return result.target_concept_id
