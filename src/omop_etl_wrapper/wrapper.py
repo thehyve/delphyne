@@ -131,6 +131,16 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
                     self.db.engine.execute(CreateSchema(schema_name))
 
     def summarize(self) -> None:
+        """
+        Summarize the results of the transformations.
+
+        Logs an overview of all transformations and data sources that
+        were used for the current run. If **write_reports** is set to
+        True in the main config file, two overview files will be written
+        to the logs folder with more detailed information.
+
+        :return: None
+        """
         etl_stats.log_summary()
         if self._config.run_options.write_reports:
             etl_stats.write_summary_files()
