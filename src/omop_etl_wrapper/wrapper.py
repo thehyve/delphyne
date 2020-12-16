@@ -129,3 +129,8 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
                 if not conn.dialect.has_schema(conn, schema_name):
                     logger.info(f'Creating schema: {schema_name}')
                     self.db.engine.execute(CreateSchema(schema_name))
+
+    def summarize(self) -> None:
+        etl_stats.log_summary()
+        if self._config.run_options.write_reports:
+            etl_stats.write_summary_files()
