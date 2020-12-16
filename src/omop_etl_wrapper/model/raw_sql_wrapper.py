@@ -8,7 +8,7 @@ from typing import Dict
 from sqlalchemy import text
 from sqlalchemy.engine.result import ResultProxy
 
-from .etl_stats import EtlTransformation, EtlStats
+from .etl_stats import EtlTransformation, etl_stats
 from ..config.models import MainConfig
 from ..database.database import Database
 from ..util.helper import replace_substrings
@@ -22,7 +22,6 @@ class RawSqlWrapper:
     """
     def __init__(self, database: Database, config: MainConfig):
         self.db = database
-        self.etl_stats = EtlStats()
         self.sql_parameters = self._get_sql_parameters(config)
 
     @staticmethod
@@ -61,7 +60,7 @@ class RawSqlWrapper:
                 transformation_metadata.query_success = False
 
         transformation_metadata.end = datetime.now()
-        self.etl_stats.add_transformation(transformation_metadata)
+        etl_stats.add_transformation(transformation_metadata)
 
     @staticmethod
     def apply_sql_parameters(parameterized_query: str, sql_parameters: Dict[str, str]):

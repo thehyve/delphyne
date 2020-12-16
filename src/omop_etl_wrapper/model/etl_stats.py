@@ -207,3 +207,6 @@ class EtlStats:
         output_dir.mkdir(exist_ok=True)
         self.sources_df.to_csv(output_dir / f'{time_str}_sources.tsv', sep='\t', index=False)
         self.transformations_df.to_csv(output_dir / f'{time_str}_transformations.tsv', sep='\t', index=False)
+
+
+etl_stats = EtlStats()

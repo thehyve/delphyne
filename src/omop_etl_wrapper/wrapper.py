@@ -11,12 +11,12 @@ from .cdm import vocabularies as cdm
 from .cdm._schema_placeholders import VOCAB_SCHEMA
 from .config.models import MainConfig
 from .database import Database
-from .model.etl_stats import EtlStats
+from .model.etl_stats import etl_stats
+from .model.mapping import CodeMapper
 from .model.orm_wrapper import OrmWrapper
 from .model.raw_sql_wrapper import RawSqlWrapper
 from .model.source_data import SourceData
 from .model.vocab_manager import VocabManager
-from .model.mapping import CodeMapper
 from .util.io import read_yaml_file
 
 logger = logging.getLogger(__name__)
@@ -38,25 +38,22 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         :param cdm_: Module containing the SQLAlchemy declarative Base
             and the CDM tables.
         """
+        etl_stats.reset()
+        self._config = config
         self.db = Database.from_config(config, cdm_.Base)
 
         if not self.db.can_connect(str(self.db.engine.url)):
             sys.exit()
 
-        self.write_reports = config.run_options.write_reports
-
         super().__init__(database=self.db)
         super(OrmWrapper, self).__init__(database=self.db, config=config)
 
-        self.etl_stats = EtlStats()
-
-        source_data_path = config.source_data_folder
-        self.source_data: Optional[SourceData] = self._set_source_data(source_data_path)
-        
-        self.vocab_manager = VocabManager(self.db, cdm_, config, self.etl_stats)
+        self.source_data: Optional[SourceData] = self._set_source_data()
+        self.vocab_manager = VocabManager(self.db, cdm_, config)
         self.code_mapper = CodeMapper(self.db, cdm_)
 
-    def _set_source_data(self, source_data_path: Optional[Path]):
+    def _set_source_data(self):
+        source_data_path = self._config.source_data_folder
         if source_data_path is None:
             logger.info(f'No source_data_folder provided in config file, '
                         f'assuming no source data files are present')
@@ -67,7 +64,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
             return None
         source_config = read_yaml_file(SOURCE_DATA_CONFIG_PATH)
         source_config['source_data_folder'] = source_data_path
-        return SourceData(source_config, self.etl_stats)
+        return SourceData(source_config)
 
     def run(self) -> None:
         print('OMOP wrapper goes brrrrrrrr')
