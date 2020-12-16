@@ -141,6 +141,6 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
 
         :return: None
         """
-        etl_stats.log_summary()
         if self._config.run_options.write_reports:
             etl_stats.write_summary_files()
+        etl_stats.log_summary()
