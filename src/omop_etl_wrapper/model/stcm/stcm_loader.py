@@ -13,7 +13,7 @@ from ..._paths import STCM_DIR, STCM_VERSION_FILE
 from ...cdm._schema_placeholders import VOCAB_SCHEMA
 from ...cdm.vocabularies import BaseSourceToConceptMapVersion
 from ...database import Database
-from ...model.etl_stats import EtlTransformation, EtlStats
+from ...model.etl_stats import EtlTransformation, etl_stats
 from ...util.io import is_hidden
 
 logger = logging.getLogger(__name__)
@@ -22,10 +22,9 @@ _STCM_VERSION_TABLE_NAME = BaseSourceToConceptMapVersion.__tablename__
 
 
 class StcmLoader:
-    def __init__(self, db: Database, cdm, etl_stats: EtlStats):
+    def __init__(self, db: Database, cdm):
         self._db = db
         self._cdm = cdm
-        self._etl_stats = etl_stats
         # STCM versions previously loaded into the db
         self._loaded_stcm_versions: Dict[str, str] = {}
         # Newly provided STCM versions from stcm_versions.tsv
@@ -167,7 +166,7 @@ class StcmLoader:
                 session.add(self._cdm.SourceToConceptMap(**row))
 
             transformation_metadata.end = datetime.now()
-            self._etl_stats.add_transformation(transformation_metadata)
+            etl_stats.add_transformation(transformation_metadata)
 
             if unrecognized_vocabs:
                 logger.warning(f'Skipped records with source_vocabulary_id values that '

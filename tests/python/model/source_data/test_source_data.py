@@ -1,14 +1,14 @@
 from typing import Dict
 
 import pytest
-from src.omop_etl_wrapper.model.etl_stats import EtlStats
+from src.omop_etl_wrapper.model.etl_stats import etl_stats
 from src.omop_etl_wrapper.model.source_data import SourceData
 
 
 @pytest.fixture
 def source_data1(source_config: Dict) -> SourceData:
     """Return SourceData instance with test_dir1 as source_dir."""
-    return SourceData(source_config, EtlStats())
+    return SourceData(source_config)
 
 
 def test_get_file_returns_the_file(source_data1: SourceData):
@@ -22,9 +22,10 @@ def test_get_non_existing_file_raises_exception(source_data1: SourceData):
 
 
 def test_source_data_counts_are_collected(source_config: Dict):
+    etl_stats.reset()
     source_config['count_source_rows'] = True
-    source_data = SourceData(source_config, EtlStats())
-    assert len(source_data._etl_stats.sources) == 3
+    SourceData(source_config)
+    assert len(etl_stats.sources) == 3
 
 
 def test_source_dir_property(source_data1: SourceData):

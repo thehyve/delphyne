@@ -23,7 +23,7 @@ from typing import Callable, List
 
 from sqlalchemy.orm.session import Session
 
-from .etl_stats import EtlTransformation, EtlStats
+from .etl_stats import EtlTransformation, etl_stats
 from ..database.database import Database
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,6 @@ class OrmWrapper(ABC):
     """
     def __init__(self, database: Database):
         self.db = database
-        self.etl_stats = EtlStats()
 
     @property
     @abstractmethod
@@ -78,7 +77,7 @@ class OrmWrapper(ABC):
 
         transformation_metadata.end = datetime.now()
         logger.info(f'{statement.__name__} completed with success status: {transformation_metadata.query_success}')
-        self.etl_stats.add_transformation(transformation_metadata)
+        etl_stats.add_transformation(transformation_metadata)
 
     @staticmethod
     def _collect_query_statistics_bulk_mode(session: Session,

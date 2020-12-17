@@ -7,7 +7,7 @@ from typing import Dict
 
 from .source_file import SourceFile
 from ...config.models import SourceConfig
-from ...model.etl_stats import EtlSource, EtlStats
+from ...model.etl_stats import EtlSource, etl_stats
 from ...util import io
 
 logger = logging.getLogger(__name__)
@@ -15,9 +15,8 @@ logger = logging.getLogger(__name__)
 
 class SourceData:
     """Handle for all interactions related to source data files."""
-    def __init__(self, config: Dict, etl_stats: EtlStats):
+    def __init__(self, config: Dict):
         self.source_config: SourceConfig = SourceConfig(**config)
-        self._etl_stats = etl_stats
         self._source_dir = self.source_config.source_data_folder
         self._file_defaults: Dict = self.source_config.file_defaults
         self._source_files: Dict[str, SourceFile] = self._collect_source_files()
@@ -54,4 +53,4 @@ class SourceData:
             row_count = source_file.get_line_count()
             end_time = datetime.now()
             etl_source = EtlSource(start_time, end_time, file_name, row_count)
-            self._etl_stats.add_source(etl_source)
+            etl_stats.add_source(etl_source)

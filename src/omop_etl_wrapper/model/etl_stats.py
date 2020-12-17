@@ -142,6 +142,11 @@ class EtlStats:
         transformations_df = transformations_df.append([t.to_dict() for t in self.transformations])
         return transformations_df[EtlTransformation.df_column_order]
 
+    def reset(self) -> None:
+        """Remove all stored Etl objects from this instance."""
+        self.transformations = []
+        self.sources = []
+
     @staticmethod
     def get_total_duration(etl_objects: Union[List[EtlTransformation], List[EtlSource]]) -> datetime.timedelta:
         durations = (obj.duration for obj in etl_objects if obj.start and obj.end)
@@ -202,3 +207,6 @@ class EtlStats:
         output_dir.mkdir(exist_ok=True)
         self.sources_df.to_csv(output_dir / f'{time_str}_sources.tsv', sep='\t', index=False)
         self.transformations_df.to_csv(output_dir / f'{time_str}_transformations.tsv', sep='\t', index=False)
+
+
+etl_stats = EtlStats()

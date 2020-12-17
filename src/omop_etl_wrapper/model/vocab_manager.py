@@ -1,7 +1,6 @@
 import logging
 
 from .custom_vocab import CustomVocabLoader
-from .etl_stats import EtlStats
 from .stcm import StcmLoader
 from ..config.models import MainConfig
 from ..database import Database
@@ -10,9 +9,9 @@ logger = logging.getLogger(__name__)
 
 
 class VocabManager:
-    def __init__(self, db: Database, cdm, config: MainConfig, etl_stats: EtlStats):
+    def __init__(self, db: Database, cdm, config: MainConfig):
         self._custom_vocab_loader = CustomVocabLoader(db, cdm)
-        self._stcm_loader = StcmLoader(db, cdm, etl_stats)
+        self._stcm_loader = StcmLoader(db, cdm)
 
         self._load_custom_vocabs = not config.run_options.skip_custom_vocabulary_loading
         self._load_stcm = not config.run_options.skip_source_to_concept_map_loading
