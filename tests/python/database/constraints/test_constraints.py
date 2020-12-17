@@ -165,3 +165,22 @@ def test_drop_and_add_cdm_constraints(cdm600_wrapper_with_tables_created: Wrappe
     wrapper.db.constraint_manager.add_cdm_constraints()
     all_db_objects = get_all_db_table_object_names(wrapper.db.reflected_metadata)
     assert all_db_objects == expected_sets.db_table_objects_full
+
+
+@pytest.mark.usefixtures("container", "test_db")
+def test_drop_and_add_all_constraints(cdm600_wrapper_with_tables_created: Wrapper):
+    wrapper = cdm600_wrapper_with_tables_created
+
+    # Initially all constraints/indexes are present
+    all_db_objects = get_all_db_table_object_names(wrapper.db.reflected_metadata)
+    assert all_db_objects == expected_sets.db_table_objects_full
+
+    # Calling drop_cdm_constraints without arguments drops everything
+    wrapper.db.constraint_manager.drop_all_constraints()
+    all_db_objects = get_all_db_table_object_names(wrapper.db.reflected_metadata)
+    assert all_db_objects == {None}
+
+    # Calling add_all_constraints restores all constraints/indexes
+    wrapper.db.constraint_manager.add_all_constraints()
+    all_db_objects = get_all_db_table_object_names(wrapper.db.reflected_metadata)
+    assert all_db_objects == expected_sets.db_table_objects_full
