@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from copy import copy
 from functools import lru_cache, wraps
-from typing import TYPE_CHECKING, Union, Dict, Callable
+from typing import TYPE_CHECKING, Union, Dict, Callable, List, Tuple
 
 from itertools import chain
 from sqlalchemy import Index, Table, PrimaryKeyConstraint, Constraint, MetaData
@@ -74,8 +74,8 @@ class ConstraintManager:
     """
     Manager for adding and removing table constraints/indexes.
 
-    They can be dropped/added individually, per table, or for all
-    non-vocabulary tables.
+    They can be dropped/added individually, per table, for all
+    non-vocabulary tables, or for all tables.
 
     Dropping does not cascade; meaning that if a constraint cannot be
     dropped because another object depends on it, it will remain active.
@@ -100,6 +100,74 @@ class ConstraintManager:
         ConstraintManager._reflected_table_lookup.fget.cache_clear()
         ConstraintManager._reflected_constraint_lookup.fget.cache_clear()
 
+    def drop_all_constraints(self,
+                             drop_constraint: bool = True,
+                             drop_pk: bool = True,
+                             drop_index: bool = True
+                             ) -> None:
+        """
+        Remove constraints/indexes of all tables (including vocabulary).
+
+        Any table bound to your SQLAlchemy Base will be affected. If
+        there are any additional tables in your database that are not
+        bound to Base, they will not be affected by this method.
+
+        :param drop_constraint: bool, default True
+            If True, drop any FK, unique and check constraints.
+        :param drop_pk: bool, default True
+            If True, drop all PKs.
+        :param drop_index: bool, default True
+            If True, drop all indexes.
+        :return: None
+        """
+        logger.info('Dropping all constraints')
+
+        tables = [table for table in self._db.reflected_metadata.tables.values()
+                  if self._model.is_model_table(table.name)]
+
+        constraints, pks, indexes = self._get_table_objects(tables, drop_constraint,
+                                                            drop_pk, drop_index)
+
+        for constraint in chain(indexes, constraints, pks):
+            self._drop_constraint_in_db(constraint)
+
+    @_invalidate_db_cache
+    def add_all_constraints(self,
+                            add_constraint: bool = True,
+                            add_pk: bool = True,
+                            add_index: bool = True
+                            ) -> None:
+        """
+        Add constraints/indexes of all tables (including vocabulary).
+
+        Any table bound to your SQLAlchemy Base will be affected. If
+        there are any additional tables in your database that are not
+        bound to Base, they will not be affected by this method.
+
+        If some constraints are already present before this method is
+        called, they will remain active and not be added a second time,
+        regardless of constraint names.
+
+        :param add_constraint: bool, default True
+            If True, add all FK, unique and check constraints.
+        :param add_pk: bool, default True
+            If True, add all PKs.
+        :param add_index: bool, default True
+            If True, add all indexes.
+        :return: None
+        """
+        logger.info('Adding all constraints')
+        constraints, pks, indexes = [], [], []
+        if add_index:
+            indexes = self._model.indexes
+        if add_pk:
+            pks = self._model.pks
+        if add_constraint:
+            constraints = self._model.constraints
+
+        for constraint in chain(indexes, pks, constraints):
+            self._add_constraint_in_db(constraint)
+
     def drop_cdm_constraints(self,
                              drop_constraint: bool = True,
                              drop_pk: bool = True,
@@ -122,25 +190,13 @@ class ConstraintManager:
         :return: None
         """
         logger.info('Dropping CDM constraints')
-        # Because we don't know in which order the table constraints can
-        # be dropped without violating one in the process, we first
-        # collect all of them, then drop them in the following order:
-        # indexes, non-pk constraints, pks.
-        constraints, pks, indexes = [], [], []
-        for table in self._db.reflected_metadata.tables.values():
-            if table.name in VOCAB_TABLES or not self._model.is_model_table(table.name):
-                continue
 
-            for constraint in table.constraints:
-                is_pk = isinstance(constraint, PrimaryKeyConstraint)
-                if is_pk and drop_pk:
-                    pks.append(constraint)
-                elif not is_pk and drop_constraint:
-                    constraints.append(constraint)
+        tables = [table for table in self._db.reflected_metadata.tables.values()
+                  if self._model.is_model_table(table.name)
+                  and table.name not in VOCAB_TABLES]
 
-            if drop_index:
-                for index in table.indexes:
-                    indexes.append(index)
+        constraints, pks, indexes = self._get_table_objects(tables, drop_constraint,
+                                                            drop_pk, drop_index)
 
         for constraint in chain(indexes, constraints, pks):
             self._drop_constraint_in_db(constraint)
@@ -319,6 +375,32 @@ class ConstraintManager:
         :return: None
         """
         self._add_constraint_or_index(index)
+
+    @staticmethod
+    def _get_table_objects(tables: List[Table],
+                           drop_constraint: bool,
+                           drop_pk: bool,
+                           drop_index: bool
+                           ) -> Tuple[List[Constraint], List[PrimaryKeyConstraint], List[Index]]:
+        # Return the non-pk constraints, pks and indexes of a list of
+        # tables.
+        # Because we don't know in which order the table constraints can
+        # be dropped without violating one in the process, we first
+        # collect all of them. They can then safely be dropped in the
+        # following order: indexes, non-pk constraints, pks.
+        constraints, pks, indexes = [], [], []
+        for table in tables:
+            for constraint in table.constraints:
+                is_pk = isinstance(constraint, PrimaryKeyConstraint)
+                if is_pk and drop_pk:
+                    pks.append(constraint)
+                elif not is_pk and drop_constraint:
+                    constraints.append(constraint)
+
+            if drop_index:
+                for index in table.indexes:
+                    indexes.append(index)
+        return constraints, pks, indexes
 
     def _add_constraint_or_index(self, constraint_name: str) -> None:
         constraint = self._model.constraint_lookup.get(constraint_name)
