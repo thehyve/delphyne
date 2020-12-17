@@ -55,8 +55,8 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
     def _set_source_data(self):
         source_data_path = self._config.source_data_folder
         if source_data_path is None:
-            logger.info(f'No source_data_folder provided in config file, '
-                        f'assuming no source data files are present')
+            logger.info('No source_data_folder provided in config file, '
+                        'assuming no source data files are present')
             return None
         if not SOURCE_DATA_CONFIG_PATH.exists():
             logger.info(f'No source data config file found at {SOURCE_DATA_CONFIG_PATH}, '
