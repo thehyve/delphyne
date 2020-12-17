@@ -216,7 +216,7 @@ class CodeMapper:
         if type(invalid_reason) == list:
             source_filters.append(source.invalid_reason.in_(invalid_reason))
         elif invalid_reason == 'NULL':
-            source_filters.append(source.invalid_reason is None)
+            source_filters.append(source.invalid_reason == None)
         elif type(invalid_reason) == str:
             source_filters.append(source.invalid_reason == invalid_reason)
         # standard concept: either list, str (incl. "NULL"),
@@ -224,7 +224,7 @@ class CodeMapper:
         if type(standard_concept) == list:
             source_filters.append(source.standard_concept.in_(standard_concept))
         elif standard_concept == 'NULL':
-            source_filters.append(source.standard_concept is None)
+            source_filters.append(source.standard_concept == None)
         elif type(standard_concept) == str:
             source_filters.append(source.standard_concept == standard_concept)
         if restrict_to_codes:
@@ -248,7 +248,7 @@ class CodeMapper:
                 .outerjoin(target,
                            and_(self.cdm.ConceptRelationship.concept_id_2 == target.concept_id,
                                 target.standard_concept == 'S',
-                                target.invalid_reason is None)) \
+                                target.invalid_reason == None)) \
                 .filter(and_(*source_filters)) \
                 .all()
 
