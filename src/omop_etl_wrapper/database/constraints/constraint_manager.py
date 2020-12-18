@@ -463,6 +463,6 @@ class ConstraintManager:
             return False
         if not c1.table.name == c2.table.name:
             return False
-        if not [c.name for c in c1.columns] == [c.name for c in c2.columns]:
+        if not {c.name for c in c1.columns} == {c.name for c in c2.columns}:
             return False
         return True
