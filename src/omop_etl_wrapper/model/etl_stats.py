@@ -111,6 +111,7 @@ class EtlStats:
     Output is an ETL summary report.
     """
     def __init__(self):
+        self.start_time = datetime.datetime.now()
         self.transformations: List[EtlTransformation] = []
         self.sources: List[EtlSource] = []
 
@@ -144,6 +145,7 @@ class EtlStats:
 
     def reset(self) -> None:
         """Remove all stored Etl objects from this instance."""
+        self.start_time = datetime.datetime.now()
         self.transformations = []
         self.sources = []
 
@@ -164,6 +166,8 @@ class EtlStats:
         transformations to the logs.
         """
         with LoggingFormatContext(logger, MESSAGE_ONLY):
+            logger.info(f'Total runtime: {datetime.datetime.now() - self.start_time}')
+
             if self.sources:
                 logger.info(f'Source table row counts (total time: {self.get_total_duration(self.sources)}):')
                 for source in self.sources:
