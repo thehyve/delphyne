@@ -97,7 +97,8 @@ class EtlTransformation(_AbstractEtlBase):
                 if not value:
                     d[key] = None
                 else:
-                    counts: List[str] = [':'.join([table, str(count)]) for table, count in value.items()]
+                    counts: List[str] = [':'.join([table, str(count)])
+                                         for table, count in value.items()]
                     d[key] = ', '.join(counts)
         return d
 
@@ -154,7 +155,8 @@ class EtlStats:
         self.sources = []
 
     @staticmethod
-    def get_total_duration(etl_objects: Union[List[EtlTransformation], List[EtlSource]]) -> datetime.timedelta:
+    def get_total_duration(etl_objects: Union[List[EtlTransformation], List[EtlSource]]
+                           ) -> datetime.timedelta:
         durations = (obj.duration for obj in etl_objects if obj.start and obj.end)
         return sum(durations, datetime.timedelta())
 
@@ -173,7 +175,8 @@ class EtlStats:
             logger.info(f'Total runtime: {datetime.datetime.now() - self.start_time}')
 
             if self.sources:
-                logger.info(f'Source table row counts (total time: {self.get_total_duration(self.sources)}):')
+                logger.info(f'Source table row counts (total time: '
+                            f'{self.get_total_duration(self.sources)}):')
                 for source in self.sources:
                     logger.info(f'\t{source}')
 
@@ -181,7 +184,8 @@ class EtlStats:
                         f'{self.get_total_duration(self.transformations)})')
 
             if self.successful_transformations:
-                logger.info(f'Successful transformations ({len(self.successful_transformations)}):')
+                logger.info(f'Successful transformations '
+                            f'({len(self.successful_transformations)}):')
                 for transformation in self.successful_transformations:
                     self._log_transformation_counts(transformation)
 
@@ -214,7 +218,8 @@ class EtlStats:
         output_dir = LOG_OUTPUT_DIR
         output_dir.mkdir(exist_ok=True)
         self.sources_df.to_csv(output_dir / f'{time_str}_sources.tsv', sep='\t', index=False)
-        self.transformations_df.to_csv(output_dir / f'{time_str}_transformations.tsv', sep='\t', index=False)
+        self.transformations_df.to_csv(output_dir / f'{time_str}_transformations.tsv',
+                                       sep='\t', index=False)
 
 
 etl_stats = EtlStats()
