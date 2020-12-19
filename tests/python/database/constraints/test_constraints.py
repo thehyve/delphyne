@@ -86,12 +86,21 @@ def test_drop_and_add_pk(cdm600_wrapper_with_tables_created: Wrapper):
 
 
 @pytest.mark.usefixtures("container", "test_db")
-def test_drop_index_raises_keyerror_if_missing(cdm600_wrapper_with_tables_created: Wrapper):
+def test_raise_keyerror_if_object_not_found(cdm600_wrapper_with_tables_created: Wrapper):
     wrapper = cdm600_wrapper_with_tables_created
 
+    # Cannot add/drop for non-existing tables
+    with pytest.raises(KeyError):
+        wrapper.db.constraint_manager.add_table_constraints('we_lay_my_love_and_i')
+    with pytest.raises(KeyError):
+        wrapper.db.constraint_manager.drop_table_constraints('beneath_the_weeping_willow')
+
+    # Cannot add index that doesn't exist
+    with pytest.raises(KeyError):
+        wrapper.db.constraint_manager.add_index('but_now_alone_i_lie')
     # Cannot drop index that never existed
     with pytest.raises(KeyError):
-        wrapper.db.constraint_manager.drop_index('index_404')
+        wrapper.db.constraint_manager.drop_index('and_weep_beside_the_tree')
 
     # This index can be dropped
     wrapper.db.constraint_manager.drop_index('ix_measurement_person_id')
