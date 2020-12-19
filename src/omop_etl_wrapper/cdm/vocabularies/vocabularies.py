@@ -1,6 +1,7 @@
 import datetime
 
-from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric, String, Text, DateTime
+from sqlalchemy import (Column, Date, ForeignKey, Integer, Numeric, String,
+                        Text, DateTime, CheckConstraint)
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
@@ -9,7 +10,17 @@ from .._schema_placeholders import VOCAB_SCHEMA
 
 class BaseConcept:
     __tablename__ = 'concept'
-    __table_args__ = {'schema': VOCAB_SCHEMA}
+    __table_args__ = (
+        CheckConstraint("(COALESCE(invalid_reason, 'D'::character varying))::text "
+                        "= ANY ((ARRAY['D'::character varying, "
+                        "'U'::character varying])::text[])", name="chk_c_invalid_reason"),
+        CheckConstraint("(COALESCE(standard_concept, 'C'::character varying))::text "
+                        "= ANY ((ARRAY['C'::character varying, "
+                        "'S'::character varying])::text[])", name="chk_c_standard_concept"),
+        CheckConstraint("(concept_code)::text <> ''::text", name="chk_c_concept_code"),
+        CheckConstraint("(concept_name)::text <> ''::text", name="chk_c_concept_name"),
+        {'schema': VOCAB_SCHEMA},
+    )
 
     @declared_attr
     def concept_id(cls):
@@ -116,7 +127,11 @@ class BaseConceptClass:
 
 class BaseConceptRelationship:
     __tablename__ = 'concept_relationship'
-    __table_args__ = {'schema': VOCAB_SCHEMA}
+    __table_args__ = (
+        CheckConstraint("(COALESCE(invalid_reason, 'D'::character varying))::text "
+                        "= 'D'::text", name="chk_cr_invalid_reason"),
+        {'schema': VOCAB_SCHEMA},
+    )
 
     @declared_attr
     def concept_id_1(cls):
@@ -157,7 +172,13 @@ class BaseConceptRelationship:
 
 class BaseConceptSynonym:
     __tablename__ = 'concept_synonym'
-    __table_args__ = {'schema': VOCAB_SCHEMA}
+    __table_args__ = (
+        # UniqueConstraint uq_concept_synonym is not added, because
+        # there is already a PK on the same columns
+        CheckConstraint("(concept_synonym_name)::text <> ''::text",
+                        name="chk_csyn_concept_synonym_name"),
+        {'schema': VOCAB_SCHEMA},
+    )
 
     @declared_attr
     def concept_id(cls):
