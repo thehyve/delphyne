@@ -16,7 +16,6 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from collections import Counter
-from datetime import datetime
 from functools import lru_cache
 from inspect import signature
 from typing import Callable, List
@@ -75,7 +74,7 @@ class OrmWrapper(ABC):
             else:
                 session.add_all(records_to_insert)
 
-        transformation_metadata.end = datetime.now()
+        transformation_metadata.end_now()
         logger.info(f'{statement.__name__} completed with success status: {transformation_metadata.query_success}')
         etl_stats.add_transformation(transformation_metadata)
 

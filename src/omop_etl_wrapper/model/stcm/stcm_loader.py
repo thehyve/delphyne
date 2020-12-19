@@ -1,7 +1,6 @@
 import csv
 import logging
 from collections import Counter
-from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import Dict, Set, Optional
@@ -165,7 +164,7 @@ class StcmLoader:
                                      f'{source_vocabulary_id} is not in the vocabulary table')
                 session.add(self._cdm.SourceToConceptMap(**row))
 
-            transformation_metadata.end = datetime.now()
+            transformation_metadata.end_now()
             etl_stats.add_transformation(transformation_metadata)
 
             if unrecognized_vocabs:

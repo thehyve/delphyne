@@ -44,6 +44,10 @@ class _AbstractEtlBase(ABC):
         if self.start is not None and self.end is not None:
             return self.end - self.start
 
+    def end_now(self):
+        """Set current time as the end time."""
+        self.end = datetime.datetime.now()
+
     def to_dict(self) -> Dict:
         d = self.__dict__
         d['duration'] = self.duration
