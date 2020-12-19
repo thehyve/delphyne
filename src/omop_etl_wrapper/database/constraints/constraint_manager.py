@@ -67,7 +67,7 @@ class _TargetModel:
 
     def is_model_table(self, table_name: str) -> bool:
         # Check table exists within the CDM model MetaData instance
-        return table_name in self.table_lookup.keys()
+        return table_name in self.table_lookup
 
 
 class ConstraintManager:
@@ -128,7 +128,7 @@ class ConstraintManager:
         constraints, pks, indexes = self._get_table_objects(tables, drop_constraint,
                                                             drop_pk, drop_index)
 
-        for constraint in chain(indexes, constraints, pks):
+        for constraint in chain(constraints, indexes, pks):
             self._drop_constraint_in_db(constraint)
 
     @_invalidate_db_cache
@@ -198,7 +198,7 @@ class ConstraintManager:
         constraints, pks, indexes = self._get_table_objects(tables, drop_constraint,
                                                             drop_pk, drop_index)
 
-        for constraint in chain(indexes, constraints, pks):
+        for constraint in chain(constraints, indexes, pks):
             self._drop_constraint_in_db(constraint)
 
     @_invalidate_db_cache
@@ -265,15 +265,11 @@ class ConstraintManager:
         if table is None:
             raise KeyError(f'No table found in database with name "{table_name}"')
 
-        if drop_index:
-            for index in table.indexes:
-                self._drop_constraint_in_db(index)
-        if drop_constraint:
-            for constraint in table.constraints:
-                if not isinstance(constraint, PrimaryKeyConstraint):
-                    self._drop_constraint_in_db(constraint)
-        if drop_pk and table.primary_key:
-            self._drop_constraint_in_db(table.primary_key)
+        constraints, pks, indexes = self._get_table_objects([table], drop_constraint,
+                                                            drop_pk, drop_index)
+
+        for constraint in chain(constraints, indexes, pks):
+            self._drop_constraint_in_db(constraint)
 
     @_invalidate_db_cache
     def add_table_constraints(self,
@@ -303,19 +299,14 @@ class ConstraintManager:
         :return: None
         """
         logger.info(f'Adding constraints on table {table_name}')
-        if not self._model.is_model_table(table_name):
+        table = self._model.table_lookup.get(table_name)
+        if table is None:
             raise KeyError(f'No table found in model with name "{table_name}"')
 
-        table_constraints = [c for c in self._model.constraint_lookup.values()
-                             if c.table.name == table_name]
+        constraints, pks, indexes = self._get_table_objects([table], add_constraint,
+                                                            add_pk, add_index)
 
-        for constraint in table_constraints:
-            if not add_index and isinstance(constraint, Index):
-                continue
-            if not add_pk and isinstance(constraint, PrimaryKeyConstraint):
-                continue
-            if not add_constraint and _is_non_pk_constraint(constraint):
-                continue
+        for constraint in chain(indexes, pks, constraints):
             self._add_constraint_in_db(constraint)
 
     @_invalidate_db_cache
@@ -378,9 +369,9 @@ class ConstraintManager:
 
     @staticmethod
     def _get_table_objects(tables: List[Table],
-                           drop_constraint: bool,
-                           drop_pk: bool,
-                           drop_index: bool
+                           get_constraints: bool,
+                           get_pks: bool,
+                           get_indexes: bool
                            ) -> Tuple[List[Constraint], List[PrimaryKeyConstraint], List[Index]]:
         # Return the non-pk constraints, pks and indexes of a list of
         # tables.
@@ -392,12 +383,12 @@ class ConstraintManager:
         for table in tables:
             for constraint in table.constraints:
                 is_pk = isinstance(constraint, PrimaryKeyConstraint)
-                if is_pk and drop_pk:
+                if is_pk and get_pks:
                     pks.append(constraint)
-                elif not is_pk and drop_constraint:
+                elif not is_pk and get_constraints:
                     constraints.append(constraint)
 
-            if drop_index:
+            if get_indexes:
                 for index in table.indexes:
                     indexes.append(index)
         return constraints, pks, indexes
@@ -413,7 +404,7 @@ class ConstraintManager:
         if self._constraint_already_active(constraint):
             return
         with self._db.engine.connect() as conn:
-            logger.debug(f'Adding {constraint.name}')
+            logger.info(f'Adding {constraint.name}')
             if isinstance(constraint, Index):
                 conn.execute(CreateIndex(constraint))
             else:
@@ -444,7 +435,7 @@ class ConstraintManager:
             return
 
         with self._db.engine.connect() as conn:
-            logger.debug(f'Dropping {constraint.name}')
+            logger.info(f'Dropping {constraint.name}')
             if isinstance(constraint, Index):
                 conn.execute(DropIndex(constraint))
             else:
