@@ -30,7 +30,7 @@ logger = logging.getLogger()
 
 @dataclass
 class _AbstractEtlBase(ABC):
-    start: Optional[datetime.datetime] = None
+    start: datetime.datetime = field(default_factory=datetime.datetime.now)
     end: Optional[datetime.datetime] = None
 
     @abstractmethod
@@ -71,7 +71,6 @@ class EtlSource(_AbstractEtlBase):
 
 @dataclass
 class EtlTransformation(_AbstractEtlBase):
-    start: datetime.datetime = field(default_factory=datetime.datetime.now)
     name: str = ''
     query_success: bool = True
     insertion_counts: Counter = field(default_factory=Counter)
