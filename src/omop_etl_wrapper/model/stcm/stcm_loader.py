@@ -8,11 +8,11 @@ from typing import Dict, Set, Optional
 from sqlalchemy import MetaData
 from sqlalchemy.exc import InvalidRequestError
 
+from ..etl_stats import EtlTransformation, etl_stats
 from ..._paths import STCM_DIR, STCM_VERSION_FILE
 from ...cdm._schema_placeholders import VOCAB_SCHEMA
 from ...cdm.vocabularies import BaseSourceToConceptMapVersion
 from ...database import Database
-from ...model.etl_stats import EtlTransformation, etl_stats
 from ...util.io import is_hidden
 
 logger = logging.getLogger(__name__)

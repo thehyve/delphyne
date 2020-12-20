@@ -77,7 +77,6 @@ def etl_stats(etl_source: EtlSource, etl_transformation: EtlTransformation) -> E
 def test_etlstats_lengths(etl_stats: EtlStats):
     assert len(etl_stats.sources) == 1
     assert etl_stats.n_queries_executed == 3
-    assert len(etl_stats.failed_transformations) == 1
     assert len(etl_stats.successful_transformations) == 2
 
 

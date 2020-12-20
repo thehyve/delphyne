@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from pathlib import Path
 from typing import Dict
 
 from .source_file import SourceFile
+from ..etl_stats import EtlSource, etl_stats
 from ...config.models import SourceConfig
-from ...model.etl_stats import EtlSource, etl_stats
 from ...util import io
 
 logger = logging.getLogger(__name__)

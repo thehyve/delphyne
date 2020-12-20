@@ -15,17 +15,15 @@
 import copy
 import datetime
 import logging
-import time
 from abc import ABC, abstractmethod
 from collections import Counter
 from dataclasses import dataclass, field
 from typing import Optional, Union, List, Dict, ClassVar
 
 import pandas as pd
+from itertools import chain
 
-from .._paths import LOG_OUTPUT_DIR
-from ..log.log_formats import MESSAGE_ONLY
-from ..log.logging_context import LoggingFormatContext
+from ...database.constraints import VOCAB_TABLES
 
 logger = logging.getLogger()
 
@@ -86,6 +84,21 @@ class EtlTransformation(_AbstractEtlBase):
     def __str__(self):
         return f'{self.name} ({self.duration})'
 
+    @property
+    def is_empty(self) -> bool:
+        return (not self.insertion_counts
+                and not self.deletion_counts
+                and not self.update_counts)
+
+    @property
+    def is_vocab_only(self) -> bool:
+        """All mutations are exclusively on vocabulary tables."""
+        tables = {table.rsplit('.', 1)[-1] for table in chain(self.insertion_counts.keys(),
+                                                              self.update_counts.keys(),
+                                                              self.deletion_counts.keys())}
+        is_vocab_table = [table in VOCAB_TABLES for table in tables]
+        return all(is_vocab_table)
+
     def to_dict(self) -> Dict:
         """
         Return dict with empty Counters as None, otherwise convert to
@@ -125,10 +138,6 @@ class EtlStats:
         return len(self.transformations)
 
     @property
-    def failed_transformations(self) -> List[EtlTransformation]:
-        return [t for t in self.transformations if not t.query_success]
-
-    @property
     def successful_transformations(self) -> List[EtlTransformation]:
         return [t for t in self.transformations if t.query_success]
 
@@ -165,61 +174,6 @@ class EtlStats:
 
     def add_source(self, source: EtlSource) -> None:
         self.sources.append(source)
-
-    def log_summary(self) -> None:
-        """
-        Write a human readable summary of all sources and ETL
-        transformations to the logs.
-        """
-        with LoggingFormatContext(logger, MESSAGE_ONLY):
-            logger.info(f'Total runtime: {datetime.datetime.now() - self.start_time}')
-
-            if self.sources:
-                logger.info(f'Source table row counts (total time: '
-                            f'{self.get_total_duration(self.sources)}):')
-                for source in self.sources:
-                    logger.info(f'\t{source}')
-
-            logger.info(f'Total transformations: {self.n_queries_executed} (total time: '
-                        f'{self.get_total_duration(self.transformations)})')
-
-            if self.successful_transformations:
-                logger.info(f'Successful transformations '
-                            f'({len(self.successful_transformations)}):')
-                for transformation in self.successful_transformations:
-                    self._log_transformation_counts(transformation)
-
-            if self.failed_transformations:
-                logger.info(f'Failed transformations ({len(self.failed_transformations)}):')
-                for transformation in self.failed_transformations:
-                    self._log_transformation_counts(transformation)
-
-            logger.info('Total insertions:')
-            counts = {k: v for k, v in sorted(self.total_insertions.items(),
-                                              key=lambda item: item[1], reverse=True)}
-            for table, insertion_count in counts.items():
-                logger.info(f'\t{table}: {insertion_count}')
-
-    @staticmethod
-    def _log_transformation_counts(transformation: EtlTransformation) -> None:
-        logger.info(f'\t{transformation}')
-        if transformation.insertion_counts:
-            logger.info(f'\t\tInsertions: {dict(transformation.insertion_counts)}')
-        if transformation.update_counts:
-            logger.info(f'\t\tUpdates: {dict(transformation.update_counts)}')
-        if transformation.deletion_counts:
-            logger.info(f'\t\tDeletions: {dict(transformation.deletion_counts)}')
-
-    def write_summary_files(self) -> None:
-        """Write overview tables for 1. the source tables and 2. the ETL
-        transformations."""
-        logger.info('Writing summary files')
-        time_str = time.strftime("%Y-%m-%dT%H%M%S")
-        output_dir = LOG_OUTPUT_DIR
-        output_dir.mkdir(exist_ok=True)
-        self.sources_df.to_csv(output_dir / f'{time_str}_sources.tsv', sep='\t', index=False)
-        self.transformations_df.to_csv(output_dir / f'{time_str}_transformations.tsv',
-                                       sep='\t', index=False)
 
 
 etl_stats = EtlStats()
