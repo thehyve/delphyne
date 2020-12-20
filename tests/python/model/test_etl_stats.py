@@ -64,13 +64,30 @@ def get_etltransformation(name: str, **kwargs) -> EtlTransformation:
     return EtlTransformation(**final_params)
 
 
+def test_transformation_is_vocab_only():
+    t1 = get_etltransformation(name='vocab_only', insertion_counts=Counter({'concept': 950}))
+    assert t1.is_vocab_only
+    t2 = get_etltransformation(name='mixed',
+                               insertion_counts=Counter({'concept': 950, 'person': 10}))
+    assert not t2.is_vocab_only
+
+
+def test_transformation_is_empty():
+    t1 = get_etltransformation(name='empty')
+    assert t1.is_empty
+    t2 = get_etltransformation(name='not_empty', insertion_counts=Counter({'person': 10}))
+    assert not t2.is_empty
+
+
 @pytest.fixture(scope='module')
 def etl_stats(etl_source: EtlSource, etl_transformation: EtlTransformation) -> EtlStats:
     stats = EtlStats()
     stats.add_source(etl_source)
     stats.add_transformation(etl_transformation)
-    stats.add_transformation(get_etltransformation(name='failed_transformation', query_success=False))
-    stats.add_transformation(get_etltransformation(name='T2', insertion_counts=Counter({'table2': 950})))
+    stats.add_transformation(get_etltransformation(name='failed_transformation',
+                                                   query_success=False))
+    stats.add_transformation(get_etltransformation(name='T2',
+                                                   insertion_counts=Counter({'table2': 950})))
     return stats
 
 
