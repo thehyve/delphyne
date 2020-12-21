@@ -11,14 +11,12 @@ from .._schema_placeholders import VOCAB_SCHEMA
 class BaseConcept:
     __tablename__ = 'concept'
     __table_args__ = (
-        CheckConstraint("(COALESCE(invalid_reason, 'D'::character varying))::text "
-                        "= ANY ((ARRAY['D'::character varying, "
-                        "'U'::character varying])::text[])", name="chk_c_invalid_reason"),
-        CheckConstraint("(COALESCE(standard_concept, 'C'::character varying))::text "
-                        "= ANY ((ARRAY['C'::character varying, "
-                        "'S'::character varying])::text[])", name="chk_c_standard_concept"),
-        CheckConstraint("(concept_code)::text <> ''::text", name="chk_c_concept_code"),
-        CheckConstraint("(concept_name)::text <> ''::text", name="chk_c_concept_name"),
+        CheckConstraint("(COALESCE(invalid_reason,'D') in ('D','U'))",
+                        name="chk_c_invalid_reason"),
+        CheckConstraint("(COALESCE(standard_concept,'C') in ('C','S'))",
+                        name="chk_c_standard_concept"),
+        CheckConstraint("(concept_code <> '')", name="chk_c_concept_code"),
+        CheckConstraint("(concept_name <> '')", name="chk_c_concept_name"),
         {'schema': VOCAB_SCHEMA},
     )
 
@@ -128,8 +126,7 @@ class BaseConceptClass:
 class BaseConceptRelationship:
     __tablename__ = 'concept_relationship'
     __table_args__ = (
-        CheckConstraint("(COALESCE(invalid_reason, 'D'::character varying))::text "
-                        "= 'D'::text", name="chk_cr_invalid_reason"),
+        CheckConstraint("(COALESCE(invalid_reason,'D')='D')", name="chk_cr_invalid_reason"),
         {'schema': VOCAB_SCHEMA},
     )
 
@@ -175,8 +172,7 @@ class BaseConceptSynonym:
     __table_args__ = (
         # UniqueConstraint uq_concept_synonym is not added, because
         # there is already a PK on the same columns
-        CheckConstraint("(concept_synonym_name)::text <> ''::text",
-                        name="chk_csyn_concept_synonym_name"),
+        CheckConstraint("(concept_synonym_name <> '')", name="chk_csyn_concept_synonym_name"),
         {'schema': VOCAB_SCHEMA},
     )
 
