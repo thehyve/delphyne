@@ -17,6 +17,12 @@ logger = logging.getLogger()
 
 
 class EtlStatsReporter:
+    """
+    Reporter for contents of EtlStats instance.
+
+    Can create a summary report of sources used and transformations
+    performed. Either as a log report or as tab-delimited files.
+    """
     def __init__(self, etl_stats: EtlStats):
         self.stats = etl_stats
 

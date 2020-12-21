@@ -54,6 +54,7 @@ class _AbstractEtlBase(ABC):
 
 @dataclass
 class EtlSource(_AbstractEtlBase):
+    """Metadata storage unit for source tables/files."""
     source_name: str = ''
     n_rows: Optional[int] = None
 
@@ -71,6 +72,7 @@ class EtlSource(_AbstractEtlBase):
 
 @dataclass
 class EtlTransformation(_AbstractEtlBase):
+    """Metadata storage unit for data mutation calls."""
     name: str = ''
     query_success: bool = True
     insertion_counts: Counter = field(default_factory=Counter)
@@ -117,15 +119,14 @@ class EtlTransformation(_AbstractEtlBase):
 
 class EtlStats:
     """
-    Storage class for ETL statistics.
+    Metadata storage unit for ETL statistics.
 
     Can contain:
      - list of transformations executed with script name, target table,
        start time, end time, status (exceptions) and number of affected
-       rows.
+       rows (**EtlTransformation**).
      - list of source tables with file/tablename and raw input row
-       counts
-    Output is an ETL summary report.
+       counts (**EtlSource**).
     """
     def __init__(self):
         self.start_time = datetime.datetime.now()
