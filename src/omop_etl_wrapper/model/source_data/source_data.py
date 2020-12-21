@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
 from pathlib import Path
 from typing import Dict
 
 from .source_file import SourceFile
+from ..etl_stats import EtlSource, etl_stats
 from ...config.models import SourceConfig
-from ...model.etl_stats import EtlSource, etl_stats
 from ...util import io
 
 logger = logging.getLogger(__name__)
@@ -49,8 +48,7 @@ class SourceData:
     def _calculate_file_line_counts(self) -> None:
         logger.info('Collecting source file row counts')
         for file_name, source_file in self._source_files.items():
-            start_time = datetime.now()
-            row_count = source_file.get_line_count()
-            end_time = datetime.now()
-            etl_source = EtlSource(start_time, end_time, file_name, row_count)
+            etl_source = EtlSource(source_name=file_name)
+            etl_source.n_rows = source_file.get_line_count()
+            etl_source.end_now()
             etl_stats.add_source(etl_source)

@@ -1,7 +1,6 @@
 import csv
 import logging
 from collections import Counter
-from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import Dict, Set, Optional
@@ -9,11 +8,11 @@ from typing import Dict, Set, Optional
 from sqlalchemy import MetaData
 from sqlalchemy.exc import InvalidRequestError
 
+from ..etl_stats import EtlTransformation, etl_stats
 from ..._paths import STCM_DIR, STCM_VERSION_FILE
 from ...cdm._schema_placeholders import VOCAB_SCHEMA
 from ...cdm.vocabularies import BaseSourceToConceptMapVersion
 from ...database import Database
-from ...model.etl_stats import EtlTransformation, etl_stats
 from ...util.io import is_hidden
 
 logger = logging.getLogger(__name__)
@@ -165,7 +164,7 @@ class StcmLoader:
                                      f'{source_vocabulary_id} is not in the vocabulary table')
                 session.add(self._cdm.SourceToConceptMap(**row))
 
-            transformation_metadata.end = datetime.now()
+            transformation_metadata.end_now()
             etl_stats.add_transformation(transformation_metadata)
 
             if unrecognized_vocabs:

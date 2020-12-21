@@ -1,7 +1,6 @@
 import logging
 import re
 from collections import Counter
-from datetime import datetime
 from pathlib import Path
 from typing import Dict
 
@@ -59,7 +58,7 @@ class RawSqlWrapper:
                 logger.error(msg)
                 transformation_metadata.query_success = False
 
-        transformation_metadata.end = datetime.now()
+        transformation_metadata.end_now()
         etl_stats.add_transformation(transformation_metadata)
 
     @staticmethod
