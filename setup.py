@@ -45,7 +45,7 @@ setup(
     keywords="omop-etl-wrapper",
     name="omop_etl_wrapper",
     package_dir={"": "src"},
-    packages=find_packages(include=["src/omop_etl_wrapper", "src/omop_etl_wrapper.*"]),
+    packages=["omop_etl_wrapper"],
     extras_require={
         "TEST": ["pytest", "pytest-cov", "docker", "nox", "flake8"],
     },
