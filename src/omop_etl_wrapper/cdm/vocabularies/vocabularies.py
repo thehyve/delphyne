@@ -1,6 +1,7 @@
 import datetime
 
-from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric, String, Text, DateTime
+from sqlalchemy import (Column, Date, ForeignKey, Integer, Numeric, String,
+                        Text, DateTime, CheckConstraint)
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
@@ -9,7 +10,15 @@ from .._schema_placeholders import VOCAB_SCHEMA
 
 class BaseConcept:
     __tablename__ = 'concept'
-    __table_args__ = {'schema': VOCAB_SCHEMA}
+    __table_args__ = (
+        CheckConstraint("(COALESCE(invalid_reason,'D') in ('D','U'))",
+                        name="chk_c_invalid_reason"),
+        CheckConstraint("(COALESCE(standard_concept,'C') in ('C','S'))",
+                        name="chk_c_standard_concept"),
+        CheckConstraint("(concept_code <> '')", name="chk_c_concept_code"),
+        CheckConstraint("(concept_name <> '')", name="chk_c_concept_name"),
+        {'schema': VOCAB_SCHEMA},
+    )
 
     @declared_attr
     def concept_id(cls):
@@ -70,11 +79,11 @@ class BaseConceptAncestor:
 
     @declared_attr
     def ancestor_concept_id(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True, nullable=False, index=True)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True, index=True)
 
     @declared_attr
     def descendant_concept_id(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True, nullable=False, index=True)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True, index=True)
 
     @declared_attr
     def min_levels_of_separation(cls):
@@ -116,19 +125,22 @@ class BaseConceptClass:
 
 class BaseConceptRelationship:
     __tablename__ = 'concept_relationship'
-    __table_args__ = {'schema': VOCAB_SCHEMA}
+    __table_args__ = (
+        CheckConstraint("(COALESCE(invalid_reason,'D')='D')", name="chk_cr_invalid_reason"),
+        {'schema': VOCAB_SCHEMA},
+    )
 
     @declared_attr
     def concept_id_1(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True, nullable=False, index=True)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True, index=True)
 
     @declared_attr
     def concept_id_2(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True, nullable=False, index=True)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True, index=True)
 
     @declared_attr
     def relationship_id(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.relationship.relationship_id'), primary_key=True, nullable=False, index=True)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.relationship.relationship_id'), primary_key=True, index=True)
 
     @declared_attr
     def valid_start_date(cls):
@@ -157,19 +169,24 @@ class BaseConceptRelationship:
 
 class BaseConceptSynonym:
     __tablename__ = 'concept_synonym'
-    __table_args__ = {'schema': VOCAB_SCHEMA}
+    __table_args__ = (
+        # UniqueConstraint uq_concept_synonym is not added, because
+        # there is already a PK on the same columns
+        CheckConstraint("(concept_synonym_name <> '')", name="chk_csyn_concept_synonym_name"),
+        {'schema': VOCAB_SCHEMA},
+    )
 
     @declared_attr
     def concept_id(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True, nullable=False, index=True)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True, index=True)
 
     @declared_attr
     def concept_synonym_name(cls):
-        return Column(String(1000), primary_key=True, nullable=False)
+        return Column(String(1000), primary_key=True)
 
     @declared_attr
     def language_concept_id(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True, nullable=False)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True)
 
     @declared_attr
     def concept(cls):
@@ -207,11 +224,11 @@ class BaseDrugStrength:
 
     @declared_attr
     def drug_concept_id(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True, nullable=False, index=True)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True, index=True)
 
     @declared_attr
     def ingredient_concept_id(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True, nullable=False, index=True)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True, index=True)
 
     @declared_attr
     def amount_value(cls):
@@ -317,7 +334,7 @@ class BaseSourceToConceptMap:
 
     @declared_attr
     def source_code(cls):
-        return Column(Text, primary_key=True, nullable=False, index=True)
+        return Column(Text, primary_key=True, index=True)
 
     @declared_attr
     def source_concept_id(cls):
@@ -325,7 +342,7 @@ class BaseSourceToConceptMap:
 
     @declared_attr
     def source_vocabulary_id(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.vocabulary.vocabulary_id'), primary_key=True, nullable=False, index=True)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.vocabulary.vocabulary_id'), primary_key=True, index=True)
 
     @declared_attr
     def source_code_description(cls):
@@ -333,7 +350,7 @@ class BaseSourceToConceptMap:
 
     @declared_attr
     def target_concept_id(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True, nullable=False, index=True)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True, index=True)
 
     @declared_attr
     def target_vocabulary_id(cls):
@@ -345,7 +362,7 @@ class BaseSourceToConceptMap:
 
     @declared_attr
     def valid_end_date(cls):
-        return Column(Date, primary_key=True, nullable=False)
+        return Column(Date, primary_key=True)
 
     @declared_attr
     def invalid_reason(cls):
