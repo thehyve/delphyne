@@ -116,14 +116,19 @@ class BaseClassManager:
 
     def _drop_unused_custom_classes(self) -> None:
         # Drop obsolete custom concept classes from the database;
-        # these are assumed to be all custom classes in the database
-        # (concept_id == 0) minus the all custom classes seen in files.
+        # these are assumed to all classes in the database with
+        # concept_id == 0 minus all custom classes seen in files.
 
-        logging.info(f'Dropping obsolete custom concept class versions')
+        logging.info(f'Checking for obsolete custom concept class versions')
 
         if self._all_class_ids:
             with self.db.session_scope() as session:
-                session.query(self._cdm.ConceptClass) \
+
+                query_base = session.query(self._cdm.ConceptClass) \
                     .filter(self._cdm.ConceptClass.concept_class_concept_id == 0) \
-                    .filter(self._cdm.ConceptClass.concept_class_id.notin_(self._all_class_ids)) \
-                    .delete(synchronize_session=False)
+                    .filter(self._cdm.ConceptClass.concept_class_id.notin_(self._all_class_ids))
+
+                record = query_base.one_or_none()
+                if record:
+                    logging.info(f'Dropping unused custom class: {record.concept_class_id}')
+                    query_base.delete(synchronize_session=False)
