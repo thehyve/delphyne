@@ -19,7 +19,7 @@ class BaseClassManager:
         self._custom_class_files = custom_class_files
 
     def _get_new_custom_concept_class_ids(self) -> List[str]:
-        # create a list of custom concept_class ids
+        # Extract a list of custom concept_class ids
         # from the custom class table if the same concept_class name
         # is not already present in the database
 
@@ -75,7 +75,7 @@ class BaseClassManager:
                     .delete(synchronize_session=False)
 
     def _load_custom_classes(self, class_ids: List[str]) -> None:
-        # Load a list of custom concept_classes to the database
+        # Load a list of new custom concept_classes to the database
 
         logging.info(f'Loading new custom class versions: '
                      f'{True if class_ids else False}')
@@ -98,3 +98,24 @@ class BaseClassManager:
                                 ))
 
                 session.add_all(records)
+
+    def _update_custom_classes(self, class_ids: List[str]) -> None:
+        # Update the name of existing custom concept_classes in the
+        # database
+
+        logging.info(f'Updating custom class names: '
+                     f'{True if class_ids else False}')
+
+        if class_ids:
+
+            with self.db.session_scope() as session:
+                for class_file in self._custom_class_files:
+                    with open(class_file) as f:
+                        reader = csv.DictReader(f, delimiter='\t')
+                        for row in reader:
+                            if row['concept_class_id'] in class_ids:
+                                session.query(self._cdm.ConceptClass) \
+                                    .filter(self._cdm.ConceptClass.concept_class_id ==
+                                            row['concept_class_id']) \
+                                    .update({self._cdm.ConceptClass.concept_class_name:
+                                            row['concept_class_name']})
