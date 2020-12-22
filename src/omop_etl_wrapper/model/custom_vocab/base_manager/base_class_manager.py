@@ -66,7 +66,7 @@ class BaseClassManager:
         self._custom_classes_unused = set(classes_old.keys()) - set(classes_new.keys())
 
         for old_id in self._custom_classes_unused:
-                logging.info(f'Found obsolete class version: {old_id}')
+            logging.info(f'Found obsolete class version: {old_id}')
 
         if not self._custom_classes_unused:
             logging.info('No obsolete version found in database')
@@ -161,7 +161,7 @@ class BaseClassManager:
                         for row in reader:
                             if row['concept_class_id'] in classes_to_update:
                                 session.query(self._cdm.ConceptClass) \
-                                    .filter(self._cdm.ConceptClass.concept_class_id ==
-                                            row['concept_class_id']) \
+                                    .filter(self._cdm.ConceptClass.concept_class_id
+                                            == row['concept_class_id']) \
                                     .update({self._cdm.ConceptClass.concept_class_name:
                                             row['concept_class_name']})
