@@ -19,7 +19,6 @@ class BaseVocabManager:
         self._custom_vocab_files = custom_vocab_files
         self._custom_vocabs_updated = set()
         self._custom_vocabs_unused = set()
-        self._get_custom_vocabulary_sets()  # populates custom_vocabs_updated & _unused
 
     @property
     def vocabs_updated(self):

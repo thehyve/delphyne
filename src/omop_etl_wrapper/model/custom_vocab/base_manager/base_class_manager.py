@@ -20,7 +20,6 @@ class BaseClassManager:
         self._custom_classes_to_update = set()
         self._custom_classes_to_create = set()
         self._custom_classes_unused = set()
-        self._get_custom_class_sets()  # populates custom_classes_to_update, _to_create, _unused
 
     def _get_custom_class_sets(self) -> None:
         # Compare custom concept_class ids and names

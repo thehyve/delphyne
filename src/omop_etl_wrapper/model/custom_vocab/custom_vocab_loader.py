@@ -37,6 +37,9 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         return [f for f in custom_table_files if f.stem.endswith(omop_table)]
 
     def load_custom_vocabulary_tables(self) -> None:
+        # check vocabs and classes to drop and update
+        self._get_custom_vocabulary_sets()
+        self._get_custom_class_sets()
         # get vocabularies ids for Concept table operations
         vocabs_to_load = self.vocabs_updated
         vocabs_to_drop = self.vocabs_updated | self.vocabs_unused
