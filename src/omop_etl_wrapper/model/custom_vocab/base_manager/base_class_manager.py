@@ -17,19 +17,20 @@ class BaseClassManager:
         self.db = db
         self._cdm = cdm
         self._custom_class_files = custom_class_files
+        self._class_ids_update = set()
+        self._class_ids_create = set()
+        self._all_class_ids = set()
 
-    def _get_new_custom_concept_class_ids(self) -> Tuple[List[str],List[str]]:
+    def _get_new_custom_concept_class_ids(self) -> None:
         # Compare custom concept_class ids and names
         # to the ones already present in the database.
         #
-        # Returns 2 lists:
-        # - one of concept_classes to be updated (same id, new name)
-        # - one of concept_classes to be created (new id)
+        # Retrieves the following:
+        # - set of concept_classes to be updated (same id, new name)
+        # - set of concept_classes to be created (new id)
+        # - set of all custom concept_classes
 
         logging.info('Looking for new custom class versions')
-
-        class_ids_update = set()
-        class_ids_create = set()
 
         for class_file in self._custom_class_files:
 
@@ -39,6 +40,8 @@ class BaseClassManager:
                     class_id = row['concept_class_id']
                     class_name = row['concept_class_name']
 
+                    self._all_class_ids.add(class_id)
+
                     old_class_name = self._get_old_class_version(class_id)
 
                     # skip loading if class version already present
@@ -46,22 +49,19 @@ class BaseClassManager:
                         continue
 
                     if old_class_name is None:
-                        class_ids_create.add(class_id)
+                        self._class_ids_create.add(class_id)
                     else:
-                        class_ids_update.add(class_id)
+                        self._class_ids_update.add(class_id)
 
                     logging.info(f'Found new class version: {class_id} : '
                                  f'{old_class_name} ->  {class_name}')
 
-        if not class_ids_update | class_ids_create:
+        if not self._class_ids_update | self._class_ids_create:
             logging.info('No new class version found')
 
-        return list(class_ids_update), list(class_ids_create)
-
     def _get_old_class_version(self, class_id: str) -> Union[bool, None]:
-        # For a given custom concept_class id,
-        # retrieve the name already present in the database
-        # if available, otherwise None
+        # For a given custom concept_class id, retrieve the name
+        # already present in the database if available, otherwise None
 
         with self.db.session_scope() as session:
             existing_record = \
@@ -70,35 +70,21 @@ class BaseClassManager:
                 .one_or_none()
             return existing_record.concept_class_name if existing_record is not None else None
 
-    def _drop_custom_classes(self, class_ids: List[str]) -> None:
-        # Drop a list of custom concept_class ids from the database
-
-        logging.info(f'Dropping old custom concept class versions: '
-                     f'{True if class_ids else False}')
-
-        if class_ids:
-            with self.db.session_scope() as session:
-                session.query(self._cdm.ConceptClass) \
-                    .filter(self._cdm.ConceptClass.concept_class_id.in_(class_ids)) \
-                    .delete(synchronize_session=False)
-
-    def _load_custom_classes(self, class_ids: List[str]) -> None:
-        # Load a list of new custom concept_classes to the database
+    def _load_custom_classes(self) -> None:
+        # Load new custom concept_classes to the database
 
         logging.info(f'Loading new custom classes: '
-                     f'{True if class_ids else False}')
+                     f'{True if self._class_ids_create else False}')
 
-        if class_ids:
+        if self._class_ids_create:
 
             with self.db.session_scope() as session:
-
                 records = []
-
                 for class_file in self._custom_class_files:
                     with open(class_file) as f:
                         reader = csv.DictReader(f, delimiter='\t')
                         for row in reader:
-                            if row['concept_class_id'] in class_ids:
+                            if row['concept_class_id'] in self._class_ids_create:
                                 records.append(self._cdm.ConceptClass(
                                     concept_class_id=row['concept_class_id'],
                                     concept_class_name=row['concept_class_name'],
@@ -107,23 +93,37 @@ class BaseClassManager:
 
                 session.add_all(records)
 
-    def _update_custom_classes(self, class_ids: List[str]) -> None:
+    def _update_custom_classes(self) -> None:
         # Update the name of existing custom concept_classes in the
         # database
 
         logging.info(f'Updating custom class names: '
-                     f'{True if class_ids else False}')
+                     f'{True if self._class_ids_update else False}')
 
-        if class_ids:
+        if self._class_ids_update:
 
             with self.db.session_scope() as session:
                 for class_file in self._custom_class_files:
                     with open(class_file) as f:
                         reader = csv.DictReader(f, delimiter='\t')
                         for row in reader:
-                            if row['concept_class_id'] in class_ids:
+                            if row['concept_class_id'] in self._class_ids_update:
                                 session.query(self._cdm.ConceptClass) \
                                     .filter(self._cdm.ConceptClass.concept_class_id ==
                                             row['concept_class_id']) \
                                     .update({self._cdm.ConceptClass.concept_class_name:
                                             row['concept_class_name']})
+
+    def _drop_unused_custom_classes(self) -> None:
+        # Drop obsolete custom concept classes from the database;
+        # these are assumed to be all custom classes in the database
+        # (concept_id == 0) minus the all custom classes seen in files.
+
+        logging.info(f'Dropping obsolete custom concept class versions')
+
+        if self._all_class_ids:
+            with self.db.session_scope() as session:
+                session.query(self._cdm.ConceptClass) \
+                    .filter(self._cdm.ConceptClass.concept_class_concept_id == 0) \
+                    .filter(self._cdm.ConceptClass.concept_class_id.notin_(self._all_class_ids)) \
+                    .delete(synchronize_session=False)

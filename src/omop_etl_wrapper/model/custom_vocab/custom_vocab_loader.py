@@ -39,13 +39,16 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
     def load_custom_vocabulary_tables(self) -> None:
         # get vocabularies and classes that need to be updated
         vocab_ids = self._get_new_custom_vocabulary_ids()
-        class_ids = self._get_new_custom_concept_class_ids()
+        self._get_new_custom_concept_class_ids()
 
         # drop older version
         self._drop_custom_concepts(vocab_ids)
         self._drop_custom_vocabularies(vocab_ids)
-        self._drop_custom_classes(class_ids)
-        # load new version
-        self._load_custom_classes(class_ids)
+        # update version
+        self._update_custom_classes()
+        # load new version (create new records)
+        self._load_custom_classes()
         self._load_custom_vocabularies(vocab_ids)
         self._load_custom_concepts(vocab_ids)
+        # remove obsolete version
+        self._drop_unused_custom_classes()
