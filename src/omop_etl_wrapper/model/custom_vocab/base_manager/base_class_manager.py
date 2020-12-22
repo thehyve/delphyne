@@ -110,7 +110,7 @@ class BaseClassManager:
                     if not class_name:
                         raise ValueError(f'{class_file.name} may not contain an empty '
                                          f'concept_class_name')
-                    if concept_id != 0:
+                    if concept_id != '0':
                         raise ValueError(f'{class_file.name} must have concept_class_concept_id '
                                          f'set to 0')
                     if class_id in class_dict.keys():

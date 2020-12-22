@@ -113,7 +113,7 @@ class BaseVocabManager:
                     if not reference:
                         raise ValueError(f'{vocab_file.name} may not contain an empty '
                                          f'vocabulary_reference')
-                    if concept_id != 0:
+                    if concept_id != '0':
                         raise ValueError(f'{vocab_file.name} must have vocabulary_concept_id '
                                          f'set to 0')
                     if vocab_id in vocab_dict.keys():
