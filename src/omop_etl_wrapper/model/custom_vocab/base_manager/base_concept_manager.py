@@ -44,11 +44,50 @@ class BaseConceptManager:
 
                 records = []
 
+                unique_concepts_check = set()
+
                 for concept_file in self._custom_concept_files:
 
                     with open(concept_file) as f:
                         reader = csv.DictReader(f, delimiter='\t')
                         for row in reader:
+                            concept_id = row['concept_id']
+                            concept_name = row['concept_name']
+                            concept_code = row['concept_code']
+                            vocabulary_id = row['vocabulary_id']
+                            concept_class_id = row['concept_class_id']
+                            domain_id = row['domain_id']
+                            valid_start_date = row['valid_start_date']
+                            valid_end_date = row['valid_end_date']
+                            if not concept_id:
+                                raise ValueError(f'{concept_file.name} may not contain an empty '
+                                                 f'concept_id')
+                            if not concept_name:
+                                raise ValueError(f'{concept_file.name} may not contain an empty '
+                                                 f'concept_name')
+                            if not concept_code:
+                                raise ValueError(f'{concept_file.name} may not contain an empty '
+                                                 f'concept_code')
+                            if not vocabulary_id:
+                                raise ValueError(f'{concept_file.name} may not contain an empty '
+                                                 f'vocabulary_id')
+                            if not concept_class_id:
+                                raise ValueError(f'{concept_file.name} may not contain an empty '
+                                                 f'concept_class_id')
+                            if not valid_start_date or not valid_end_date:
+                                raise ValueError(f'{concept_file.name} may not contain an empty '
+                                                 f'date fields')
+                            if not domain_id:
+                                raise ValueError(f'{concept_file.name} may not contain an empty '
+                                                 f'domain_id')
+                            if int(concept_id) < 2000000000:
+                                raise ValueError(
+                                    f'{concept_file.name} must have concept_ids starting at '
+                                    f'2\'000\'000\'000 (2B+ convention)')
+                            if concept_id in unique_concepts_check:
+                                raise ValueError(
+                                    f'{concept_id} has duplicates across one or multiple files')
+
                             if row['vocabulary_id'] in vocab_ids:
                                 records.append(self._cdm.Concept(
                                     concept_id=row['concept_id'],
