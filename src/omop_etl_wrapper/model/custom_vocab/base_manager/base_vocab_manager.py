@@ -100,7 +100,21 @@ class BaseVocabManager:
             with open(vocab_file) as f:
                 reader = csv.DictReader(f, delimiter='\t')
                 for row in reader:
-                    vocab_dict[row['vocabulary_id']] = row['vocabulary_version']
+                    vocab_id = row['vocabulary_id']
+                    version = row['vocabulary_version']
+                    concept_id = row['vocabulary_concept_id']
+                    if not vocab_id:
+                        raise ValueError(f'{vocab_file.name} may not contain an empty '
+                                         f'vocabulary_id')
+                    if not version:
+                        raise ValueError(f'{vocab_file.name} may not contain an empty '
+                                         f'vocabulary_version')
+                    if concept_id != 0:
+                        raise ValueError(f'{vocab_file.name} must have vocabulary_concept_id '
+                                         f'set to 0')
+                    if vocab_id in vocab_dict.keys():
+                        raise ValueError(f'{vocab_file.name} contains vocabulary_id duplicates')
+                    vocab_dict[vocab_id] = version
 
         return vocab_dict
 
