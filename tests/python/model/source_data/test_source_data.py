@@ -1,7 +1,7 @@
 from typing import Dict
 
 import pytest
-from src.omop_etl_wrapper.model.etl_stats import etl_stats
+from src.omop_etl_wrapper.model.etl_stats import etl_stats, EtlStats
 from src.omop_etl_wrapper.model.source_data import SourceData
 
 
@@ -9,6 +9,13 @@ from src.omop_etl_wrapper.model.source_data import SourceData
 def source_data1(source_config: Dict) -> SourceData:
     """Return SourceData instance with test_dir1 as source_dir."""
     return SourceData(source_config)
+
+
+@pytest.fixture
+def stats() -> EtlStats:
+    """Return empty EtlStats."""
+    etl_stats.reset()
+    yield etl_stats
 
 
 def test_get_file_returns_the_file(source_data1: SourceData):
@@ -21,11 +28,10 @@ def test_get_non_existing_file_raises_exception(source_data1: SourceData):
         source_data1.get_source_file('source_file99.csv')
 
 
-def test_source_data_counts_are_collected(source_config: Dict):
-    etl_stats.reset()
+def test_source_data_counts_are_collected(source_config: Dict, stats: EtlStats):
     source_config['count_source_rows'] = True
     SourceData(source_config)
-    assert len(etl_stats.sources) == 3
+    assert len(stats.sources) == 3
 
 
 def test_source_dir_property(source_data1: SourceData):

@@ -11,7 +11,7 @@ from .cdm import vocabularies as cdm
 from .cdm._schema_placeholders import VOCAB_SCHEMA
 from .config.models import MainConfig
 from .database import Database
-from .model.etl_stats import etl_stats
+from .model.etl_stats import EtlStatsReporter, etl_stats
 from .model.mapping import CodeMapper
 from .model.orm_wrapper import OrmWrapper
 from .model.raw_sql_wrapper import RawSqlWrapper
@@ -141,6 +141,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
 
         :return: None
         """
+        etl_stats_logger = EtlStatsReporter(etl_stats)
         if self._config.run_options.write_reports:
-            etl_stats.write_summary_files()
-        etl_stats.log_summary()
+            etl_stats_logger.write_summary_files()
+        etl_stats_logger.log_summary()

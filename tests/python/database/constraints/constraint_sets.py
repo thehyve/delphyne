@@ -314,6 +314,12 @@ db_table_objects_full = {
     'pk_visit_detail',
     'pk_visit_occurrence',
     'pk_vocabulary',
+    'ck_concept_chk_c_concept_code',
+    'ck_concept_chk_c_concept_name',
+    'ck_concept_chk_c_invalid_reason',
+    'ck_concept_chk_c_standard_concept',
+    'ck_concept_relationship_chk_cr_invalid_reason',
+    'ck_concept_synonym_chk_csyn_concept_synonym_name',
 }
 
 vocab_table_objects = {
@@ -366,4 +372,10 @@ vocab_table_objects = {
     'pk_relationship',
     'pk_source_to_concept_map',
     'pk_vocabulary',
+    'ck_concept_chk_c_concept_code',
+    'ck_concept_chk_c_concept_name',
+    'ck_concept_chk_c_invalid_reason',
+    'ck_concept_chk_c_standard_concept',
+    'ck_concept_relationship_chk_cr_invalid_reason',
+    'ck_concept_synonym_chk_csyn_concept_synonym_name',
 }
