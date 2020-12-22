@@ -1,7 +1,7 @@
 import csv
 import logging
 from pathlib import Path
-from typing import Tuple, List, Union
+from typing import List, Union
 
 from ....database import Database
 
@@ -19,16 +19,18 @@ class BaseClassManager:
         self._custom_class_files = custom_class_files
         self._class_ids_update = set()
         self._class_ids_create = set()
-        self._all_class_ids = set()
+        self._class_ids_all = set()
 
     def _get_new_custom_concept_class_ids(self) -> None:
         # Compare custom concept_class ids and names
         # to the ones already present in the database.
         #
-        # Retrieves the following:
-        # - set of concept_classes to be updated (same id, new name)
-        # - set of concept_classes to be created (new id)
-        # - set of all custom concept_classes
+        # Retrieves:
+        # - set of custom concept_classes to be updated
+        #   (same id, new name)
+        # - set of custom concept_classes to be created
+        #   (new id)
+        # - set of all user-provided custom concept_classes
 
         logging.info('Looking for new custom class versions')
 
@@ -40,7 +42,7 @@ class BaseClassManager:
                     class_id = row['concept_class_id']
                     class_name = row['concept_class_name']
 
-                    self._all_class_ids.add(class_id)
+                    self._class_ids_all.add(class_id)
 
                     old_class_name = self._get_old_class_version(class_id)
 
@@ -116,17 +118,17 @@ class BaseClassManager:
 
     def _drop_unused_custom_classes(self) -> None:
         # Drop obsolete custom concept classes from the database;
-        # these are assumed to all classes in the database with
-        # concept_id == 0 minus all custom classes seen in files.
+        # these are assumed to be all classes in the database with
+        # concept_id == 0 minus all user-provided custom classes.
 
         logging.info(f'Checking for obsolete custom concept class versions')
 
-        if self._all_class_ids:
+        if self._class_ids_all:
             with self.db.session_scope() as session:
 
                 query_base = session.query(self._cdm.ConceptClass) \
                     .filter(self._cdm.ConceptClass.concept_class_concept_id == 0) \
-                    .filter(self._cdm.ConceptClass.concept_class_id.notin_(self._all_class_ids))
+                    .filter(self._cdm.ConceptClass.concept_class_id.notin_(self._class_ids_all))
 
                 record = query_base.one_or_none()
                 if record:
