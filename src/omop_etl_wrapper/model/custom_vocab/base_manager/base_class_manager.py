@@ -1,7 +1,7 @@
 import csv
 import logging
 from pathlib import Path
-from typing import List, Union
+from typing import Tuple, List, Union
 
 from ....database import Database
 
@@ -18,14 +18,18 @@ class BaseClassManager:
         self._cdm = cdm
         self._custom_class_files = custom_class_files
 
-    def _get_new_custom_concept_class_ids(self) -> List[str]:
-        # Extract a list of custom concept_class ids
-        # from the custom class table if the same concept_class name
-        # is not already present in the database
+    def _get_new_custom_concept_class_ids(self) -> Tuple[List[str],List[str]]:
+        # Compare custom concept_class ids and names
+        # to the ones already present in the database.
+        #
+        # Returns 2 lists:
+        # - one of concept_classes to be updated (same id, new name)
+        # - one of concept_classes to be created (new id)
 
         logging.info('Looking for new custom class versions')
 
-        class_ids = set()
+        class_ids_update = set()
+        class_ids_create = set()
 
         for class_file in self._custom_class_files:
 
@@ -41,14 +45,18 @@ class BaseClassManager:
                     if class_name == old_class_name:
                         continue
 
-                    logging.info(f'Found new class name: {class_id} : '
-                                 f'{old_class_name} ->  {class_name}')
-                    class_ids.add(class_id)
+                    if old_class_name is None:
+                        class_ids_create.add(class_id)
+                    else:
+                        class_ids_update.add(class_id)
 
-        if not class_ids:
+                    logging.info(f'Found new class version: {class_id} : '
+                                 f'{old_class_name} ->  {class_name}')
+
+        if not class_ids_update | class_ids_create:
             logging.info('No new class version found')
 
-        return list(class_ids)
+        return list(class_ids_update), list(class_ids_create)
 
     def _get_old_class_version(self, class_id: str) -> Union[bool, None]:
         # For a given custom concept_class id,
@@ -77,7 +85,7 @@ class BaseClassManager:
     def _load_custom_classes(self, class_ids: List[str]) -> None:
         # Load a list of new custom concept_classes to the database
 
-        logging.info(f'Loading new custom class versions: '
+        logging.info(f'Loading new custom classes: '
                      f'{True if class_ids else False}')
 
         if class_ids:
