@@ -1,7 +1,7 @@
 import csv
 import logging
 from pathlib import Path
-from typing import List
+from typing import Set, List
 
 from ....database import Database
 
@@ -18,8 +18,8 @@ class BaseConceptManager:
         self._cdm = cdm
         self._custom_concept_files = custom_concept_files
 
-    def _drop_custom_concepts(self, vocab_ids: List[str]) -> None:
-        # Drop concepts associated with a list of custom vocabulary ids
+    def _drop_custom_concepts(self, vocab_ids: Set[str]) -> None:
+        # Drop concepts associated with a set of custom vocabulary ids
         # from the database
 
         logging.info(f'Dropping old custom concepts: '
@@ -31,8 +31,8 @@ class BaseConceptManager:
                     .filter(self._cdm.Concept.vocabulary_id.in_(vocab_ids)) \
                     .delete(synchronize_session=False)
 
-    def _load_custom_concepts(self, vocab_ids: List[str]) -> None:
-        # Load concept_ids associated with a list of custom
+    def _load_custom_concepts(self, vocab_ids: Set[str]) -> None:
+        # Load concept_ids associated with a set of custom
         # vocabulary ids to the database
 
         logging.info(f'Loading new custom concept_ids: '
