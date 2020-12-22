@@ -46,7 +46,7 @@ class BaseVocabManager:
 
         unchanged_vocabs = set()
 
-        for new_id, new_version in vocab_new:
+        for new_id, new_version in vocab_new.items():
             old_version = vocab_old.get(new_id, None)
 
             # skip version if already present in database
@@ -64,12 +64,12 @@ class BaseVocabManager:
 
         logging.info('Looking for unused custom vocabulary versions')
 
-        for old_id in vocab_old.keys():
-            if old_id not in vocab_new.keys():
-                logging.info(f'Found obsolete vocabulary version: {old_id}')
-
         self._custom_vocabs_unused = \
             set(vocab_old.keys()) - set(vocab_new.keys())
+
+        for old_id in self._custom_vocabs_unused:
+            logging.info(f'Found obsolete vocabulary version: {old_id}')
+
         if not self._custom_vocabs_unused:
             logging.info('No obsolete version found in database')
 

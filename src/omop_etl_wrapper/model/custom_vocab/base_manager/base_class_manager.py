@@ -42,7 +42,7 @@ class BaseClassManager:
         classes_to_create = set()
         classes_to_update = set()
 
-        for new_id, new_name in classes_new:
+        for new_id, new_name in classes_new.items():
             old_name = classes_old.get(new_id, None)
 
             # skip version if already present in database
@@ -67,7 +67,6 @@ class BaseClassManager:
         self._custom_classes_unused = set(classes_old.keys()) - set(classes_new.keys())
 
         for old_id in self._custom_classes_unused:
-            if old_id not in classes_new.keys():
                 logging.info(f'Found obsolete class version: {old_id}')
 
         if not self._custom_classes_unused:
