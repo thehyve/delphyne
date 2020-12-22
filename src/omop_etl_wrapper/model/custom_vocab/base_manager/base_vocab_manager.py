@@ -102,6 +102,7 @@ class BaseVocabManager:
                 for row in reader:
                     vocab_id = row['vocabulary_id']
                     version = row['vocabulary_version']
+                    reference = row['vocabulary_reference']
                     concept_id = row['vocabulary_concept_id']
                     if not vocab_id:
                         raise ValueError(f'{vocab_file.name} may not contain an empty '
@@ -109,6 +110,9 @@ class BaseVocabManager:
                     if not version:
                         raise ValueError(f'{vocab_file.name} may not contain an empty '
                                          f'vocabulary_version')
+                    if not reference:
+                        raise ValueError(f'{vocab_file.name} may not contain an empty '
+                                         f'vocabulary_reference')
                     if concept_id != 0:
                         raise ValueError(f'{vocab_file.name} must have vocabulary_concept_id '
                                          f'set to 0')
