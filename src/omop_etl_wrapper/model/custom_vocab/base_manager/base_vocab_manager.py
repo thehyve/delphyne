@@ -17,15 +17,19 @@ class BaseVocabManager:
         self.db = db
         self._cdm = cdm
         self._custom_vocab_files = custom_vocab_files
+        self._vocab_ids_update = set()
+        self._vocab_ids_all = set()
 
-    def _get_new_custom_vocabulary_ids(self) -> List[str]:
-        # Create a list of custom vocabulary ids
-        # from the custom vocabulary table if the same vocabulary
-        # version is not already present in the database
+    def _get_new_custom_vocabulary_ids(self) -> None:
+        # Compare custom vocabulary ids
+        # to the ones already present in the database.
+        #
+        # Retrieves:
+        # - set of custom vocabularies to be updated
+        #   (new id, or same id and new version)
+        # - set of all user-provided custom vocabularies
 
         logging.info('Looking for new custom vocabulary versions')
-
-        vocab_ids = set()
 
         for vocab_file in self._custom_vocab_files:
 
@@ -35,6 +39,8 @@ class BaseVocabManager:
                     vocab_id = row['vocabulary_id']
                     vocab_version = row['vocabulary_version']
 
+                    self._vocab_ids_all.add(vocab_id)
+
                     old_vocab_version = self._get_old_vocab_version(vocab_id)
 
                     # skip loading if vocabulary version already present
@@ -43,17 +49,14 @@ class BaseVocabManager:
 
                     logging.info(f'Found new vocabulary version: {vocab_id} : '
                                  f'{old_vocab_version} ->  {vocab_version}')
-                    vocab_ids.add(vocab_id)
+                    self._vocab_ids_update.add(vocab_id)
 
-        if not vocab_ids:
+        if not self._vocab_ids_update:
             logging.info('No new vocabulary version found')
 
-        return list(vocab_ids)
-
     def _get_old_vocab_version(self, vocab_id: str) -> Union[bool, None]:
-        # For a given custom vocabulary id,
-        # retrieve the version already present in the database
-        # if available, otherwise None
+        # For a given custom vocabulary id, retrieve the version
+        # already present in the database if available, otherwise None
 
         with self.db.session_scope() as session:
             existing_record = \
@@ -62,25 +65,25 @@ class BaseVocabManager:
                 .one_or_none()
             return existing_record.vocabulary_version if existing_record is not None else None
 
-    def _drop_custom_vocabularies(self, vocab_ids: List[str]) -> None:
-        # Drop a list of custom vocabulary ids from the database
+    def _drop_updated_custom_vocabs(self) -> None:
+        # Drop updated custom vocabulary ids from the database
 
-        logging.info(f'Dropping old custom vocabulary versions: '
-                     f'{True if vocab_ids else False}')
+        logging.info(f'Dropping updated custom vocabulary versions: '
+                     f'{True if self._vocab_ids_update else False}')
 
-        if vocab_ids:
+        if self._vocab_ids_update:
             with self.db.session_scope() as session:
                 session.query(self._cdm.Vocabulary) \
-                    .filter(self._cdm.Vocabulary.vocabulary_id.in_(vocab_ids)) \
+                    .filter(self._cdm.Vocabulary.vocabulary_id.in_(self._vocab_ids_update)) \
                     .delete(synchronize_session=False)
 
-    def _load_custom_vocabularies(self, vocab_ids: List[str]) -> None:
-        # Load a list of custom vocabularies to the database
+    def _load_custom_vocabs(self) -> None:
+        # Load new and updated custom vocabularies to the database
 
         logging.info(f'Loading new custom vocabulary versions: '
-                     f'{True if vocab_ids else False}')
+                     f'{True if self._vocab_ids_update else False}')
 
-        if vocab_ids:
+        if self._vocab_ids_update:
 
             with self.db.session_scope() as session:
 
@@ -90,7 +93,7 @@ class BaseVocabManager:
                     with open(vocab_file) as f:
                         reader = csv.DictReader(f, delimiter='\t')
                         for row in reader:
-                            if row['vocabulary_id'] in vocab_ids:
+                            if row['vocabulary_id'] in self._vocab_ids_update:
                                 records.append(self._cdm.Vocabulary(
                                     vocabulary_id=row['vocabulary_id'],
                                     vocabulary_name=row['vocabulary_name'],
@@ -99,3 +102,22 @@ class BaseVocabManager:
                                     vocabulary_concept_id=row['vocabulary_concept_id']
                                 ))
                 session.add_all(records)
+
+    def _drop_unused_custom_vocabs(self) -> None:
+        # Drop obsolete custom vocabularies from the database;
+        # these are assumed to be all vocabularies in the database with
+        # concept_id == 0 minus all user-provided custom vocabularies.
+
+        logging.info(f'Checking for obsolete custom vocabulary versions')
+
+        if self._vocab_ids_all:
+            with self.db.session_scope() as session:
+
+                query_base = session.query(self._cdm.Vocabulary) \
+                    .filter(self._cdm.Vocabulary.vocabulary_concept_id == 0) \
+                    .filter(self._cdm.Vocabulary.vocabulary_id.notin_(self._vocab_ids_all))
+
+                record = query_base.one_or_none()
+                if record:
+                    logging.info(f'Dropping unused custom vocabulary: {record.vocabulary_id}')
+                    query_base.delete(synchronize_session=False)
