@@ -59,6 +59,8 @@ class BaseConceptManager:
                             domain_id = row['domain_id']
                             valid_start_date = row['valid_start_date']
                             valid_end_date = row['valid_end_date']
+
+                            # quality checks
                             if not concept_id:
                                 raise ValueError(f'{concept_file.name} may not contain an empty '
                                                  f'concept_id')
@@ -75,7 +77,7 @@ class BaseConceptManager:
                                 raise ValueError(f'{concept_file.name} may not contain an empty '
                                                  f'concept_class_id')
                             if not valid_start_date or not valid_end_date:
-                                raise ValueError(f'{concept_file.name} may not contain an empty '
+                                raise ValueError(f'{concept_file.name} may not contain empty '
                                                  f'date fields')
                             if not domain_id:
                                 raise ValueError(f'{concept_file.name} may not contain an empty '

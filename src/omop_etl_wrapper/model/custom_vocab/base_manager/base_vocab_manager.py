@@ -104,6 +104,8 @@ class BaseVocabManager:
                     version = row['vocabulary_version']
                     reference = row['vocabulary_reference']
                     concept_id = row['vocabulary_concept_id']
+
+                    # quality checks
                     if not vocab_id:
                         raise ValueError(f'{vocab_file.name} may not contain an empty '
                                          f'vocabulary_id')
@@ -117,7 +119,8 @@ class BaseVocabManager:
                         raise ValueError(f'{vocab_file.name} must have vocabulary_concept_id '
                                          f'set to 0')
                     if vocab_id in vocab_dict.keys():
-                        raise ValueError(f'{vocab_file.name} contains vocabulary_id duplicates')
+                        raise ValueError(f'{vocab_id} has duplicates across one or multiple files')
+
                     vocab_dict[vocab_id] = version
 
         return vocab_dict
