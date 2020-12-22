@@ -19,7 +19,7 @@ class BaseVocabManager:
         self._custom_vocab_files = custom_vocab_files
 
     def _get_new_custom_vocabulary_ids(self) -> List[str]:
-        # create a list of custom vocabulary ids
+        # Create a list of custom vocabulary ids
         # from the custom vocabulary table if the same vocabulary
         # version is not already present in the database
 
