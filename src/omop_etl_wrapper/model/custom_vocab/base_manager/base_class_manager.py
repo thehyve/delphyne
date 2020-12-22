@@ -19,8 +19,9 @@ class BaseClassManager:
         self._custom_class_files = custom_class_files
 
     def _get_new_custom_concept_class_ids(self) -> List[str]:
-        # create a list of custom concept_class ids from the custom class table if the same
-        # concept_class name is not already present in the database
+        # create a list of custom concept_class ids
+        # from the custom class table if the same concept_class name
+        # is not already present in the database
 
         logging.info('Looking for new custom class versions')
 
@@ -50,7 +51,8 @@ class BaseClassManager:
         return list(class_ids)
 
     def _get_old_class_version(self, class_id: str) -> Union[bool, None]:
-        # For a given custom concept_class id, retrieve the name already present in the database
+        # For a given custom concept_class id,
+        # retrieve the name already present in the database
         # if available, otherwise None
 
         with self.db.session_scope() as session:

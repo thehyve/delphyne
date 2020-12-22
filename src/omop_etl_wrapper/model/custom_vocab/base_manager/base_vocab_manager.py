@@ -19,8 +19,9 @@ class BaseVocabManager:
         self._custom_vocab_files = custom_vocab_files
 
     def _get_new_custom_vocabulary_ids(self) -> List[str]:
-        # create a list of custom vocabulary ids from the custom vocabulary table if the same
-        # vocabulary version is not already present in the database
+        # create a list of custom vocabulary ids
+        # from the custom vocabulary table if the same vocabulary
+        # version is not already present in the database
 
         logging.info('Looking for new custom vocabulary versions')
 
@@ -50,7 +51,8 @@ class BaseVocabManager:
         return list(vocab_ids)
 
     def _get_old_vocab_version(self, vocab_id: str) -> Union[bool, None]:
-        # For a given custom vocabulary id, retrieve the version already present in the database
+        # For a given custom vocabulary id,
+        # retrieve the version already present in the database
         # if available, otherwise None
 
         with self.db.session_scope() as session:

@@ -27,8 +27,8 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
 
     @staticmethod
     def _get_all_custom_table_files() -> List[Path]:
-        return [f for f in CUSTOM_VOCAB_DIR.glob('*') if f.is_file()
-                and not is_hidden(f)]
+        return [f for f in CUSTOM_VOCAB_DIR.glob('*')
+                if f.is_file() and not is_hidden(f)]
 
     def _subset_custom_table_files(self, omop_table: str) -> List[Path]:
         # get custom vocab files for a specific vocabulary target table

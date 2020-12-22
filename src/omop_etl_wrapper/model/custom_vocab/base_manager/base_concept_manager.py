@@ -19,7 +19,8 @@ class BaseConceptManager:
         self._custom_concept_files = custom_concept_files
 
     def _drop_custom_concepts(self, vocab_ids: List[str]) -> None:
-        # Drop concepts associated with a list of custom vocabulary ids from the database
+        # Drop concepts associated with a list of custom vocabulary ids
+        # from the database
 
         logging.info(f'Dropping old custom concepts: '
                      f'{True if vocab_ids else False}')
@@ -31,7 +32,8 @@ class BaseConceptManager:
                     .delete(synchronize_session=False)
 
     def _load_custom_concepts(self, vocab_ids: List[str]) -> None:
-        # Load concept_ids associated with a list of custom vocabulary ids to the database
+        # Load concept_ids associated with a list of custom
+        # vocabulary ids to the database
 
         logging.info(f'Loading new custom concept_ids: '
                      f'{True if vocab_ids else False}')
