@@ -100,7 +100,23 @@ class BaseClassManager:
             with open(class_file) as f:
                 reader = csv.DictReader(f, delimiter='\t')
                 for row in reader:
-                    class_dict[row['concept_class_id']] = row['concept_class_name']
+                    class_id = row['concept_class_id']
+                    class_name = row['concept_class_name']
+                    concept_id = row['concept_class_concept_id']
+
+                    if not class_id:
+                        raise ValueError(f'{class_file.name} may not contain an empty '
+                                         f'concept_class_id')
+                    if not class_name:
+                        raise ValueError(f'{class_file.name} may not contain an empty '
+                                         f'concept_class_name')
+                    if concept_id != 0:
+                        raise ValueError(f'{class_file.name} must have concept_class_concept_id '
+                                         f'set to 0')
+                    if class_id in class_dict.keys():
+                        raise ValueError(f'{class_file.name} contains concept_class_id duplicates')
+
+                    class_dict[class_id] = class_name
 
         return class_dict
 
