@@ -62,7 +62,7 @@ class BaseConceptManager:
                     rows = csv.DictReader(f_in, delimiter='\t')
                     records = []
 
-                    for i, row in enumerate(rows, start=2):
+                    for _, row in enumerate(rows, start=2):
                         concept_id = row['concept_id']
                         concept_name = row['concept_name']
                         concept_code = row['concept_code']
