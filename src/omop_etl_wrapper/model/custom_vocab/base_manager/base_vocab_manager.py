@@ -35,12 +35,64 @@ class BaseVocabManager:
     @property
     @lru_cache()
     def vocabs_from_disk(self) -> Dict[str, str]:
-        return self._get_new_custom_vocabs_from_disk()
+        # Retrieve all user-provided custom vocabularies from disk
+        # and return a dictionary {id : version}.
+
+        vocab_dict = {}
+
+        for vocab_file in self._custom_vocab_files:
+            prefix = get_file_prefix(vocab_file, 'vocabulary')
+
+            with open(vocab_file) as f:
+                reader = csv.DictReader(f, delimiter='\t')
+                for row in reader:
+                    vocab_id = row['vocabulary_id']
+                    version = row['vocabulary_version']
+                    reference = row['vocabulary_reference']
+                    concept_id = row['vocabulary_concept_id']
+
+                    # quality checks
+                    if not vocab_id:
+                        raise ValueError(f'{vocab_file.name} may not contain an empty '
+                                         f'vocabulary_id')
+                    if not version:
+                        raise ValueError(f'{vocab_file.name} may not contain an empty '
+                                         f'vocabulary_version')
+                    if not reference:
+                        raise ValueError(f'{vocab_file.name} may not contain an empty '
+                                         f'vocabulary_reference')
+                    if concept_id != '0':
+                        raise ValueError(f'{vocab_file.name} must have vocabulary_concept_id '
+                                         f'set to 0')
+                    if vocab_id in vocab_dict.keys():
+                        raise ValueError(f'vocabulary {vocab_id} has duplicates across one or '
+                                         f'multiple files')
+
+                    vocab_dict[vocab_id] = version
+
+            if prefix and any(v != prefix for v in vocab_dict.keys()):
+                logging.warning(f'{vocab_file.name} contains vocabulary_ids '
+                                f'that do not match file prefix')
+
+        return vocab_dict
 
     @property
     @lru_cache()
     def vocabs_from_database(self) -> Dict[str, str]:
-        return self._get_old_custom_vocabs_from_database()
+        # Retrieve all custom vocabularies (vocabulary_concept_id == 0)
+        # currently in database and return a dictionary {id : version}.
+
+        vocab_dict = {}
+
+        with self.db.session_scope() as session:
+            records = session.query(self._cdm.Vocabulary) \
+                .filter(self._cdm.Vocabulary.vocabulary_concept_id == 0) \
+                .all()
+
+            for record in records:
+                vocab_dict[record.vocabulary_id] = record.vocabulary_version
+
+        return vocab_dict
 
     def _get_custom_vocabulary_sets(self) -> None:
         # Compare custom vocabulary ids from disk
@@ -85,65 +137,6 @@ class BaseVocabManager:
 
         if not self._custom_vocabs_unused:
             logging.info('No obsolete version found in database')
-
-    def _get_old_custom_vocabs_from_database(self) -> Dict[str, str]:
-        # Retrieve all custom vocabularies (vocabulary_concept_id == 0)
-        # currently in database and return a dictionary {id : version}.
-
-        vocab_dict = {}
-
-        with self.db.session_scope() as session:
-
-            records = session.query(self._cdm.Vocabulary) \
-                .filter(self._cdm.Vocabulary.vocabulary_concept_id == 0) \
-                .all()
-
-            for record in records:
-                vocab_dict[record.vocabulary_id] = record.vocabulary_version
-
-        return vocab_dict
-
-    def _get_new_custom_vocabs_from_disk(self) -> Dict[str, str]:
-        # Retrieve all user-provided custom vocabularies from disk
-        # and return a dictionary {id : version}.
-
-        vocab_dict = {}
-
-        for vocab_file in self._custom_vocab_files:
-            prefix = get_file_prefix(vocab_file, 'vocabulary')
-
-            with open(vocab_file) as f:
-                reader = csv.DictReader(f, delimiter='\t')
-                for row in reader:
-                    vocab_id = row['vocabulary_id']
-                    version = row['vocabulary_version']
-                    reference = row['vocabulary_reference']
-                    concept_id = row['vocabulary_concept_id']
-
-                    # quality checks
-                    if not vocab_id:
-                        raise ValueError(f'{vocab_file.name} may not contain an empty '
-                                         f'vocabulary_id')
-                    if not version:
-                        raise ValueError(f'{vocab_file.name} may not contain an empty '
-                                         f'vocabulary_version')
-                    if not reference:
-                        raise ValueError(f'{vocab_file.name} may not contain an empty '
-                                         f'vocabulary_reference')
-                    if concept_id != '0':
-                        raise ValueError(f'{vocab_file.name} must have vocabulary_concept_id '
-                                         f'set to 0')
-                    if vocab_id in vocab_dict.keys():
-                        raise ValueError(f'vocabulary {vocab_id} has duplicates across one or '
-                                         f'multiple files')
-
-                    vocab_dict[vocab_id] = version
-
-            if prefix and any(v != prefix for v in vocab_dict.keys()):
-                logging.warning(f'{vocab_file.name} contains vocabulary_ids '
-                                f'that do not match file prefix')
-
-        return vocab_dict
 
     def _drop_custom_vocabs(self) -> None:
         # Drop updated and obsolete custom vocabularies
