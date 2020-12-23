@@ -146,7 +146,13 @@ class Database:
             target table
         """
         for record in record_containing_object:
-            placeholder_schema = record.__table_args__.get('schema')
+            # if table constraints present (SQLAlchemy CheckConstraint),
+            # __table_args__ consists of a tuple where the dictionary
+            # containing the schema name is listed as the last element
+            if len(record.__table_args__) > 1:
+                placeholder_schema = record.__table_args__[-1].get('schema')
+            else:
+                placeholder_schema = record.__table_args__.get('schema')
             schema_name = Database.schema_translate_map.get(placeholder_schema, placeholder_schema)
             table_name = record.__tablename__
             if schema_name is None:
