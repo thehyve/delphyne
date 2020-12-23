@@ -29,6 +29,8 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
     def _get_custom_table_files(omop_table: str) -> List[Path]:
         # Get custom vocab files for a specific vocabulary target table
         # based on the file name conventions (e.g. "concept").
+        if not CUSTOM_VOCAB_DIR.exists():
+            raise FileNotFoundError(f'{CUSTOM_VOCAB_DIR.resolve()} folder not found')
         custom_table_files = get_all_files_in_dir(CUSTOM_VOCAB_DIR)
         return [f for f in custom_table_files if f.stem.endswith(omop_table)]
 
