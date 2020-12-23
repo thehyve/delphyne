@@ -56,10 +56,10 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         # check vocabs and classes to drop and update
         self._get_custom_vocabulary_sets()
         self._get_custom_class_sets()
-        # get vocabularies ids for Concept table operations
+        # get vocab_ids for Concept table operations
         vocabs_to_load = self.vocabs_updated
         vocabs_to_drop = self.vocabs_updated | self.vocabs_unused
-
+        valid_file_prefixes = set(self.vocabs_from_disk.keys())
         # update list of concept files to parse
         # (not done for vocabulary and concept class files
         # since not particularly large)
@@ -72,11 +72,11 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
 
         # drop old versions (unused + updated)
         self._drop_custom_concepts(vocabs_to_drop)
-        self._drop_custom_vocabs()
         self._drop_custom_classes()
+        self._drop_custom_vocabs()
         # load new versions (update in place)
         self._update_custom_classes()
         # load new versions (create new records)
-        self._load_custom_classes()
         self._load_custom_vocabs()
-        self._load_custom_concepts(vocabs_to_load)
+        self._load_custom_classes()
+        self._load_custom_concepts(vocabs_to_load, valid_file_prefixes)

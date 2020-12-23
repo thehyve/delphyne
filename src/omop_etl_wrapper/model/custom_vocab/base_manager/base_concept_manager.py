@@ -39,7 +39,7 @@ class BaseConceptManager:
                 transformation_metadata.end_now()
                 etl_stats.add_transformation(transformation_metadata)
 
-    def _load_custom_concepts(self, vocab_ids: Set[str]) -> None:
+    def _load_custom_concepts(self, vocab_ids: Set[str], valid_prefixes: Set[str]) -> None:
         # Load concept_ids associated with a set of custom
         # vocabulary ids to the database
 
@@ -55,7 +55,7 @@ class BaseConceptManager:
                 transformation_metadata = EtlTransformation(name=f'load_{concept_file.stem}')
 
                 prefix = get_file_prefix(concept_file, 'concept')
-                used_vocabs = set()
+                invalid_vocabs = set()
 
                 with self.db.session_scope(metadata=transformation_metadata) as session, \
                         concept_file.open('r') as f_in:
@@ -117,14 +117,16 @@ class BaseConceptManager:
                                 invalid_reason=row['invalid_reason']
                             ))
 
-                        if prefix:
-                            used_vocabs.add(vocabulary_id)
+                        # if prefix is valid vocab_id,
+                        # vocabulary_ids in file should match it
+                        if prefix in valid_prefixes and vocabulary_id != prefix:
+                            invalid_vocabs.add(vocabulary_id)
 
                     session.add_all(records)
 
                     transformation_metadata.end_now()
                     etl_stats.add_transformation(transformation_metadata)
 
-                if prefix and any(v != prefix for v in used_vocabs):
+                if invalid_vocabs:
                     logging.warning(f'{concept_file.name} contains vocabulary_ids '
                                     f'that do not match file prefix')
