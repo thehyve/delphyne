@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Set, List
 
 from ....database import Database
+from ....model.etl_stats import EtlTransformation, etl_stats
 from ....util.io import get_file_prefix
 
 logger = logging.getLogger(__name__)
@@ -41,77 +42,83 @@ class BaseConceptManager:
 
         if vocab_ids:
 
-            with self.db.session_scope() as session:
+            unique_concepts_check = set()
 
-                records = []
+            for concept_file in self._custom_concept_files:
 
-                unique_concepts_check = set()
+                transformation_metadata = EtlTransformation(name=f'load_{concept_file.stem}')
 
-                for concept_file in self._custom_concept_files:
-                    prefix = get_file_prefix(concept_file, 'concept')
-                    vocabs = set()
+                prefix = get_file_prefix(concept_file, 'concept')
+                used_vocabs = set()
 
-                    with open(concept_file) as f:
-                        reader = csv.DictReader(f, delimiter='\t')
-                        for row in reader:
-                            concept_id = row['concept_id']
-                            concept_name = row['concept_name']
-                            concept_code = row['concept_code']
-                            vocabulary_id = row['vocabulary_id']
-                            concept_class_id = row['concept_class_id']
-                            domain_id = row['domain_id']
-                            valid_start_date = row['valid_start_date']
-                            valid_end_date = row['valid_end_date']
+                with self.db.session_scope(metadata=transformation_metadata) as session, \
+                        concept_file.open('r') as f_in:
+                    rows = csv.DictReader(f_in, delimiter='\t')
+                    records = []
 
-                            if prefix:
-                                vocabs.add(vocabulary_id)
+                    for i, row in enumerate(rows, start=2):
+                        concept_id = row['concept_id']
+                        concept_name = row['concept_name']
+                        concept_code = row['concept_code']
+                        vocabulary_id = row['vocabulary_id']
+                        concept_class_id = row['concept_class_id']
+                        domain_id = row['domain_id']
+                        valid_start_date = row['valid_start_date']
+                        valid_end_date = row['valid_end_date']
 
-                            # quality checks
-                            if not concept_id:
-                                raise ValueError(f'{concept_file.name} may not contain an empty '
-                                                 f'concept_id')
-                            if not concept_name:
-                                raise ValueError(f'{concept_file.name} may not contain an empty '
-                                                 f'concept_name')
-                            if not concept_code:
-                                raise ValueError(f'{concept_file.name} may not contain an empty '
-                                                 f'concept_code')
-                            if not vocabulary_id:
-                                raise ValueError(f'{concept_file.name} may not contain an empty '
-                                                 f'vocabulary_id')
-                            if not concept_class_id:
-                                raise ValueError(f'{concept_file.name} may not contain an empty '
-                                                 f'concept_class_id')
-                            if not valid_start_date or not valid_end_date:
-                                raise ValueError(f'{concept_file.name} may not contain empty '
-                                                 f'date fields')
-                            if not domain_id:
-                                raise ValueError(f'{concept_file.name} may not contain an empty '
-                                                 f'domain_id')
-                            if int(concept_id) < 2000000000:
-                                raise ValueError(
-                                    f'{concept_file.name} must have concept_ids starting at '
-                                    f'2\'000\'000\'000 (2B+ convention)')
-                            if concept_id in unique_concepts_check:
-                                raise ValueError(
-                                    f'concept {concept_id} has duplicates across one or multiple '
-                                    f'files')
+                        # quality checks
+                        if not concept_id:
+                            raise ValueError(f'{concept_file.name} may not contain an empty '
+                                             f'concept_id')
+                        if not concept_name:
+                            raise ValueError(f'{concept_file.name} may not contain an empty '
+                                             f'concept_name')
+                        if not concept_code:
+                            raise ValueError(f'{concept_file.name} may not contain an empty '
+                                             f'concept_code')
+                        if not vocabulary_id:
+                            raise ValueError(f'{concept_file.name} may not contain an empty '
+                                             f'vocabulary_id')
+                        if not concept_class_id:
+                            raise ValueError(f'{concept_file.name} may not contain an empty '
+                                             f'concept_class_id')
+                        if not valid_start_date or not valid_end_date:
+                            raise ValueError(f'{concept_file.name} may not contain empty '
+                                             f'date fields')
+                        if not domain_id:
+                            raise ValueError(f'{concept_file.name} may not contain an empty '
+                                             f'domain_id')
+                        if int(concept_id) < 2000000000:
+                            raise ValueError(
+                                f'{concept_file.name} must have concept_ids starting at '
+                                f'2\'000\'000\'000 (2B+ convention)')
+                        if concept_id in unique_concepts_check:
+                            raise ValueError(
+                                f'concept {concept_id} has duplicates across one or multiple '
+                                f'files')
 
-                            if row['vocabulary_id'] in vocab_ids:
-                                records.append(self._cdm.Concept(
-                                    concept_id=row['concept_id'],
-                                    concept_name=row['concept_name'],
-                                    domain_id=row['domain_id'],
-                                    vocabulary_id=row['vocabulary_id'],
-                                    concept_class_id=row['concept_class_id'],
-                                    standard_concept=row['standard_concept'],
-                                    concept_code=row['concept_code'],
-                                    valid_start_date=row['valid_start_date'],
-                                    valid_end_date=row['valid_end_date'],
-                                    invalid_reason=row['invalid_reason']
-                                ))
+                        if vocabulary_id in vocab_ids:
+                            records.append(self._cdm.Concept(
+                                concept_id=row['concept_id'],
+                                concept_name=row['concept_name'],
+                                domain_id=row['domain_id'],
+                                vocabulary_id=row['vocabulary_id'],
+                                concept_class_id=row['concept_class_id'],
+                                standard_concept=row['standard_concept'],
+                                concept_code=row['concept_code'],
+                                valid_start_date=row['valid_start_date'],
+                                valid_end_date=row['valid_end_date'],
+                                invalid_reason=row['invalid_reason']
+                            ))
+
+                        if prefix:
+                            used_vocabs.add(vocabulary_id)
+
                     session.add_all(records)
 
-                    if prefix and any(v != prefix for v in vocabs):
-                        logging.warning(f'{concept_file.name} contains vocabulary_ids '
-                                        f'that do not match file prefix')
+                    transformation_metadata.end_now()
+                    etl_stats.add_transformation(transformation_metadata)
+
+                if prefix and any(v != prefix for v in used_vocabs):
+                    logging.warning(f'{concept_file.name} contains vocabulary_ids '
+                                    f'that do not match file prefix')
