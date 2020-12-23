@@ -47,12 +47,8 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         vocabs_to_load = self.vocabs_updated
         vocabs_to_drop = self.vocabs_updated | self.vocabs_unused
 
-        # update list of files to parse to only include those without
-        # prefix, or prefix matching vocab ids to update
-        self._custom_vocab_files = self._update_custom_files(
-            self._custom_vocab_files, 'vocabulary')
-        self._custom_class_files = self._update_custom_files(
-            self._custom_class_files, 'concept_class')
+        # update list of concept files to parse to only include those
+        # without prefix, or prefix matching vocab ids to update
         self._custom_concept_files = self._update_custom_files(
             self._custom_concept_files, 'concept')
 
