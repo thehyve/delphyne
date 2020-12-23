@@ -17,6 +17,8 @@ class BaseClassManager:
         self.db = db
         self._cdm = cdm
         self._custom_class_files = custom_class_files
+        self._old_classes = self._get_old_custom_classes_from_database()
+        self._new_classes = self._get_new_custom_classes_from_disk()
         self._custom_classes_to_update = set()
         self._custom_classes_to_create = set()
         self._custom_classes_unused = set()
@@ -35,8 +37,8 @@ class BaseClassManager:
 
         logging.info('Looking for new custom class versions')
 
-        classes_old = self._get_old_custom_classes_from_database()
-        classes_new = self._get_new_custom_classes_from_disk()
+        classes_old = self._old_classes
+        classes_new = self._new_classes
 
         classes_to_create = set()
         classes_to_update = set()

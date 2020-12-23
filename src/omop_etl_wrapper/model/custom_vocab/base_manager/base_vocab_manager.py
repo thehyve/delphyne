@@ -17,6 +17,8 @@ class BaseVocabManager:
         self.db = db
         self._cdm = cdm
         self._custom_vocab_files = custom_vocab_files
+        self._old_vocabs = self._get_old_custom_vocabs_from_database()
+        self._new_vocabs = self._get_new_custom_vocabs_from_disk()
         self._custom_vocabs_to_update = set()
         self._custom_vocabs_unused = set()
 
@@ -40,8 +42,8 @@ class BaseVocabManager:
 
         logging.info('Looking for new custom vocabulary versions')
 
-        vocab_old = self._get_old_custom_vocabs_from_database()
-        vocab_new = self._get_new_custom_vocabs_from_disk()
+        vocab_old = self._old_vocabs
+        vocab_new = self._new_vocabs
 
         unchanged_vocabs = set()
 
