@@ -49,6 +49,7 @@ class BaseConceptManager:
 
                 for concept_file in self._custom_concept_files:
                     prefix = get_file_prefix(concept_file, 'concept')
+                    vocabs = set()
 
                     with open(concept_file) as f:
                         reader = csv.DictReader(f, delimiter='\t')
@@ -61,6 +62,9 @@ class BaseConceptManager:
                             domain_id = row['domain_id']
                             valid_start_date = row['valid_start_date']
                             valid_end_date = row['valid_end_date']
+
+                            if prefix:
+                                vocabs.add(vocabulary_id)
 
                             # quality checks
                             if not concept_id:
@@ -88,13 +92,10 @@ class BaseConceptManager:
                                 raise ValueError(
                                     f'{concept_file.name} must have concept_ids starting at '
                                     f'2\'000\'000\'000 (2B+ convention)')
-                            if prefix and vocabulary_id != prefix:
-                                raise ValueError(
-                                    f'{concept_file.name} may not contain vocabulary_ids '
-                                    f'that do not match file prefix')
                             if concept_id in unique_concepts_check:
                                 raise ValueError(
-                                    f'{concept_id} has duplicates across one or multiple files')
+                                    f'concept {concept_id} has duplicates across one or multiple '
+                                    f'files')
 
                             if row['vocabulary_id'] in vocab_ids:
                                 records.append(self._cdm.Concept(
@@ -110,3 +111,7 @@ class BaseConceptManager:
                                     invalid_reason=row['invalid_reason']
                                 ))
                     session.add_all(records)
+
+                if prefix and any(v != prefix for v in vocabs):
+                    logging.warning(f'{concept_file.name} contains vocabulary_ids '
+                                    f'that do not match file prefix')

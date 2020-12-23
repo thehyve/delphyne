@@ -18,8 +18,6 @@ class BaseVocabManager:
         self.db = db
         self._cdm = cdm
         self._custom_vocab_files = custom_vocab_files
-        self._old_vocabs = self._get_old_custom_vocabs_from_database()
-        self._new_vocabs = self._get_new_custom_vocabs_from_disk()
         self._custom_vocabs_to_update = set()
         self._custom_vocabs_unused = set()
 
@@ -43,8 +41,8 @@ class BaseVocabManager:
 
         logging.info('Looking for new custom vocabulary versions')
 
-        vocab_old = self._old_vocabs
-        vocab_new = self._new_vocabs
+        vocab_old = self._get_old_custom_vocabs_from_database()
+        vocab_new = self._get_new_custom_vocabs_from_disk()
 
         unchanged_vocabs = set()
 
@@ -122,13 +120,15 @@ class BaseVocabManager:
                     if concept_id != '0':
                         raise ValueError(f'{vocab_file.name} must have vocabulary_concept_id '
                                          f'set to 0')
-                    if prefix and vocab_id != prefix:
-                        raise ValueError(f'{vocab_file.name} may not contain vocabulary_ids '
-                                         f'that do not match file prefix')
                     if vocab_id in vocab_dict.keys():
-                        raise ValueError(f'{vocab_id} has duplicates across one or multiple files')
+                        raise ValueError(f'vocabulary {vocab_id} has duplicates across one or '
+                                         f'multiple files')
 
                     vocab_dict[vocab_id] = version
+
+            if prefix and any(v != prefix for v in vocab_dict.keys()):
+                logging.warning(f'{vocab_file.name} contains vocabulary_ids '
+                                f'that do not match file prefix')
 
         return vocab_dict
 
