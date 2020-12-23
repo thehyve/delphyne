@@ -1,6 +1,6 @@
 import hashlib
 from pathlib import Path
-from typing import Dict
+from typing import List, Dict, Optional
 
 import yaml
 
@@ -19,6 +19,29 @@ def write_yaml_file(contents: Dict, out_path: Path) -> None:
 def is_hidden(path: Path) -> bool:
     """Return True if a path is hidden."""
     return path.name.startswith(('.', '~'))
+
+
+def get_all_files_in_dir(directory: Path) -> List[Path]:
+    """Return all but hidden files"""
+    return [f for f in directory.glob('*')
+            if f.is_file() and not is_hidden(f)]
+
+
+def get_file_prefix(path: Path, suffix: str) -> Optional[str]:
+    stem = path.stem
+    if stem.endswith('_' + suffix):
+        prefix = stem.rsplit('_' + suffix, 1)[0]
+        return prefix
+    return None
+
+
+def valid_or_null_prefix(path: Path, suffix: str, valid_list: List[str]) -> bool:
+    prefix = get_file_prefix(path, suffix)
+    if prefix is None:
+        return True
+    if prefix in valid_list:
+        return True
+    return False
 
 
 def get_file_line_count(file_path: Path, skip_header: bool = True) -> int:
