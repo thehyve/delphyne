@@ -133,10 +133,16 @@ class BaseClassManager:
                      f'{True if classes_to_drop else False}')
 
         if classes_to_drop:
-            with self.db.session_scope() as session:
+
+            transformation_metadata = EtlTransformation(name='drop_concepts')
+
+            with self.db.session_scope(metadata=transformation_metadata) as session:
                 session.query(self._cdm.ConceptClass) \
                     .filter(self._cdm.ConceptClass.concept_class_id.in_(classes_to_drop)) \
                     .delete(synchronize_session=False)
+
+                transformation_metadata.end_now()
+                etl_stats.add_transformation(transformation_metadata)
 
     def _load_custom_classes(self) -> None:
         # Load new custom concept_classes to the database

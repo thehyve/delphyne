@@ -28,10 +28,16 @@ class BaseConceptManager:
                      f'{True if vocab_ids else False}')
 
         if vocab_ids:
-            with self.db.session_scope() as session:
+
+            transformation_metadata = EtlTransformation(name='drop_concepts')
+
+            with self.db.session_scope(metadata=transformation_metadata) as session:
                 session.query(self._cdm.Concept) \
                     .filter(self._cdm.Concept.vocabulary_id.in_(vocab_ids)) \
                     .delete(synchronize_session=False)
+
+                transformation_metadata.end_now()
+                etl_stats.add_transformation(transformation_metadata)
 
     def _load_custom_concepts(self, vocab_ids: Set[str]) -> None:
         # Load concept_ids associated with a set of custom
