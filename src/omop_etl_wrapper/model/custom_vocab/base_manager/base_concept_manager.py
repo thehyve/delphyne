@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Set, List
 
 from ....database import Database
+from ....util.io import get_file_prefix
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ class BaseConceptManager:
                 unique_concepts_check = set()
 
                 for concept_file in self._custom_concept_files:
+                    prefix = get_file_prefix(concept_file, 'concept')
 
                     with open(concept_file) as f:
                         reader = csv.DictReader(f, delimiter='\t')
@@ -86,6 +88,10 @@ class BaseConceptManager:
                                 raise ValueError(
                                     f'{concept_file.name} must have concept_ids starting at '
                                     f'2\'000\'000\'000 (2B+ convention)')
+                            if prefix and vocabulary_id != prefix:
+                                raise ValueError(
+                                    f'{concept_file.name} may not contain vocabulary_ids '
+                                    f'that do not match file prefix')
                             if concept_id in unique_concepts_check:
                                 raise ValueError(
                                     f'{concept_id} has duplicates across one or multiple files')

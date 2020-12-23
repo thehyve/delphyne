@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import List, Dict
 
 from ....database import Database
+from ....util.io import get_file_prefix
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +99,7 @@ class BaseVocabManager:
         vocab_dict = {}
 
         for vocab_file in self._custom_vocab_files:
+            prefix = get_file_prefix(vocab_file, 'vocabulary')
 
             with open(vocab_file) as f:
                 reader = csv.DictReader(f, delimiter='\t')
@@ -120,6 +122,9 @@ class BaseVocabManager:
                     if concept_id != '0':
                         raise ValueError(f'{vocab_file.name} must have vocabulary_concept_id '
                                          f'set to 0')
+                    if prefix and vocab_id != prefix:
+                        raise ValueError(f'{vocab_file.name} may not contain vocabulary_ids '
+                                         f'that do not match file prefix')
                     if vocab_id in vocab_dict.keys():
                         raise ValueError(f'{vocab_id} has duplicates across one or multiple files')
 
