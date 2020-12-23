@@ -13,7 +13,7 @@ from ..._paths import STCM_DIR, STCM_VERSION_FILE
 from ...cdm._schema_placeholders import VOCAB_SCHEMA
 from ...cdm.vocabularies import BaseSourceToConceptMapVersion
 from ...database import Database
-from ...util.io import get_all_files_in_dir
+from ...util.io import get_all_files_in_dir, get_file_prefix
 
 logger = logging.getLogger(__name__)
 
@@ -95,20 +95,14 @@ class StcmLoader:
             raise
 
     def _must_be_parsed(self, stcm_file: Path) -> bool:
-        stcm_file_vocab_id = self._get_stcm_file_vocab_id(stcm_file)
-        if stcm_file_vocab_id is None:
+        stcm_file_vocab_id = get_file_prefix(stcm_file, 'stcm')
+        if stcm_file_vocab_id not in self._provided_stcm_versions:
             return True
         if stcm_file_vocab_id in self._stcm_vocabs_to_update:
             return True
+        if stcm_file_vocab_id is None:
+            return True
         return False
-
-    def _get_stcm_file_vocab_id(self, stcm_file: Path) -> Optional[str]:
-        stem_name = stcm_file.stem
-        if stem_name.endswith('_stcm'):
-            vocab_id = stem_name.rsplit('_', 1)[0]
-            if vocab_id in self._provided_stcm_versions:
-                return vocab_id
-        return None
 
     def _delete_outdated_stcm_records(self) -> None:
         if not self._stcm_vocabs_to_update:
