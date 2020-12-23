@@ -41,7 +41,6 @@ class BaseVocabManager:
         vocab_dict = {}
 
         for vocab_file in self._custom_vocab_files:
-            prefix = get_file_prefix(vocab_file, 'vocabulary')
 
             with open(vocab_file) as f:
                 reader = csv.DictReader(f, delimiter='\t')
@@ -69,10 +68,6 @@ class BaseVocabManager:
                                          f'multiple files')
 
                     vocab_dict[vocab_id] = version
-
-            if prefix and any(v != prefix for v in vocab_dict.keys()):
-                logging.warning(f'{vocab_file.name} contains vocabulary_ids '
-                                f'that do not match file prefix')
 
         return vocab_dict
 
@@ -173,6 +168,9 @@ class BaseVocabManager:
 
             for vocab_file in self._custom_vocab_files:
 
+                prefix = get_file_prefix(vocab_file, 'vocabulary')
+                invalid_vocabs = set()
+
                 transformation_metadata = EtlTransformation(name=f'load_{vocab_file.stem}')
 
                 with self.db.session_scope(metadata=transformation_metadata) as session, \
@@ -194,10 +192,19 @@ class BaseVocabManager:
                         else:
                             ignored_vocabs.update([vocabulary_id])
 
+                        # if prefix is valid vocab_id,
+                        # vocabulary_ids in file should match it
+                        if prefix in self.vocabs_from_disk and vocabulary_id != prefix:
+                            invalid_vocabs.add(vocabulary_id)
+
                     session.add_all(records)
 
                     transformation_metadata.end_now()
                     etl_stats.add_transformation(transformation_metadata)
+
+                if invalid_vocabs:
+                    logging.warning(f'{vocab_file.name} contains vocabulary_ids '
+                                    f'that do not match file prefix')
 
             if ignored_vocabs:
                 logger.info(f'Skipped records with vocabulary_id values that '
