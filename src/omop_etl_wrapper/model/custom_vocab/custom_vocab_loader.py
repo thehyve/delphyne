@@ -53,9 +53,8 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
             self._custom_concept_files, 'concept')
 
         if vocabs_to_load and not self._custom_concept_files:
-            raise Exception('Found vocabs to load but no valid custom '
-                            'concept files, check for mismatches '
-                            'between new vocab ids and file prefix')
+            raise Exception('Found vocabs to load but no valid custom concept files, '
+                            'check for mismatches between new vocab ids and concept files prefix')
 
         # drop old versions (unused + updated)
         self._drop_custom_concepts(vocabs_to_drop)

@@ -2,8 +2,10 @@ import csv
 import logging
 from pathlib import Path
 from typing import List, Dict
+from collections import Counter
 
 from ....database import Database
+from ....model.etl_stats import EtlTransformation, etl_stats
 from ....util.io import get_file_prefix
 
 logger = logging.getLogger(__name__)
@@ -157,20 +159,37 @@ class BaseVocabManager:
 
         if vocabs_to_create:
 
-            with self.db.session_scope() as session:
+            ignored_vocabs = Counter()
 
-                records = []
+            for vocab_file in self._custom_vocab_files:
 
-                for vocab_file in self._custom_vocab_files:
-                    with open(vocab_file) as f:
-                        reader = csv.DictReader(f, delimiter='\t')
-                        for row in reader:
-                            if row['vocabulary_id'] in vocabs_to_create:
-                                records.append(self._cdm.Vocabulary(
-                                    vocabulary_id=row['vocabulary_id'],
-                                    vocabulary_name=row['vocabulary_name'],
-                                    vocabulary_reference=row['vocabulary_reference'],
-                                    vocabulary_version=row['vocabulary_version'],
-                                    vocabulary_concept_id=row['vocabulary_concept_id']
-                                ))
-                session.add_all(records)
+                transformation_metadata = EtlTransformation(name=f'load_{vocab_file.stem}')
+
+                with self.db.session_scope(metadata=transformation_metadata) as session, \
+                        vocab_file.open('r') as f_in:
+                    rows = csv.DictReader(f_in, delimiter='\t')
+                    records = []
+
+                    for i, row in enumerate(rows, start=2):
+                        vocabulary_id = row['vocabulary_id']
+
+                        if vocabulary_id in vocabs_to_create:
+                            records.append(self._cdm.Vocabulary(
+                                vocabulary_id=row['vocabulary_id'],
+                                vocabulary_name=row['vocabulary_name'],
+                                vocabulary_reference=row['vocabulary_reference'],
+                                vocabulary_version=row['vocabulary_version'],
+                                vocabulary_concept_id=row['vocabulary_concept_id']
+                            ))
+                        else:
+                            ignored_vocabs.update([vocabulary_id])
+
+                    session.add_all(records)
+
+                    transformation_metadata.end_now()
+                    etl_stats.add_transformation(transformation_metadata)
+
+            if ignored_vocabs:
+                logger.info(f'Skipped records with vocabulary_id values that '
+                            f'were already loaded under the current version: '
+                            f'{ignored_vocabs.most_common()}')
