@@ -1,8 +1,9 @@
 import csv
 import logging
+from collections import Counter
+from functools import lru_cache
 from pathlib import Path
 from typing import List, Dict
-from collections import Counter
 
 from ....database import Database
 from ....model.etl_stats import EtlTransformation, etl_stats
@@ -31,6 +32,16 @@ class BaseVocabManager:
     def vocabs_unused(self):
         return self._custom_vocabs_unused
 
+    @property
+    @lru_cache()
+    def vocabs_from_disk(self) -> Dict[str, str]:
+        return self._get_new_custom_vocabs_from_disk()
+
+    @property
+    @lru_cache()
+    def vocabs_from_database(self) -> Dict[str, str]:
+        return self._get_old_custom_vocabs_from_database()
+
     def _get_custom_vocabulary_sets(self) -> None:
         # Compare custom vocabulary ids from disk
         # to the ones already present in the database.
@@ -43,8 +54,8 @@ class BaseVocabManager:
 
         logging.info('Looking for new custom vocabulary versions')
 
-        vocab_old = self._get_old_custom_vocabs_from_database()
-        vocab_new = self._get_new_custom_vocabs_from_disk()
+        vocab_old = self.vocabs_from_database
+        vocab_new = self.vocabs_from_disk
 
         unchanged_vocabs = set()
 

@@ -5,7 +5,7 @@ from typing import List
 from .base_manager import BaseVocabManager, BaseClassManager, BaseConceptManager
 from ..._paths import CUSTOM_VOCAB_DIR
 from ...database import Database
-from ...util.io import get_all_files_in_dir, valid_or_null_prefix
+from ...util.io import get_all_files_in_dir, get_file_prefix
 
 logger = logging.getLogger(__name__)
 
@@ -33,11 +33,24 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         return [f for f in custom_table_files if f.stem.endswith(omop_table)]
 
     def _update_custom_files(self, file_list: List[Path], omop_table: str) -> List[Path]:
-        # Check if file has either a valid suffix (matching a
-        # vocabulary_id to be updated) or no suffix; a mismatching
-        # suffix will cause the file to be ignored.
-        return [f for f in file_list
-                if valid_or_null_prefix(f, omop_table, self._custom_vocabs_to_update)]
+        # Check if file has either a valid prefix (matching a
+        # vocabulary_id to be updated), no prefix, or a prefix
+        # unrelated to vocabulary_ids; a valid but mismatching prefix
+        # will cause the file to be ignored.
+        return [f for f in file_list if self._must_be_parsed(f, omop_table)]
+
+    def _must_be_parsed(self, custom_file: Path, omop_table: str) -> bool:
+        custom_file_vocab_id = get_file_prefix(custom_file, omop_table)
+        # filename is unrelated to vocab ids
+        if custom_file_vocab_id not in self.vocabs_from_disk.keys():
+            return True
+        # filename contains vocab_id that matches vocabs to update
+        if custom_file_vocab_id in self._custom_vocabs_to_update:
+            return True
+        # filename contains no prefix
+        if custom_file_vocab_id is None:
+            return True
+        return False
 
     def load_custom_vocabulary_tables(self) -> None:
         # check vocabs and classes to drop and update
@@ -47,8 +60,9 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         vocabs_to_load = self.vocabs_updated
         vocabs_to_drop = self.vocabs_updated | self.vocabs_unused
 
-        # update list of concept files to parse to only include those
-        # without prefix, or prefix matching vocab ids to update
+        # update list of concept files to parse
+        # (not done for vocabulary and concept class files
+        # since not particularly large)
         self._custom_concept_files = self._update_custom_files(
             self._custom_concept_files, 'concept')
 
