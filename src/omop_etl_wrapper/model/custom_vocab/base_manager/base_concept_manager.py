@@ -112,6 +112,6 @@ class BaseConceptManager:
                                 ))
                     session.add_all(records)
 
-                if prefix and any(v != prefix for v in vocabs):
-                    logging.warning(f'{concept_file.name} contains vocabulary_ids '
-                                    f'that do not match file prefix')
+                    if prefix and any(v != prefix for v in vocabs):
+                        logging.warning(f'{concept_file.name} contains vocabulary_ids '
+                                        f'that do not match file prefix')
