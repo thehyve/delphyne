@@ -35,15 +35,6 @@ def get_file_prefix(path: Path, suffix: str) -> Optional[str]:
     return None
 
 
-def valid_or_null_prefix(path: Path, suffix: str, valid_list: List[str]) -> bool:
-    prefix = get_file_prefix(path, suffix)
-    if prefix is None:
-        return True
-    if prefix in valid_list:
-        return True
-    return False
-
-
 def get_file_line_count(file_path: Path, skip_header: bool = True) -> int:
     """
     Get the line count of a text (non-binary) file.
