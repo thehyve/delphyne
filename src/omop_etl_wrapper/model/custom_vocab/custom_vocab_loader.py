@@ -15,8 +15,8 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         self.db = db
         self._cdm = cdm
         self._custom_vocab_files = self._get_custom_table_files('vocabulary')
-        self._custom_concept_files = self._get_custom_table_files('concept')
         self._custom_class_files = self._get_custom_table_files('concept_class')
+        self._custom_concept_files = self._get_custom_table_files('concept')
 
         BaseVocabManager.__init__(self, db=self.db, cdm=self._cdm,
                                   custom_vocab_files=self._custom_vocab_files)
@@ -25,13 +25,6 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         BaseConceptManager.__init__(self, db=self.db, cdm=self._cdm,
                                     custom_concept_files=self._custom_concept_files)
 
-        self._custom_vocab_files = self._update_custom_files_to_be_parsed(
-            self._custom_vocab_files, 'vocabulary')
-        self._custom_class_files = self._update_custom_files_to_be_parsed(
-            self._custom_class_files, 'concept_class')
-        self._custom_concept_files = self._update_custom_files_to_be_parsed(
-            self._custom_concept_files, 'concept')
-
     @staticmethod
     def _get_custom_table_files(omop_table: str) -> List[Path]:
         # Get custom vocab files for a specific vocabulary target table
@@ -39,8 +32,7 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         custom_table_files = get_all_files_in_dir(CUSTOM_VOCAB_DIR)
         return [f for f in custom_table_files if f.stem.endswith(omop_table)]
 
-    def _update_custom_files_to_be_parsed(self, file_list: List[Path], omop_table: str
-                                          ) -> List[Path]:
+    def _update_custom_files(self, file_list: List[Path], omop_table: str) -> List[Path]:
         # Check if file has either a valid suffix (matching a
         # vocabulary_id to be updated) or no suffix; a mismatching
         # suffix will cause the file to be ignored.
@@ -54,6 +46,15 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         # get vocabularies ids for Concept table operations
         vocabs_to_load = self.vocabs_updated
         vocabs_to_drop = self.vocabs_updated | self.vocabs_unused
+
+        # update list of files to parse to only include those without
+        # prefix, or prefix matching vocab ids to update
+        self._custom_vocab_files = self._update_custom_files(
+            self._custom_vocab_files, 'vocabulary')
+        self._custom_class_files = self._update_custom_files(
+            self._custom_class_files, 'concept_class')
+        self._custom_concept_files = self._update_custom_files(
+            self._custom_concept_files, 'concept')
 
         # drop old versions (unused + updated)
         self._drop_custom_concepts(vocabs_to_drop)
