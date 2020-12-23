@@ -2,8 +2,10 @@ import csv
 import logging
 from pathlib import Path
 from typing import List, Dict
+from collections import Counter
 
 from ....database import Database
+from ....model.etl_stats import EtlTransformation, etl_stats
 
 logger = logging.getLogger(__name__)
 
@@ -146,20 +148,39 @@ class BaseClassManager:
 
         if classes_to_create:
 
-            with self.db.session_scope() as session:
-                records = []
-                for class_file in self._custom_class_files:
-                    with open(class_file) as f:
-                        reader = csv.DictReader(f, delimiter='\t')
-                        for row in reader:
-                            if row['concept_class_id'] in classes_to_create:
-                                records.append(self._cdm.ConceptClass(
-                                    concept_class_id=row['concept_class_id'],
-                                    concept_class_name=row['concept_class_name'],
-                                    concept_class_concept_id=row['concept_class_concept_id']
-                                ))
+            ignored_classes = Counter()
 
-                session.add_all(records)
+            for class_file in self._custom_class_files:
+
+                transformation_metadata = EtlTransformation(name=f'load_{class_file.stem}')
+
+                with self.db.session_scope(metadata=transformation_metadata) as session, \
+                        class_file.open('r') as f_in:
+                    rows = csv.DictReader(f_in, delimiter='\t')
+
+                    records = []
+
+                    for i, row in enumerate(rows, start=2):
+                        class_id = row['concept_class_id']
+
+                        if class_id in classes_to_create:
+                            records.append(self._cdm.ConceptClass(
+                                concept_class_id=row['concept_class_id'],
+                                concept_class_name=row['concept_class_name'],
+                                concept_class_concept_id=row['concept_class_concept_id']
+                            ))
+                        elif class_id not in self._custom_classes_to_update:
+                            ignored_classes.update([class_id])
+
+                    session.add_all(records)
+
+                    transformation_metadata.end_now()
+                    etl_stats.add_transformation(transformation_metadata)
+
+            if ignored_classes:
+                logger.info(f'Skipped records with concept_class_id values that '
+                            f'were already loaded under the current name: '
+                            f'{ignored_classes.most_common()}')
 
     def _update_custom_classes(self) -> None:
         # Update the name of existing custom concept_classes in the
@@ -172,14 +193,35 @@ class BaseClassManager:
 
         if classes_to_update:
 
-            with self.db.session_scope() as session:
-                for class_file in self._custom_class_files:
-                    with open(class_file) as f:
-                        reader = csv.DictReader(f, delimiter='\t')
-                        for row in reader:
-                            if row['concept_class_id'] in classes_to_update:
-                                session.query(self._cdm.ConceptClass) \
-                                    .filter(self._cdm.ConceptClass.concept_class_id
-                                            == row['concept_class_id']) \
-                                    .update({self._cdm.ConceptClass.concept_class_name:
-                                            row['concept_class_name']})
+            ignored_classes = Counter()
+
+            for class_file in self._custom_class_files:
+                transformation_metadata = EtlTransformation(name=f'load_{class_file.stem}')
+
+                with self.db.session_scope(metadata=transformation_metadata) as session, \
+                        class_file.open('r') as f_in:
+                    rows = csv.DictReader(f_in, delimiter='\t')
+
+                    for i, row in enumerate(rows, start=2):
+                        class_id = row['concept_class_id']
+
+                        if class_id in classes_to_update:
+                            session.query(self._cdm.ConceptClass) \
+                                .filter(self._cdm.ConceptClass.concept_class_id
+                                        == row['concept_class_id']) \
+                                .update({self._cdm.ConceptClass.concept_class_name:
+                                        row['concept_class_name']})
+
+                        # this check has already been performed in the
+                        # _load_custom_classes transformation, unless
+                        # there were no classes new class_ids to add
+                        elif not self._custom_classes_to_create:
+                            ignored_classes.update([class_id])
+
+                    transformation_metadata.end_now()
+                    etl_stats.add_transformation(transformation_metadata)
+
+            if ignored_classes:
+                logger.info(f'Skipped records with concept_class_id values that '
+                            f'were already loaded under the current name: '
+                            f'{ignored_classes.most_common()}')
