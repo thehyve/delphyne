@@ -13,7 +13,7 @@ from ..._paths import STCM_DIR, STCM_VERSION_FILE
 from ...cdm._schema_placeholders import VOCAB_SCHEMA
 from ...cdm.vocabularies import BaseSourceToConceptMapVersion
 from ...database import Database
-from ...util.io import is_hidden
+from ...util.io import get_all_files_in_dir
 
 logger = logging.getLogger(__name__)
 
@@ -61,12 +61,8 @@ class StcmLoader:
 
     @staticmethod
     def _get_stcm_files() -> Set[Path]:
-        files = set()
-        for f in STCM_DIR.glob('*'):
-            if is_hidden(f) or not f.is_file() or f.name == STCM_VERSION_FILE.name:
-                continue
-            files.add(f)
-        return files
+        files = get_all_files_in_dir(STCM_DIR)
+        return set([f for f in files if not f.name == STCM_VERSION_FILE.name])
 
     def _get_loaded_stcm_versions(self) -> None:
         self._check_stcm_version_table_exists()
