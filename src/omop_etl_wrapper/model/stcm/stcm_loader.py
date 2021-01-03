@@ -42,8 +42,14 @@ class StcmLoader:
             records = session.query(self._cdm.Vocabulary.vocabulary_id).all()
             return {vocabulary_id for vocabulary_id, in records}
 
+    @staticmethod
+    def _invalidate_cache() -> None:
+        StcmLoader._stcm_vocabs_to_update.fget.cache_clear()
+        StcmLoader._loaded_vocabulary_ids.fget.cache_clear()
+
     def load_stcm(self) -> None:
         logger.info('Loading STCM files')
+        self._invalidate_cache()
         if not STCM_DIR.exists():
             raise FileNotFoundError(f'{STCM_DIR.resolve()} folder not found')
         self._get_loaded_stcm_versions()
