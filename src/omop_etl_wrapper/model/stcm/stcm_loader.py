@@ -82,6 +82,9 @@ class StcmLoader:
             self._loaded_stcm_versions = vocab_version_dict
 
     def _get_provided_stcm_versions(self) -> None:
+        if not STCM_VERSION_FILE.exists():
+            raise FileNotFoundError('source to concept map version file not found. '
+                                    f'Expected file at {STCM_VERSION_FILE}')
         with STCM_VERSION_FILE.open('r') as version_file:
             reader = csv.DictReader(version_file, delimiter='\t')
             for line in reader:
@@ -91,7 +94,7 @@ class StcmLoader:
                     raise ValueError(f'{STCM_VERSION_FILE.name} may not contain empty values')
                 if vocab_id not in self._loaded_vocabulary_ids:
                     raise ValueError(f'{vocab_id} is not present in the vocabulary table. '
-                                     f'Make sure to add it as a custom vocabulary.')
+                                     'Make sure to add it as a custom vocabulary.')
                 self._provided_stcm_versions[vocab_id] = version
 
     def _check_stcm_version_table_exists(self) -> None:
@@ -100,8 +103,8 @@ class StcmLoader:
         try:
             metadata.reflect(schema=schema, only=[_STCM_VERSION_TABLE_NAME])
         except InvalidRequestError:
-            logger.error(f'{schema}.{_STCM_VERSION_TABLE_NAME} does not exist. '
-                         f'Run create_all to ensure all required tables are present.')
+            logger.error(f'Table {schema}.{_STCM_VERSION_TABLE_NAME} does not exist. '
+                         'Run create_all to ensure all required tables are present.')
             raise
 
     def _must_be_parsed(self, stcm_file: Path) -> bool:
@@ -121,6 +124,8 @@ class StcmLoader:
         return None
 
     def _delete_outdated_stcm_records(self) -> None:
+        # Delete STCM records for all source_vocabulary_ids for which a
+        # new version is provided in the stcm version file.
         if not self._stcm_vocabs_to_update:
             return
         logger.info(f'Deleting STCM records for vocabulary_ids: {self._stcm_vocabs_to_update}')
