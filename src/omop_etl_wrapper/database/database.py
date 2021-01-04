@@ -72,13 +72,12 @@ class Database:
             logger.disabled = False
 
     @property
-    def session(self) -> Session:
-        logger.debug('Creating new session')
-        return self._sessionmaker()
-
-    @property
     def schemas(self) -> FrozenSet[str]:
         return self._schemas
+
+    def get_new_session(self) -> Session:
+        logger.debug('Creating new session')
+        return self._sessionmaker()
 
     def close_connection(self) -> None:
         self.engine.dispose()
@@ -105,7 +104,7 @@ class Database:
             updates, deletions) will be stored in this object
         :return: None
         """
-        session = self.session
+        session = self.get_new_session()
         session_id = id(session)
         if metadata is not None:
             SessionTracker.sessions[session_id] = metadata
