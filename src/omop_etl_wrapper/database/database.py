@@ -4,7 +4,7 @@ import logging
 from collections import Counter
 from contextlib import contextmanager
 from getpass import getpass
-from typing import Dict, Iterable, Optional, Set
+from typing import Dict, Optional, Set, FrozenSet
 
 from sqlalchemy import create_engine, event, MetaData
 from sqlalchemy.exc import OperationalError
@@ -77,8 +77,8 @@ class Database:
         return self._sessionmaker()
 
     @property
-    def schemas(self) -> Set[str]:
-        return self._schemas.copy()
+    def schemas(self) -> FrozenSet[str]:
+        return self._schemas
 
     def close_connection(self) -> None:
         self.engine.dispose()
@@ -178,7 +178,7 @@ class Database:
             metadata.reflect(schema=schema)
         return metadata
 
-    def _set_schemas(self) -> Set[str]:
+    def _set_schemas(self) -> FrozenSet[str]:
         schemas: Set[str] = set()
         for table in self.base.metadata.tables.values():
             raw_schema_value = getattr(table, 'schema', None)
@@ -188,4 +188,4 @@ class Database:
                 schemas.add(self.schema_translate_map[raw_schema_value])
             else:
                 schemas.add(raw_schema_value)
-        return schemas
+        return frozenset(schemas)
