@@ -160,51 +160,52 @@ class BaseVocabManager:
         logging.info(f'Loading new custom vocabulary versions: '
                      f'{True if vocabs_to_create else False}')
 
-        if vocabs_to_create:
+        if not vocabs_to_create:
+            return
 
-            ignored_vocabs = Counter()
+        ignored_vocabs = Counter()
 
-            for vocab_file in self._custom_vocab_files:
+        for vocab_file in self._custom_vocab_files:
 
-                prefix = get_file_prefix(vocab_file, 'vocabulary')
-                invalid_vocabs = set()
+            prefix = get_file_prefix(vocab_file, 'vocabulary')
+            invalid_vocabs = set()
 
-                transformation_metadata = EtlTransformation(name=f'load_{vocab_file.stem}')
+            transformation_metadata = EtlTransformation(name=f'load_{vocab_file.stem}')
 
-                with self.db.session_scope(metadata=transformation_metadata) as session, \
-                        vocab_file.open('r') as f_in:
-                    rows = csv.DictReader(f_in, delimiter='\t')
-                    records = []
+            with self.db.session_scope(metadata=transformation_metadata) as session, \
+                    vocab_file.open('r') as f_in:
+                rows = csv.DictReader(f_in, delimiter='\t')
+                records = []
 
-                    for row in rows:
-                        vocabulary_id = row['vocabulary_id']
+                for row in rows:
+                    vocabulary_id = row['vocabulary_id']
 
-                        if vocabulary_id in vocabs_to_create:
-                            records.append(self._cdm.Vocabulary(
-                                vocabulary_id=row['vocabulary_id'],
-                                vocabulary_name=row['vocabulary_name'],
-                                vocabulary_reference=row['vocabulary_reference'],
-                                vocabulary_version=row['vocabulary_version'],
-                                vocabulary_concept_id=row['vocabulary_concept_id']
-                            ))
-                        else:
-                            ignored_vocabs.update([vocabulary_id])
+                    if vocabulary_id in vocabs_to_create:
+                        records.append(self._cdm.Vocabulary(
+                            vocabulary_id=row['vocabulary_id'],
+                            vocabulary_name=row['vocabulary_name'],
+                            vocabulary_reference=row['vocabulary_reference'],
+                            vocabulary_version=row['vocabulary_version'],
+                            vocabulary_concept_id=row['vocabulary_concept_id']
+                        ))
+                    else:
+                        ignored_vocabs.update([vocabulary_id])
 
-                        # if prefix is valid vocab_id,
-                        # vocabulary_ids in file should match it
-                        if prefix in self.vocabs_from_disk and vocabulary_id != prefix:
-                            invalid_vocabs.add(vocabulary_id)
+                    # if prefix is valid vocab_id,
+                    # vocabulary_ids in file should match it
+                    if prefix in self.vocabs_from_disk and vocabulary_id != prefix:
+                        invalid_vocabs.add(vocabulary_id)
 
-                    session.add_all(records)
+                session.add_all(records)
 
-                    transformation_metadata.end_now()
-                    etl_stats.add_transformation(transformation_metadata)
+                transformation_metadata.end_now()
+                etl_stats.add_transformation(transformation_metadata)
 
-                if invalid_vocabs:
-                    logging.warning(f'{vocab_file.name} contains vocabulary_ids '
-                                    f'that do not match file prefix')
+            if invalid_vocabs:
+                logging.warning(f'{vocab_file.name} contains vocabulary_ids '
+                                f'that do not match file prefix')
 
-            if ignored_vocabs:
-                logger.info(f'Skipped records with vocabulary_id values that '
-                            f'were already loaded under the current version: '
-                            f'{ignored_vocabs.most_common()}')
+        if ignored_vocabs:
+            logger.info(f'Skipped records with vocabulary_id values that '
+                        f'were already loaded under the current version: '
+                        f'{ignored_vocabs.most_common()}')
