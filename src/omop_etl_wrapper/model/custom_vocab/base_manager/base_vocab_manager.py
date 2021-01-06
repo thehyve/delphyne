@@ -18,7 +18,7 @@ class BaseVocabManager:
     """
 
     def __init__(self, db: Database, cdm, custom_vocab_files: List[Path]):
-        self.db = db
+        self._db = db
         self._cdm = cdm
         self._custom_vocab_files = custom_vocab_files
         self._custom_vocabs_to_update = set()
@@ -79,7 +79,7 @@ class BaseVocabManager:
 
         vocab_dict = {}
 
-        with self.db.session_scope() as session:
+        with self._db.session_scope() as session:
             records = session.query(self._cdm.Vocabulary) \
                 .filter(self._cdm.Vocabulary.vocabulary_concept_id == 0) \
                 .all()
@@ -144,7 +144,7 @@ class BaseVocabManager:
 
             transformation_metadata = EtlTransformation(name='drop_concepts')
 
-            with self.db.session_scope(metadata=transformation_metadata) as session:
+            with self._db.session_scope(metadata=transformation_metadata) as session:
                 session.query(self._cdm.Vocabulary) \
                     .filter(self._cdm.Vocabulary.vocabulary_id.in_(vocabs_to_drop)) \
                     .delete(synchronize_session=False)
@@ -172,7 +172,7 @@ class BaseVocabManager:
 
             transformation_metadata = EtlTransformation(name=f'load_{vocab_file.stem}')
 
-            with self.db.session_scope(metadata=transformation_metadata) as session, \
+            with self._db.session_scope(metadata=transformation_metadata) as session, \
                     vocab_file.open('r') as f_in:
                 rows = csv.DictReader(f_in, delimiter='\t')
                 records = []

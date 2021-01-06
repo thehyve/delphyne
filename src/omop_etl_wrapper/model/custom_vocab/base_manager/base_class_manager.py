@@ -16,7 +16,7 @@ class BaseClassManager:
     """
 
     def __init__(self, db: Database, cdm, custom_class_files: List[Path]):
-        self.db = db
+        self._db = db
         self._cdm = cdm
         self._custom_class_files = custom_class_files
         self._custom_classes_to_update = set()
@@ -80,7 +80,7 @@ class BaseClassManager:
 
         class_dict = {}
 
-        with self.db.session_scope() as session:
+        with self._db.session_scope() as session:
 
             records = session.query(self._cdm.ConceptClass) \
                 .filter(self._cdm.ConceptClass.concept_class_concept_id == 0) \
@@ -136,7 +136,7 @@ class BaseClassManager:
 
             transformation_metadata = EtlTransformation(name='drop_concepts')
 
-            with self.db.session_scope(metadata=transformation_metadata) as session:
+            with self._db.session_scope(metadata=transformation_metadata) as session:
                 session.query(self._cdm.ConceptClass) \
                     .filter(self._cdm.ConceptClass.concept_class_id.in_(classes_to_drop)) \
                     .delete(synchronize_session=False)
@@ -160,7 +160,7 @@ class BaseClassManager:
 
                 transformation_metadata = EtlTransformation(name=f'load_{class_file.stem}')
 
-                with self.db.session_scope(metadata=transformation_metadata) as session, \
+                with self._db.session_scope(metadata=transformation_metadata) as session, \
                         class_file.open('r') as f_in:
                     rows = csv.DictReader(f_in, delimiter='\t')
 
@@ -205,7 +205,7 @@ class BaseClassManager:
         for class_file in self._custom_class_files:
             transformation_metadata = EtlTransformation(name=f'load_{class_file.stem}')
 
-            with self.db.session_scope(metadata=transformation_metadata) as session, \
+            with self._db.session_scope(metadata=transformation_metadata) as session, \
                     class_file.open('r') as f_in:
                 rows = csv.DictReader(f_in, delimiter='\t')
 

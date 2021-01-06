@@ -12,17 +12,17 @@ logger = logging.getLogger(__name__)
 
 class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
     def __init__(self, db: Database, cdm):
-        self.db = db
+        self._db = db
         self._cdm = cdm
         self._custom_vocab_files = self._get_custom_table_files('vocabulary')
         self._custom_class_files = self._get_custom_table_files('concept_class')
         self._custom_concept_files = self._get_custom_table_files('concept')
 
-        BaseVocabManager.__init__(self, db=self.db, cdm=self._cdm,
+        BaseVocabManager.__init__(self, db=self._db, cdm=self._cdm,
                                   custom_vocab_files=self._custom_vocab_files)
-        BaseClassManager.__init__(self, db=self.db, cdm=self._cdm,
+        BaseClassManager.__init__(self, db=self._db, cdm=self._cdm,
                                   custom_class_files=self._custom_class_files)
-        BaseConceptManager.__init__(self, db=self.db, cdm=self._cdm,
+        BaseConceptManager.__init__(self, db=self._db, cdm=self._cdm,
                                     custom_concept_files=self._custom_concept_files)
 
     @staticmethod

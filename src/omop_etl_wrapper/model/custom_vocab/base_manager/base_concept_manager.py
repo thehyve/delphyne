@@ -16,7 +16,7 @@ class BaseConceptManager:
     """
 
     def __init__(self, db: Database, cdm, custom_concept_files: List[Path]):
-        self.db = db
+        self._db = db
         self._cdm = cdm
         self._custom_concept_files = custom_concept_files
 
@@ -31,7 +31,7 @@ class BaseConceptManager:
 
             transformation_metadata = EtlTransformation(name='drop_concepts')
 
-            with self.db.session_scope(metadata=transformation_metadata) as session:
+            with self._db.session_scope(metadata=transformation_metadata) as session:
                 session.query(self._cdm.Concept) \
                     .filter(self._cdm.Concept.vocabulary_id.in_(vocab_ids)) \
                     .delete(synchronize_session=False)
@@ -57,7 +57,7 @@ class BaseConceptManager:
                 prefix = get_file_prefix(concept_file, 'concept')
                 invalid_vocabs = set()
 
-                with self.db.session_scope(metadata=transformation_metadata) as session, \
+                with self._db.session_scope(metadata=transformation_metadata) as session, \
                         concept_file.open('r') as f_in:
                     rows = csv.DictReader(f_in, delimiter='\t')
                     records = []
