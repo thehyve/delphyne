@@ -62,7 +62,7 @@ class StcmLoader:
     @staticmethod
     def _get_stcm_files() -> Set[Path]:
         files = get_all_files_in_dir(STCM_DIR)
-        return set([f for f in files if not f.name == STCM_VERSION_FILE.name])
+        return {f for f in files if not f.name == STCM_VERSION_FILE.name}
 
     def _get_loaded_stcm_versions(self) -> None:
         self._check_stcm_version_table_exists()

@@ -63,7 +63,7 @@ class BaseVocabManager:
                     if concept_id != '0':
                         raise ValueError(f'{vocab_file.name} must have vocabulary_concept_id '
                                          f'set to 0')
-                    if vocab_id in vocab_dict.keys():
+                    if vocab_id in vocab_dict:
                         raise ValueError(f'vocabulary {vocab_id} has duplicates across one or '
                                          f'multiple files')
 
@@ -118,14 +118,13 @@ class BaseVocabManager:
                 logging.info(f'Found new vocabulary version: {new_id} : '
                              f'{old_version} ->  {new_version}')
 
-        self._custom_vocabs_to_update = set(vocab_new.keys()) - unchanged_vocabs
+        self._custom_vocabs_to_update = vocab_new.keys() - unchanged_vocabs
         if not self._custom_vocabs_to_update:
             logging.info('No new vocabulary version found on disk')
 
         logging.info('Looking for unused custom vocabulary versions')
 
-        self._custom_vocabs_unused = \
-            set(vocab_old.keys()) - set(vocab_new.keys())
+        self._custom_vocabs_unused = vocab_old.keys() - vocab_new.keys()
 
         for old_id in self._custom_vocabs_unused:
             logging.info(f'Found obsolete vocabulary version: {old_id}')

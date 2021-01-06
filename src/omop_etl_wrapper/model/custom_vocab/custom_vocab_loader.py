@@ -42,7 +42,7 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
     def _must_be_parsed(self, custom_file: Path, omop_table: str) -> bool:
         custom_file_vocab_id = get_file_prefix(custom_file, omop_table)
         # filename is unrelated to vocab ids
-        if custom_file_vocab_id not in self.vocabs_from_disk.keys():
+        if custom_file_vocab_id not in self.vocabs_from_disk:
             return True
         # filename contains vocab_id that matches vocabs to update
         if custom_file_vocab_id in self._custom_vocabs_to_update:

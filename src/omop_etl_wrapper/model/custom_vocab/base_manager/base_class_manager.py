@@ -65,7 +65,7 @@ class BaseClassManager:
 
         logging.info('Looking for unused custom concept_class versions')
 
-        self._custom_classes_unused = set(classes_old.keys()) - set(classes_new.keys())
+        self._custom_classes_unused = classes_old.keys() - classes_new.keys()
 
         for old_id in self._custom_classes_unused:
             logging.info(f'Found obsolete class version: {old_id}')
@@ -116,7 +116,7 @@ class BaseClassManager:
                     if concept_id != '0':
                         raise ValueError(f'{class_file.name} must have concept_class_concept_id '
                                          f'set to 0')
-                    if class_id in class_dict.keys():
+                    if class_id in class_dict:
                         raise ValueError(
                             f'{class_id} has duplicates across one or multiple files')
 
