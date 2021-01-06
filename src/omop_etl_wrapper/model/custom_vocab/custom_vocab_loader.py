@@ -59,7 +59,7 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         # get vocab_ids for Concept table operations
         vocabs_to_load = self.vocabs_updated
         vocabs_to_drop = self.vocabs_updated | self.vocabs_unused
-        valid_file_prefixes = set(self.vocabs_from_disk.keys())
+        valid_file_prefixes = self.vocabs_from_disk.keys()
         # update list of concept files to parse
         # (not done for vocabulary and concept class files
         # since not particularly large)
