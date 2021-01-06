@@ -43,8 +43,9 @@ def receive_after_bulk_delete(delete_context: BulkDelete):
 
 def get_record_targets(record_containing_object: Iterable) -> Iterable[str]:
     """
-    Retrieve target tables of a SQLAlchemy record object. Include
-    the target schema if available.
+    Retrieve target tables of a SQLAlchemy record object.
+
+    Includes the target schema if available.
 
     :param record_containing_object: Iterable
         container of new, updated, or deleted ORM objects
@@ -53,12 +54,9 @@ def get_record_targets(record_containing_object: Iterable) -> Iterable[str]:
     """
     for record in record_containing_object:
         placeholder_schema = record.__table__.schema
-        schema_name = Database.schema_translate_map.get(placeholder_schema, placeholder_schema)
         table_name = record.__tablename__
-        if schema_name is None:
-            yield table_name
-        else:
-            yield '.'.join([schema_name, table_name])
+        yield get_full_table_name(table=table_name, schema=placeholder_schema,
+                                  schema_map=Database.schema_translate_map)
 
 
 def _process_bulk_event(context: Union[BulkUpdate, BulkDelete]):
