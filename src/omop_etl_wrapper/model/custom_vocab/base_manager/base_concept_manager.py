@@ -64,36 +64,9 @@ class BaseConceptManager:
 
                     for _, row in enumerate(rows, start=2):
                         concept_id = row['concept_id']
-                        concept_name = row['concept_name']
-                        concept_code = row['concept_code']
                         vocabulary_id = row['vocabulary_id']
-                        concept_class_id = row['concept_class_id']
-                        domain_id = row['domain_id']
-                        valid_start_date = row['valid_start_date']
-                        valid_end_date = row['valid_end_date']
 
                         # quality checks
-                        if not concept_id:
-                            raise ValueError(f'{concept_file.name} may not contain an empty '
-                                             f'concept_id')
-                        if not concept_name:
-                            raise ValueError(f'{concept_file.name} may not contain an empty '
-                                             f'concept_name')
-                        if not concept_code:
-                            raise ValueError(f'{concept_file.name} may not contain an empty '
-                                             f'concept_code')
-                        if not vocabulary_id:
-                            raise ValueError(f'{concept_file.name} may not contain an empty '
-                                             f'vocabulary_id')
-                        if not concept_class_id:
-                            raise ValueError(f'{concept_file.name} may not contain an empty '
-                                             f'concept_class_id')
-                        if not valid_start_date or not valid_end_date:
-                            raise ValueError(f'{concept_file.name} may not contain empty '
-                                             f'date fields')
-                        if not domain_id:
-                            raise ValueError(f'{concept_file.name} may not contain an empty '
-                                             f'domain_id')
                         if int(concept_id) < 2000000000:
                             raise ValueError(
                                 f'{concept_file.name} must have concept_ids starting at '
