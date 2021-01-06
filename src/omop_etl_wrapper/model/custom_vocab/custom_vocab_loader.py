@@ -19,6 +19,8 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         self._custom_concept_files: List[str] = []
 
     def _initialize_table_managers(self) -> None:
+        if not CUSTOM_VOCAB_DIR.exists():
+            raise FileNotFoundError(f'{CUSTOM_VOCAB_DIR.resolve()} folder not found')
         self._custom_vocab_files = self._get_custom_table_files('vocabulary')
         self._custom_class_files = self._get_custom_table_files('concept_class')
         self._custom_concept_files = self._get_custom_table_files('concept')
