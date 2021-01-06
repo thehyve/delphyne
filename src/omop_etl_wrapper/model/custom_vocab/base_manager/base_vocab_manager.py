@@ -178,7 +178,7 @@ class BaseVocabManager:
                     rows = csv.DictReader(f_in, delimiter='\t')
                     records = []
 
-                    for _, row in enumerate(rows, start=2):
+                    for row in rows:
                         vocabulary_id = row['vocabulary_id']
 
                         if vocabulary_id in vocabs_to_create:

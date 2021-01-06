@@ -166,7 +166,7 @@ class BaseClassManager:
 
                     records = []
 
-                    for _, row in enumerate(rows, start=2):
+                    for row in rows:
                         class_id = row['concept_class_id']
 
                         if class_id in classes_to_create:
@@ -208,7 +208,7 @@ class BaseClassManager:
                         class_file.open('r') as f_in:
                     rows = csv.DictReader(f_in, delimiter='\t')
 
-                    for _, row in enumerate(rows, start=2):
+                    for row in rows:
                         class_id = row['concept_class_id']
 
                         if class_id in classes_to_update:
