@@ -32,7 +32,7 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         custom_table_files = get_all_files_in_dir(CUSTOM_VOCAB_DIR)
         return [f for f in custom_table_files if f.stem.endswith(omop_table)]
 
-    def _update_custom_files(self, file_list: List[Path], omop_table: str) -> List[Path]:
+    def _update_custom_file_list(self, file_list: List[Path], omop_table: str) -> List[Path]:
         # Check if file has either a valid prefix (matching a
         # vocabulary_id to be updated), no prefix, or a prefix
         # unrelated to vocabulary_ids; a valid but mismatching prefix
@@ -63,7 +63,7 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         # update list of concept files to parse
         # (not done for vocabulary and concept class files
         # since not particularly large)
-        self._custom_concept_files = self._update_custom_files(
+        self._custom_concept_files = self._update_custom_file_list(
             self._custom_concept_files, 'concept')
 
         if vocabs_to_load and not self._custom_concept_files:
