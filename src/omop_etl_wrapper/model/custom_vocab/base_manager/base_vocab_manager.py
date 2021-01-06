@@ -112,7 +112,6 @@ class BaseVocabManager:
             # skip version if already present in database
             if old_version == new_version:
                 unchanged_vocabs.add(new_id)
-                continue
             else:
                 # if vocabulary didn't exist before, old_version is None
                 logging.info(f'Found new vocabulary version: {new_id} : '
