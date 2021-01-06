@@ -5,7 +5,7 @@ from typing import List
 from .base_manager import BaseVocabManager, BaseClassManager, BaseConceptManager
 from ..._paths import CUSTOM_VOCAB_DIR
 from ...database import Database
-from ...util.io import get_all_files_in_dir, get_file_prefix
+from ...util.io import get_all_files_in_dir, file_has_valid_prefix
 
 logger = logging.getLogger(__name__)
 
@@ -44,20 +44,11 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         # vocabulary_id to be updated), no prefix, or a prefix
         # unrelated to vocabulary_ids; a valid but mismatching prefix
         # will cause the file to be ignored.
-        return [f for f in file_list if self._must_be_parsed(f, omop_table)]
-
-    def _must_be_parsed(self, custom_file: Path, omop_table: str) -> bool:
-        custom_file_vocab_id = get_file_prefix(custom_file, omop_table)
-        # filename is unrelated to vocab ids
-        if custom_file_vocab_id not in self.vocabs_from_disk:
-            return True
-        # filename contains vocab_id that matches vocabs to update
-        if custom_file_vocab_id in self._custom_vocabs_to_update:
-            return True
-        # filename contains no prefix
-        if custom_file_vocab_id is None:
-            return True
-        return False
+        vocab_ids_all = self.vocabs_from_disk
+        vocabs_ids_to_update = self._custom_vocabs_to_update
+        return [f for f in file_list if file_has_valid_prefix(f, omop_table,
+                                                              all_prefixes=vocab_ids_all,
+                                                              valid_prefixes=vocabs_ids_to_update)]
 
     def load_custom_vocabulary_tables(self) -> None:
         self._initialize_table_managers()
