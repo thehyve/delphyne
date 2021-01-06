@@ -14,6 +14,11 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
     def __init__(self, db: Database, cdm):
         self._db = db
         self._cdm = cdm
+        self._custom_vocab_files: List[str] = []
+        self._custom_class_files: List[str] = []
+        self._custom_concept_files: List[str] = []
+
+    def _initialize_table_managers(self) -> None:
         self._custom_vocab_files = self._get_custom_table_files('vocabulary')
         self._custom_class_files = self._get_custom_table_files('concept_class')
         self._custom_concept_files = self._get_custom_table_files('concept')
@@ -53,6 +58,7 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         return False
 
     def load_custom_vocabulary_tables(self) -> None:
+        self._initialize_table_managers()
         # check vocabs and classes to drop and update
         self._get_custom_vocabulary_sets()
         self._get_custom_class_sets()
