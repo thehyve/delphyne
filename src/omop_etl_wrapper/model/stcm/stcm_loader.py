@@ -13,7 +13,7 @@ from ..._paths import STCM_DIR, STCM_VERSION_FILE
 from ...cdm._schema_placeholders import VOCAB_SCHEMA
 from ...cdm.vocabularies import BaseSourceToConceptMapVersion
 from ...database import Database
-from ...util.io import get_all_files_in_dir, get_file_prefix
+from ...util.io import get_all_files_in_dir, file_has_valid_prefix
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,9 @@ class StcmLoader:
 
         stcm_files = self._get_stcm_files()
         for stcm_file in stcm_files:
-            if not self._must_be_parsed(stcm_file):
+            if not file_has_valid_prefix(stcm_file, 'stcm',
+                                         all_prefixes=self._provided_stcm_versions,
+                                         valid_prefixes=self._stcm_vocabs_to_update):
                 logger.info(f'Skipping file {stcm_file.name} as this STCM file '
                             f'has no new version available.')
                 continue
@@ -93,16 +95,6 @@ class StcmLoader:
             logger.error(f'{schema}.{_STCM_VERSION_TABLE_NAME} does not exist. '
                          f'Run create_all to ensure all required tables are present.')
             raise
-
-    def _must_be_parsed(self, stcm_file: Path) -> bool:
-        stcm_file_vocab_id = get_file_prefix(stcm_file, 'stcm')
-        if stcm_file_vocab_id not in self._provided_stcm_versions:
-            return True
-        if stcm_file_vocab_id in self._stcm_vocabs_to_update:
-            return True
-        if stcm_file_vocab_id is None:
-            return True
-        return False
 
     def _delete_outdated_stcm_records(self) -> None:
         if not self._stcm_vocabs_to_update:
