@@ -14,7 +14,7 @@ def replace_substrings(string: str, mapping: Dict[str, str]) -> str:
     """
     Replace substrings in string, based on the items in mapping.
 
-    :param string:
+    :param string: str
         The string to be edited
     :param mapping: Dict[str, str]
         Dictionary containing the replacements as {old: new}
@@ -25,6 +25,31 @@ def replace_substrings(string: str, mapping: Dict[str, str]) -> str:
     return string
 
 
+def get_full_table_name(table: str,
+                        schema: Optional[str],
+                        schema_map: Optional[Dict[str, str]] = None
+                        ) -> str:
+    """
+    '.' join schema and table name to get the full table name.
+
+    If schema is not available, return only the table name. Placeholder
+    schema names will be replaced according to the schema_map.
+
+    :param table: str
+    :param schema: str
+    :param schema_map: Dict[str, str], default None
+        Schema map dictionary with placeholder names as keys and actual
+        schema names as values.
+    :return: str
+    """
+    if schema is None:
+        return table
+    if schema_map:
+        schema = schema_map.get(schema, schema)
+    return '.'.join([schema, table])
+
+
+# TODO: if we need this method it should go to the template repo.
 def construct_full_date_value(date: Optional[str],
                               fallback_date: Optional[str] = None
                               ) -> Optional[str]:

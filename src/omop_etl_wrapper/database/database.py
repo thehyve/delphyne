@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import logging
-from collections import Counter
 from contextlib import contextmanager
 from getpass import getpass
-from typing import Dict, Iterable, Optional, Set
+from typing import Dict, Optional, Set, FrozenSet
 
-from sqlalchemy import create_engine, event, MetaData
+from sqlalchemy import create_engine, MetaData
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
@@ -72,13 +71,12 @@ class Database:
             logger.disabled = False
 
     @property
-    def session(self) -> Session:
+    def schemas(self) -> FrozenSet[str]:
+        return self._schemas
+
+    def get_new_session(self) -> Session:
         logger.debug('Creating new session')
         return self._sessionmaker()
-
-    @property
-    def schemas(self) -> Set[str]:
-        return self._schemas.copy()
 
     def close_connection(self) -> None:
         self.engine.dispose()
@@ -105,7 +103,7 @@ class Database:
             updates, deletions) will be stored in this object
         :return: None
         """
-        session = self.session
+        session = self.get_new_session()
         session_id = id(session)
         if metadata is not None:
             SessionTracker.sessions[session_id] = metadata
@@ -125,37 +123,15 @@ class Database:
             session.close()
 
     @staticmethod
-    @event.listens_for(Session, "before_flush")
-    def _track_instances_before_flush(session: Session, context, instances):
-        if id(session) not in SessionTracker.sessions:
-            return
-        tm: EtlTransformation = SessionTracker.sessions[id(session)]
-        tm.deletion_counts += Counter(Database.get_record_targets(session.deleted))
-        tm.insertion_counts += Counter(Database.get_record_targets(session.new))
-        tm.update_counts += Counter(Database.get_record_targets(session.dirty))
-
-    @staticmethod
-    def get_record_targets(record_containing_object: Iterable) -> Iterable[str]:
-        """
-        Retrieve target tables of a SQLAlchemy record object. Include
-        the target schema if available.
-
-        :param record_containing_object: Iterable
-            container of new, updated, or deleted ORM objects
-        :return: Iterable[str]
-            target table
-        """
-        for record in record_containing_object:
-            placeholder_schema = record.__table__.schema
-            schema_name = Database.schema_translate_map.get(placeholder_schema, placeholder_schema)
-            table_name = record.__tablename__
-            if schema_name is None:
-                yield table_name
-            else:
-                yield '.'.join([schema_name, table_name])
-
-    @staticmethod
     def can_connect(uri: str) -> bool:
+        """
+        Check whether a database connection can be established for the
+        given URI.
+
+        :param uri: str
+            URI including database name
+        :return: bool
+        """
         try:
             db_exists = database_exists(uri)
         except OperationalError as e:
@@ -178,7 +154,7 @@ class Database:
             metadata.reflect(schema=schema)
         return metadata
 
-    def _set_schemas(self) -> Set[str]:
+    def _set_schemas(self) -> FrozenSet[str]:
         schemas: Set[str] = set()
         for table in self.base.metadata.tables.values():
             raw_schema_value = getattr(table, 'schema', None)
@@ -188,4 +164,4 @@ class Database:
                 schemas.add(self.schema_translate_map[raw_schema_value])
             else:
                 schemas.add(raw_schema_value)
-        return schemas
+        return frozenset(schemas)

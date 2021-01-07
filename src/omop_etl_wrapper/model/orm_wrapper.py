@@ -23,7 +23,7 @@ from typing import Callable, List
 from sqlalchemy.orm.session import Session
 
 from .etl_stats import EtlTransformation, etl_stats
-from ..database.database import Database
+from ..database import Database, events
 
 logger = logging.getLogger(__name__)
 
@@ -86,9 +86,9 @@ class OrmWrapper(ABC):
         # As SQLAlchemy's before_flush listener doesn't work in bulk
         # mode, only deleted and new objects in the record list are
         # counted
-        dc = Counter(Database.get_record_targets(session.deleted))
+        dc = Counter(events.get_record_targets(session.deleted))
         transformation_metadata.deletion_counts = dc
-        ic = Counter(Database.get_record_targets(records_to_insert))
+        ic = Counter(events.get_record_targets(records_to_insert))
         transformation_metadata.insertion_counts = ic
 
     @lru_cache(maxsize=50000)
