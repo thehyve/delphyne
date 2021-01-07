@@ -3,8 +3,8 @@ import logging
 from typing import List
 
 import pytest
-from src.omop_etl_wrapper.log.log_formats import MESSAGE_ONLY
-from src.omop_etl_wrapper.log.logging_context import LoggingFormatContext
+from src.delphyne.log.log_formats import MESSAGE_ONLY
+from src.delphyne.log.logging_context import LoggingFormatContext
 
 logger = logging.getLogger('test_logger')
 logger.setLevel(logging.DEBUG)

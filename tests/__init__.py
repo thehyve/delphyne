@@ -1,1 +1,1 @@
-"""Unit test package for omop_etl_wrapper."""
+"""Unit test package for delphyne."""

@@ -7,7 +7,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 # To update the package version number, edit __version__.py
 version = {}
-with open(os.path.join(here, 'src', 'omop_etl_wrapper', '_version.py')) as f:
+with open(os.path.join(here, 'src', 'delphyne', '_version.py')) as f:
     exec(f.read(), version)
 
 with open("README.md") as readme_file:
@@ -40,16 +40,16 @@ setup(
     license="GNU General Public License v3",
     long_description=readme,
     long_description_content_type="text/markdown",
-    package_data={"omop_etl_wrapper": ["py.typed"]},
+    package_data={"delphyne": ["py.typed"]},
     include_package_data=True,
-    keywords="omop-etl-wrapper",
-    name="omop_etl_wrapper",
+    keywords="delphyne",
+    name="delphyne",
     package_dir={"": "src"},
-    packages=["omop_etl_wrapper"],
+    packages=["delphyne"],
     extras_require={
         "TEST": ["pytest", "pytest-cov", "docker", "nox", "flake8"],
     },
-    url="https://github.com/thehyve/omop-etl-wrapper",
+    url="https://github.com/thehyve/delphyne",
     version=version['__version__'],
     zip_safe=False,
 )

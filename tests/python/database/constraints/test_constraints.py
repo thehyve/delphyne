@@ -3,7 +3,7 @@ from typing import Set
 
 import pytest
 from sqlalchemy import Table, Index, Constraint, MetaData
-from src.omop_etl_wrapper import Wrapper
+from src.delphyne import Wrapper
 
 from tests.python.conftest import docker_not_available
 from tests.python.database.constraints import constraint_sets as expected_sets

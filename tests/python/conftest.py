@@ -9,9 +9,9 @@ import pytest
 from docker.errors import DockerException
 from sqlalchemy import create_engine
 from sqlalchemy_utils import create_database, drop_database
-from src.omop_etl_wrapper.config.models import MainConfig
-from src.omop_etl_wrapper.util.io import read_yaml_file
-from src.omop_etl_wrapper.wrapper import Wrapper
+from src.delphyne.config.models import MainConfig
+from src.delphyne.util.io import read_yaml_file
+from src.delphyne.wrapper import Wrapper
 from time import sleep
 
 from .cdm import cdm531, cdm600

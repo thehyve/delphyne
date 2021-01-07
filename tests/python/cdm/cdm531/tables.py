@@ -1,9 +1,9 @@
 from sqlalchemy import MetaData
 from sqlalchemy.ext.declarative import declarative_base
 
-from src.omop_etl_wrapper.database.constraints import NAMING_CONVENTION
+from src.delphyne.database.constraints import NAMING_CONVENTION
 
-from src.omop_etl_wrapper.cdm.cdm531.clinical_data import (
+from src.delphyne.cdm.cdm531.clinical_data import (
     BasePersonCdm531,
     BaseDeathCdm531,
     BaseNoteCdm531,
@@ -22,30 +22,30 @@ from src.omop_etl_wrapper.cdm.cdm531.clinical_data import (
     BaseVisitOccurrenceCdm531,
 )
 
-from src.omop_etl_wrapper.cdm.cdm531.health_system_data import (
+from src.delphyne.cdm.cdm531.health_system_data import (
     BaseCareSiteCdm531,
     BaseLocationCdm531,
     BaseProviderCdm531,
 )
 
-from src.omop_etl_wrapper.cdm.cdm531.health_economics import (
+from src.delphyne.cdm.cdm531.health_economics import (
     BaseCostCdm531,
     BasePayerPlanPeriodCdm531,
 )
 
-from src.omop_etl_wrapper.cdm.cdm531.derived_elements import (
+from src.delphyne.cdm.cdm531.derived_elements import (
     BaseCohortCdm531,
     BaseDoseEraCdm531,
     BaseDrugEraCdm531,
     BaseConditionEraCdm531,
 )
 
-from src.omop_etl_wrapper.cdm.metadata import (
+from src.delphyne.cdm.metadata import (
     BaseMetadata,
     BaseCdmSource,
 )
 
-from src.omop_etl_wrapper.cdm.vocabularies import (
+from src.delphyne.cdm.vocabularies import (
     BaseVocabulary,
     BaseSourceToConceptMap,
     BaseSourceToConceptMapVersion,

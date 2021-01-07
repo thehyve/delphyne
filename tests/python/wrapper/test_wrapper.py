@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy import inspect
-from src.omop_etl_wrapper import Wrapper
-from src.omop_etl_wrapper.database.database import Database
+from src.delphyne import Wrapper
+from src.delphyne.database.database import Database
 
 from tests.python.conftest import docker_not_available
 
