@@ -52,7 +52,7 @@ jobs:
         # Environment variable for tests to know if running in CI environment
         RUNNING_CI: true
       run: |
-        pytest -vs --cov-report=xml --cov=src/omop_etl_wrapper
+        pytest -vs --cov-report=xml --cov=src/delphyne
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
