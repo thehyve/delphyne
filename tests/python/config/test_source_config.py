@@ -3,7 +3,7 @@ from typing import Dict
 
 import pytest
 from pydantic import ValidationError
-from src.omop_etl_wrapper.config.models import SourceConfig
+from src.delphyne.config.models import SourceConfig
 
 
 def test_source_folder_must_exist(source_config: Dict):

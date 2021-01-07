@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 from sqlalchemy.exc import InvalidRequestError
-from src.omop_etl_wrapper import Wrapper
+from src.delphyne import Wrapper
 
 from tests.python.cdm.cdm600 import SourceToConceptMapVersion, SourceToConceptMap
 from tests.python.conftest import docker_not_available
@@ -46,8 +46,8 @@ def mock_stcm_paths(base_dir: Path, stcm_dir_name: str):
     """Mock global variables STCM_DIR and STCM_VERSION_FILE."""
     stcm_dir = base_dir / stcm_dir_name
     version_file = stcm_dir / 'stcm_versions.tsv'
-    with patch('src.omop_etl_wrapper.model.stcm.stcm_loader.STCM_DIR', stcm_dir), \
-         patch('src.omop_etl_wrapper.model.stcm.stcm_loader.STCM_VERSION_FILE', version_file):
+    with patch('src.delphyne.model.stcm.stcm_loader.STCM_DIR', stcm_dir), \
+         patch('src.delphyne.model.stcm.stcm_loader.STCM_VERSION_FILE', version_file):
         yield
 
 

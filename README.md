@@ -1,11 +1,11 @@
-# OMOP ETL Wrapper
+# delphyne
 <p align="center">
-  <a href="https://github.com/thehyve/omop-etl-wrapper/actions">
-  <img src="https://github.com/thehyve/omop-etl-wrapper/workflows/build/badge.svg" /></a>
-  <a href="https://pypi.python.org/pypi/omop_etl_wrapper">
-  <img src="https://img.shields.io/pypi/v/omop_etl_wrapper.svg" /></a>
-  <a href="https://codecov.io/gh/thehyve/omop-etl-wrapper">
-  <img src="https://codecov.io/gh/thehyve/omop-etl-wrapper/branch/master/graph/badge.svg?token=48Z1TCIU8R"/></a>
+  <a href="https://github.com/thehyve/delphyne/actions">
+  <img src="https://github.com/thehyve/delphyne/workflows/build/badge.svg" /></a>
+  <a href="https://pypi.python.org/pypi/delphyne">
+  <img src="https://img.shields.io/pypi/v/delphyne.svg" /></a>
+  <a href="https://codecov.io/gh/thehyve/delphyne">
+  <img src="https://codecov.io/gh/thehyve/delphyne/branch/master/graph/badge.svg?token=48Z1TCIU8R"/></a>
 </p>
 Wrapper for OMOP ETL projects
 
@@ -17,8 +17,8 @@ Wrapper for OMOP ETL projects
 The package is currently not (yet) available on PyPI, therefore a local installation is needed.
 
 ```sh
-git clone https://github.com/thehyve/omop-etl-wrapper.git
-cd omop-etl-wrapper
+git clone https://github.com/thehyve/delphyne.git
+cd delphyne
 
 # regular installation
 pip install .

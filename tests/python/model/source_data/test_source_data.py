@@ -1,8 +1,8 @@
 from typing import Dict
 
 import pytest
-from src.omop_etl_wrapper.model.etl_stats import etl_stats, EtlStats
-from src.omop_etl_wrapper.model.source_data import SourceData
+from src.delphyne.model.etl_stats import etl_stats, EtlStats
+from src.delphyne.model.source_data import SourceData
 
 
 @pytest.fixture

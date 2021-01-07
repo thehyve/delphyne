@@ -3,7 +3,7 @@ from typing import Dict
 
 import pytest
 from pydantic import ValidationError
-from src.omop_etl_wrapper.config.models import MainConfig
+from src.delphyne.config.models import MainConfig
 
 
 @pytest.fixture(scope='function')

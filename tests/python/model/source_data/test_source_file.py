@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 import pandas as pd
 import pytest
 from numpy import nan, dtype
-from src.omop_etl_wrapper.model.source_data import SourceFile
+from src.delphyne.model.source_data import SourceFile
 
 
 def get_file_params(**kwargs) -> Dict:

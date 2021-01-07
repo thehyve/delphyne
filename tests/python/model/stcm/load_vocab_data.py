@@ -1,6 +1,6 @@
 from typing import List
 
-from src.omop_etl_wrapper import Wrapper
+from src.delphyne import Wrapper
 
 from tests.python.cdm import cdm600
 
