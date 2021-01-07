@@ -37,7 +37,6 @@ def receive_after_bulk_update(update_context: BulkUpdate):
 
 @event.listens_for(Session, 'after_bulk_delete')
 def receive_after_bulk_delete(delete_context: BulkDelete):
-    print(f'Deleted {delete_context.rowcount} {delete_context.primary_table.fullname}')
     _process_bulk_event(delete_context)
 
 
