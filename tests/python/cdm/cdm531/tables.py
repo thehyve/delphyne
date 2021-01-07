@@ -48,6 +48,7 @@ from src.omop_etl_wrapper.cdm.metadata import (
 from src.omop_etl_wrapper.cdm.vocabularies import (
     BaseVocabulary,
     BaseSourceToConceptMap,
+    BaseSourceToConceptMapVersion,
     BaseConcept,
     BaseConceptAncestor,
     BaseConceptClass,
@@ -200,6 +201,10 @@ class Relationship(BaseRelationship, Base):
 
 
 class SourceToConceptMap(BaseSourceToConceptMap, Base):
+    pass
+
+
+class SourceToConceptMapVersion(BaseSourceToConceptMapVersion, Base):
     pass
 
 

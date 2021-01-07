@@ -13,7 +13,7 @@ from ..._paths import STCM_DIR, STCM_VERSION_FILE
 from ...cdm._schema_placeholders import VOCAB_SCHEMA
 from ...cdm.vocabularies import BaseSourceToConceptMapVersion
 from ...database import Database
-from ...util.io import is_hidden
+from ...util.io import get_all_files_in_dir, file_has_valid_prefix
 
 logger = logging.getLogger(__name__)
 
@@ -42,8 +42,14 @@ class StcmLoader:
             records = session.query(self._cdm.Vocabulary.vocabulary_id).all()
             return {vocabulary_id for vocabulary_id, in records}
 
+    @staticmethod
+    def _invalidate_cache() -> None:
+        StcmLoader._stcm_vocabs_to_update.fget.cache_clear()
+        StcmLoader._loaded_vocabulary_ids.fget.cache_clear()
+
     def load_stcm(self) -> None:
         logger.info('Loading STCM files')
+        self._invalidate_cache()
         if not STCM_DIR.exists():
             raise FileNotFoundError(f'{STCM_DIR.resolve()} folder not found')
         self._get_loaded_stcm_versions()
@@ -52,7 +58,9 @@ class StcmLoader:
 
         stcm_files = self._get_stcm_files()
         for stcm_file in stcm_files:
-            if not self._must_be_parsed(stcm_file):
+            if not file_has_valid_prefix(stcm_file, 'stcm',
+                                         all_prefixes=self._provided_stcm_versions,
+                                         valid_prefixes=self._stcm_vocabs_to_update):
                 logger.info(f'Skipping file {stcm_file.name} as this STCM file '
                             f'has no new version available.')
                 continue
@@ -61,12 +69,8 @@ class StcmLoader:
 
     @staticmethod
     def _get_stcm_files() -> Set[Path]:
-        files = set()
-        for f in STCM_DIR.glob('*'):
-            if is_hidden(f) or not f.is_file() or f.name == STCM_VERSION_FILE.name:
-                continue
-            files.add(f)
-        return files
+        files = get_all_files_in_dir(STCM_DIR)
+        return {f for f in files if not f.name == STCM_VERSION_FILE.name}
 
     def _get_loaded_stcm_versions(self) -> None:
         self._check_stcm_version_table_exists()
@@ -76,6 +80,9 @@ class StcmLoader:
             self._loaded_stcm_versions = vocab_version_dict
 
     def _get_provided_stcm_versions(self) -> None:
+        if not STCM_VERSION_FILE.exists():
+            raise FileNotFoundError('source to concept map version file not found. '
+                                    f'Expected file at {STCM_VERSION_FILE}')
         with STCM_VERSION_FILE.open('r') as version_file:
             reader = csv.DictReader(version_file, delimiter='\t')
             for line in reader:
@@ -85,7 +92,7 @@ class StcmLoader:
                     raise ValueError(f'{STCM_VERSION_FILE.name} may not contain empty values')
                 if vocab_id not in self._loaded_vocabulary_ids:
                     raise ValueError(f'{vocab_id} is not present in the vocabulary table. '
-                                     f'Make sure to add it as a custom vocabulary.')
+                                     'Make sure to add it as a custom vocabulary.')
                 self._provided_stcm_versions[vocab_id] = version
 
     def _check_stcm_version_table_exists(self) -> None:
@@ -94,27 +101,13 @@ class StcmLoader:
         try:
             metadata.reflect(schema=schema, only=[_STCM_VERSION_TABLE_NAME])
         except InvalidRequestError:
-            logger.error(f'{schema}.{_STCM_VERSION_TABLE_NAME} does not exist. '
-                         f'Run create_all to ensure all required tables are present.')
+            logger.error(f'Table {schema}.{_STCM_VERSION_TABLE_NAME} does not exist. '
+                         'Run create_all to ensure all required tables are present.')
             raise
 
-    def _must_be_parsed(self, stcm_file: Path) -> bool:
-        stcm_file_vocab_id = self._get_stcm_file_vocab_id(stcm_file)
-        if stcm_file_vocab_id is None:
-            return True
-        if stcm_file_vocab_id in self._stcm_vocabs_to_update:
-            return True
-        return False
-
-    def _get_stcm_file_vocab_id(self, stcm_file: Path) -> Optional[str]:
-        stem_name = stcm_file.stem
-        if stem_name.endswith('_stcm'):
-            vocab_id = stem_name.rsplit('_', 1)[0]
-            if vocab_id in self._provided_stcm_versions:
-                return vocab_id
-        return None
-
     def _delete_outdated_stcm_records(self) -> None:
+        # Delete STCM records for all source_vocabulary_ids for which a
+        # new version is provided in the stcm version file.
         if not self._stcm_vocabs_to_update:
             return
         logger.info(f'Deleting STCM records for vocabulary_ids: {self._stcm_vocabs_to_update}')

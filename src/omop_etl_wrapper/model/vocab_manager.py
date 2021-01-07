@@ -20,13 +20,13 @@ class VocabManager:
         """
         Loads custom vocabularies to the vocabulary schema.
 
-        1. Checks for the presence of custom vocabularies and
-        concept_classes at a predefined folder location;
-        2. Compares the version of custom vocabularies and
-        concept_classes in the folder to that of custom vocabularies
-        and tables already present in the database;
-        3. Deletes obsolete versions from the database;
-        4. Loads the new versions to the database.
+        - Checks for the presence of custom vocabularies and
+          concept_classes at a predefined folder location;
+        - Compares the version of custom vocabularies and
+          concept_classes in the folder to that of custom vocabularies
+          and tables already present in the database;
+        - Deletes obsolete versions from the database;
+        - Loads the new versions to the database.
 
         :return: None
         """
