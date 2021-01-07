@@ -146,7 +146,7 @@ class Database:
             target table
         """
         for record in record_containing_object:
-            placeholder_schema = record.__table_args__.get('schema')
+            placeholder_schema = record.__table__.schema
             schema_name = Database.schema_translate_map.get(placeholder_schema, placeholder_schema)
             table_name = record.__tablename__
             if schema_name is None:
