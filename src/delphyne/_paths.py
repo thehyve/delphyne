@@ -15,6 +15,9 @@ SOURCE_DATA_CONFIG_PATH = Path('./config/source_config.yml')
 # All log files will be written here. Will be created if not present.
 LOG_OUTPUT_DIR = Path('./logs')
 
+# Directory containing SQL scripts
+SQL_TRANSFORMATIONS_DIR = Path('./src/main/sql')
+
 RESOURCES_DIR = Path('./resources')
 # Directory containing all source_to_concept_map files
 STCM_DIR = RESOURCES_DIR / 'source_to_concept'
