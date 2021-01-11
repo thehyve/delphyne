@@ -2,7 +2,7 @@ import logging
 import re
 from collections import Counter
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Union
 
 from sqlalchemy import text
 from sqlalchemy.engine.result import ResultProxy
@@ -35,7 +35,7 @@ class RawSqlWrapper:
                 sql_parameters[k] = v
         return sql_parameters
 
-    def execute_sql_file(self, file_path: Path) -> None:
+    def execute_sql_file(self, file_path: Union[Path, str]) -> None:
         """
         Executes raw SQL file.
 
