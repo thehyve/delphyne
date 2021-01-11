@@ -1,8 +1,11 @@
-from typing import Union, Callable, Optional, Dict
+from __future__ import annotations
+
+from typing import Union, Callable, Optional, Dict, TYPE_CHECKING
 
 from sqlalchemy import Table
 
-from ..database import Database
+if TYPE_CHECKING:
+    from ..database import Database
 
 
 def table_is_empty(mapped_table: Union[Callable, Table], database: Database) -> bool:
