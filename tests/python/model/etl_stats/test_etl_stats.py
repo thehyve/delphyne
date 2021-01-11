@@ -2,8 +2,9 @@ from collections import Counter
 from datetime import datetime, timedelta
 
 import pytest
-
 from src.delphyne.model.etl_stats import EtlStats, EtlSource, EtlTransformation
+
+from tests.python.model.etl_stats.conftest import get_etltransformation
 
 
 @pytest.fixture(scope="module")
@@ -47,21 +48,6 @@ def test_etltransformation_to_dict(etl_transformation: EtlTransformation):
         'update_counts': 'table1:10',
         'deletion_counts': None,
     }
-
-
-def get_etltransformation(name: str, **kwargs) -> EtlTransformation:
-    default_params = {
-        'name': name,
-        'start': datetime(year=2025, month=1, day=1, hour=1),
-        'end': datetime(year=2025, month=1, day=1, hour=2),
-        'query_success': True,
-        'insertion_counts': Counter(),
-        'update_counts': Counter(),
-        'deletion_counts': Counter(),
-    }
-    # Replace default values with those provided, if any
-    final_params = {k: v if k not in kwargs else kwargs[k] for k, v in default_params.items()}
-    return EtlTransformation(**final_params)
 
 
 def test_transformation_is_vocab_only():
