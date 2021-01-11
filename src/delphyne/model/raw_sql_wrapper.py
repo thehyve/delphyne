@@ -2,12 +2,13 @@ import logging
 import re
 from collections import Counter
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Union
 
 from sqlalchemy import text
 from sqlalchemy.engine.result import ResultProxy
 
 from .etl_stats import EtlTransformation, etl_stats
+from .._paths import SQL_TRANSFORMATIONS_DIR
 from ..config.models import MainConfig
 from ..database.database import Database
 from ..util.helper import replace_substrings
@@ -34,7 +35,15 @@ class RawSqlWrapper:
                 sql_parameters[k] = v
         return sql_parameters
 
-    def execute_sql_file(self, file_path: Path) -> None:
+    def execute_sql_file(self, file_path: Union[Path, str]) -> None:
+        """
+        Executes raw SQL file.
+
+        :param file_path: relative SQL file path inside the directory for
+            SQL transformations (the root will be automatically added).
+        :return: None
+        """
+        file_path = SQL_TRANSFORMATIONS_DIR / file_path
         # Open and read the file as a single buffer
         logger.debug(f'Reading query from file: {file_path.name}')
         with file_path.open('r') as f:
