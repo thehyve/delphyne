@@ -29,7 +29,7 @@ def get_all_files_in_dir(directory: Path) -> List[Path]:
 
 def get_file_prefix(path: Path, suffix: str) -> Optional[str]:
     """
-    Extracts the part of the file name preceding the provided suffix.
+    Extract the part of the file name preceding the provided suffix.
 
     :param path: File path
     :param suffix: String to be matched to the file name. The match only
