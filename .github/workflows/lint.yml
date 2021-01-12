@@ -1,3 +1,5 @@
+# This workflow will install Python 3.8 + dependencies and run a nox lint session
+
 name: lint
 
 on: [push, pull_request]
