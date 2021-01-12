@@ -38,15 +38,13 @@ class EtlStatsReporter:
 
             self._log_sources()
 
-            vocab_transformations = [t for t in self.stats.transformations
-                                     if t.is_vocab_only and not t.is_empty]
+            vocab_transformations = [t for t in self.stats.transformations if t.is_vocab_only]
             if vocab_transformations:
                 logger.info(f'Vocabulary updates: {len(vocab_transformations)} (total time: '
                             f'{self.stats.get_total_duration(vocab_transformations)})')
                 self._log_transformations(vocab_transformations)
 
-            cdm_transformations = [t for t in self.stats.transformations
-                                   if not t.is_vocab_only and not t.is_empty]
+            cdm_transformations = [t for t in self.stats.transformations if not t.is_vocab_only]
             if cdm_transformations:
                 logger.info(f'CDM transformations: {len(cdm_transformations)} (total time: '
                             f'{self.stats.get_total_duration(cdm_transformations)})')
@@ -71,7 +69,8 @@ class EtlStatsReporter:
         if successful_transformations:
             logger.info(f'Successful transformations ({len(successful_transformations)}):')
             for transformation in successful_transformations:
-                self._log_transformation_counts(transformation)
+                if not transformation.is_empty:
+                    self._log_transformation_counts(transformation)
 
         failed_transformations = [t for t in transformations if not t.query_success]
         if failed_transformations:
