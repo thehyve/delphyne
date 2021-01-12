@@ -140,17 +140,18 @@ class BaseVocabManager:
         logging.info(f'Dropping old custom vocabulary versions: '
                      f'{True if vocabs_to_drop else False}')
 
-        if vocabs_to_drop:
+        if not vocabs_to_drop:
+            return
 
-            transformation_metadata = EtlTransformation(name='drop_concepts')
+        transformation_metadata = EtlTransformation(name='drop_concepts')
 
-            with self._db.session_scope(metadata=transformation_metadata) as session:
-                session.query(self._cdm.Vocabulary) \
-                    .filter(self._cdm.Vocabulary.vocabulary_id.in_(vocabs_to_drop)) \
-                    .delete(synchronize_session=False)
+        with self._db.session_scope(metadata=transformation_metadata) as session:
+            session.query(self._cdm.Vocabulary) \
+                .filter(self._cdm.Vocabulary.vocabulary_id.in_(vocabs_to_drop)) \
+                .delete(synchronize_session=False)
 
-                transformation_metadata.end_now()
-                etl_stats.add_transformation(transformation_metadata)
+            transformation_metadata.end_now()
+            etl_stats.add_transformation(transformation_metadata)
 
     def _load_custom_vocabs(self) -> None:
         # Load new and updated custom vocabularies to the database
