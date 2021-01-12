@@ -2,8 +2,13 @@
 <p align="center">
   <a href="https://github.com/thehyve/delphyne/actions">
   <img src="https://github.com/thehyve/delphyne/workflows/build/badge.svg" /></a>
+  
   <a href="https://pypi.python.org/pypi/delphyne">
   <img src="https://img.shields.io/pypi/v/delphyne.svg" /></a>
+  
+  <a href="https://pypi.org/project/delphyne">
+  <img src="https://img.shields.io/pypi/pyversions/delphyne" /></a>
+
   <a href="https://codecov.io/gh/thehyve/delphyne">
   <img src="https://codecov.io/gh/thehyve/delphyne/branch/master/graph/badge.svg?token=48Z1TCIU8R"/></a>
 </p>
