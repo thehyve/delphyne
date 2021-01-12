@@ -54,7 +54,7 @@ class BaseConceptManager:
 
                 transformation_metadata = EtlTransformation(name=f'load_{concept_file.stem}')
 
-                prefix = get_file_prefix(concept_file, 'concept')
+                file_prefix = get_file_prefix(concept_file, 'concept')
                 invalid_vocabs = set()
 
                 with self._db.session_scope(metadata=transformation_metadata) as session, \
@@ -90,9 +90,11 @@ class BaseConceptManager:
                                 invalid_reason=row['invalid_reason']
                             ))
 
-                        # if prefix is valid vocab_id,
-                        # vocabulary_ids in file should match it
-                        if prefix in valid_prefixes and vocabulary_id != prefix:
+                        # if file prefix is valid vocab_id,
+                        # vocabulary_ids in file should match it.
+                        # comparison is case-insensitive.
+                        vocabs_lowercase = valid_prefixes.lower()
+                        if file_prefix in vocabs_lowercase and vocabulary_id.lower() != file_prefix:
                             invalid_vocabs.add(vocabulary_id)
 
                     session.add_all(records)

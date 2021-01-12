@@ -167,7 +167,7 @@ class BaseVocabManager:
 
         for vocab_file in self._custom_vocab_files:
 
-            prefix = get_file_prefix(vocab_file, 'vocabulary')
+            file_prefix = get_file_prefix(vocab_file, 'vocabulary')
             invalid_vocabs = set()
 
             transformation_metadata = EtlTransformation(name=f'load_{vocab_file.stem}')
@@ -191,9 +191,11 @@ class BaseVocabManager:
                     else:
                         ignored_vocabs.update([vocabulary_id])
 
-                    # if prefix is valid vocab_id,
-                    # vocabulary_ids in file should match it
-                    if prefix in self.vocabs_from_disk and vocabulary_id != prefix:
+                    # if file prefix is valid vocab_id,
+                    # vocabulary_ids in file should match it.
+                    # comparison is case-insensitive.
+                    vocabs_lowercase = self.vocabs_from_disk.lower()
+                    if file_prefix in vocabs_lowercase and vocabulary_id.lower() != file_prefix:
                         invalid_vocabs.add(vocabulary_id)
 
                 session.add_all(records)
