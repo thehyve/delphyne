@@ -21,6 +21,7 @@ jobs:
         run: |
           nox -s lint
   build:
+    needs: [lint]
     runs-on: ubuntu-latest
     # Service containers to run with `runner-job`
     services:
