@@ -11,7 +11,7 @@ from sqlalchemy.orm.session import Session
 from .database import Database
 from .session_tracker import SessionTracker
 from ..model.etl_stats import EtlTransformation
-from ..util.helper import get_full_table_name
+from ..util.table import get_full_table_name
 
 logger = logging.getLogger(__name__)
 

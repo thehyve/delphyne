@@ -25,3 +25,5 @@ STCM_DIR = RESOURCES_DIR / 'source_to_concept'
 STCM_VERSION_FILE = STCM_DIR / 'stcm_versions.tsv'
 # Directory containing all custom vocabulary tables
 CUSTOM_VOCAB_DIR = RESOURCES_DIR / 'custom_vocabularies'
+# Directory containing all standard vocabulary tables
+STANDARD_VOCAB_DIR = RESOURCES_DIR / 'standard_vocabularies'

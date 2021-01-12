@@ -1,4 +1,4 @@
-from src.delphyne.util.helper import get_full_table_name
+from src.delphyne.util.table import get_full_table_name
 
 
 def test_get_full_table_name_no_schema():
