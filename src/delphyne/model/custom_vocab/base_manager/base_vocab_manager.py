@@ -194,7 +194,7 @@ class BaseVocabManager:
                     # if file prefix is valid vocab_id,
                     # vocabulary_ids in file should match it.
                     # comparison is case-insensitive.
-                    vocabs_lowercase = self.vocabs_from_disk.lower()
+                    vocabs_lowercase = { vocab.lower() for vocab in self.vocabs_from_disk }
                     if file_prefix in vocabs_lowercase and vocabulary_id.lower() != file_prefix:
                         invalid_vocabs.add(vocabulary_id)
 
