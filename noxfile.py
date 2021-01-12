@@ -33,7 +33,7 @@ def lint(session):
     """Lint using flake8."""
     session.install(*lint_dependencies)
     files = ["tests", "src"] + [str(p) for p in Path(".").glob("*.py")]
-    session.run("flake8", *files)
+    session.run("flake8", *files, '--statistics', '--count')
     session.run("python", "setup.py", "check", "--metadata", "--strict")
     if "--skip_manifest_check" in session.posargs:
         pass
