@@ -132,17 +132,18 @@ class BaseClassManager:
         logging.info(f'Dropping unused custom concept_class versions: '
                      f'{True if classes_to_drop else False}')
 
-        if classes_to_drop:
+        if not classes_to_drop:
+            return
 
-            transformation_metadata = EtlTransformation(name='drop_concepts')
+        transformation_metadata = EtlTransformation(name='drop_concepts')
 
-            with self._db.session_scope(metadata=transformation_metadata) as session:
-                session.query(self._cdm.ConceptClass) \
-                    .filter(self._cdm.ConceptClass.concept_class_id.in_(classes_to_drop)) \
-                    .delete(synchronize_session=False)
+        with self._db.session_scope(metadata=transformation_metadata) as session:
+            session.query(self._cdm.ConceptClass) \
+                .filter(self._cdm.ConceptClass.concept_class_id.in_(classes_to_drop)) \
+                .delete(synchronize_session=False)
 
-                transformation_metadata.end_now()
-                etl_stats.add_transformation(transformation_metadata)
+            transformation_metadata.end_now()
+            etl_stats.add_transformation(transformation_metadata)
 
     def _load_custom_classes(self) -> None:
         # Load new custom concept_classes to the database
@@ -152,41 +153,42 @@ class BaseClassManager:
         logging.info(f'Loading new custom classes: '
                      f'{True if classes_to_create else False}')
 
-        if classes_to_create:
+        if not classes_to_create:
+            return
 
-            ignored_classes = Counter()
+        ignored_classes = Counter()
 
-            for class_file in self._custom_class_files:
+        for class_file in self._custom_class_files:
 
-                transformation_metadata = EtlTransformation(name=f'load_{class_file.stem}')
+            transformation_metadata = EtlTransformation(name=f'load_{class_file.stem}')
 
-                with self._db.session_scope(metadata=transformation_metadata) as session, \
-                        class_file.open('r') as f_in:
-                    rows = csv.DictReader(f_in, delimiter='\t')
+            with self._db.session_scope(metadata=transformation_metadata) as session, \
+                    class_file.open('r') as f_in:
+                rows = csv.DictReader(f_in, delimiter='\t')
 
-                    records = []
+                records = []
 
-                    for row in rows:
-                        class_id = row['concept_class_id']
+                for row in rows:
+                    class_id = row['concept_class_id']
 
-                        if class_id in classes_to_create:
-                            records.append(self._cdm.ConceptClass(
-                                concept_class_id=row['concept_class_id'],
-                                concept_class_name=row['concept_class_name'],
-                                concept_class_concept_id=row['concept_class_concept_id']
-                            ))
-                        elif class_id not in self._custom_classes_to_update:
-                            ignored_classes.update([class_id])
+                    if class_id in classes_to_create:
+                        records.append(self._cdm.ConceptClass(
+                            concept_class_id=row['concept_class_id'],
+                            concept_class_name=row['concept_class_name'],
+                            concept_class_concept_id=row['concept_class_concept_id']
+                        ))
+                    elif class_id not in self._custom_classes_to_update:
+                        ignored_classes.update([class_id])
 
-                    session.add_all(records)
+                session.add_all(records)
 
-                    transformation_metadata.end_now()
-                    etl_stats.add_transformation(transformation_metadata)
+                transformation_metadata.end_now()
+                etl_stats.add_transformation(transformation_metadata)
 
-            if ignored_classes:
-                logger.info(f'Skipped records with concept_class_id values that '
-                            f'were already loaded under the current name: '
-                            f'{ignored_classes.most_common()}')
+        if ignored_classes:
+            logger.info(f'Skipped records with concept_class_id values that '
+                        f'were already loaded under the current name: '
+                        f'{ignored_classes.most_common()}')
 
     def _update_custom_classes(self) -> None:
         # Update the name of existing custom concept_classes in the

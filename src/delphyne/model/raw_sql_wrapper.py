@@ -39,8 +39,9 @@ class RawSqlWrapper:
         """
         Executes raw SQL file.
 
-        :param file_path: relative SQL file path inside the directory for
-            SQL transformations (the root will be automatically added).
+        :param file_path: relative SQL file path inside the directory
+            for SQL transformations
+            (the root will be automatically added).
         :return: None
         """
         file_path = SQL_TRANSFORMATIONS_DIR / file_path

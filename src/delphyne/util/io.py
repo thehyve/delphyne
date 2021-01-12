@@ -28,7 +28,20 @@ def get_all_files_in_dir(directory: Path) -> List[Path]:
 
 
 def get_file_prefix(path: Path, suffix: str) -> Optional[str]:
-    stem = path.stem
+    """
+    Extract the part of the file name preceding the provided suffix.
+
+    :param path: File path
+    :param suffix: String to be matched to the file name. The match only
+        succeeds if the suffix is immediately preceding the file
+        extension, and separated by previous characters by a dash ('_').
+        The file name and prefix are both converted to lowercase before
+        the matching is performed.
+
+    :return: str (lowercase) or None
+    """
+    suffix = suffix.lower()
+    stem = path.stem.lower()
     if stem.endswith('_' + suffix):
         prefix = stem.rsplit('_' + suffix, 1)[0]
         return prefix
@@ -49,6 +62,7 @@ def file_has_valid_prefix(path: Path, suffix: str,
     If the prefix is recognized but not in the list to parse,
     the file should be ignored (returns False).
     valid_prefixes should be a subset of all_prefixes.
+    All comparisons are performed in lowercase.
 
     :param path: Path
     :param suffix: str
@@ -57,6 +71,11 @@ def file_has_valid_prefix(path: Path, suffix: str,
 
     :return: bool
     """
+
+    # convert prefixes to lowercase
+    valid_prefixes = {prefix.lower() for prefix in valid_prefixes}
+    all_prefixes = {prefix.lower() for prefix in all_prefixes}
+
     file_prefix = get_file_prefix(path, suffix)
     if file_prefix in valid_prefixes:
         return True

@@ -140,17 +140,18 @@ class BaseVocabManager:
         logging.info(f'Dropping old custom vocabulary versions: '
                      f'{True if vocabs_to_drop else False}')
 
-        if vocabs_to_drop:
+        if not vocabs_to_drop:
+            return
 
-            transformation_metadata = EtlTransformation(name='drop_concepts')
+        transformation_metadata = EtlTransformation(name='drop_concepts')
 
-            with self._db.session_scope(metadata=transformation_metadata) as session:
-                session.query(self._cdm.Vocabulary) \
-                    .filter(self._cdm.Vocabulary.vocabulary_id.in_(vocabs_to_drop)) \
-                    .delete(synchronize_session=False)
+        with self._db.session_scope(metadata=transformation_metadata) as session:
+            session.query(self._cdm.Vocabulary) \
+                .filter(self._cdm.Vocabulary.vocabulary_id.in_(vocabs_to_drop)) \
+                .delete(synchronize_session=False)
 
-                transformation_metadata.end_now()
-                etl_stats.add_transformation(transformation_metadata)
+            transformation_metadata.end_now()
+            etl_stats.add_transformation(transformation_metadata)
 
     def _load_custom_vocabs(self) -> None:
         # Load new and updated custom vocabularies to the database
@@ -167,7 +168,7 @@ class BaseVocabManager:
 
         for vocab_file in self._custom_vocab_files:
 
-            prefix = get_file_prefix(vocab_file, 'vocabulary')
+            file_prefix = get_file_prefix(vocab_file, 'vocabulary')
             invalid_vocabs = set()
 
             transformation_metadata = EtlTransformation(name=f'load_{vocab_file.stem}')
@@ -191,9 +192,11 @@ class BaseVocabManager:
                     else:
                         ignored_vocabs.update([vocabulary_id])
 
-                    # if prefix is valid vocab_id,
-                    # vocabulary_ids in file should match it
-                    if prefix in self.vocabs_from_disk and vocabulary_id != prefix:
+                    # if file prefix is valid vocab_id,
+                    # vocabulary_ids in file should match it.
+                    # comparison is case-insensitive.
+                    vocabs_lowercase = {vocab.lower() for vocab in self.vocabs_from_disk}
+                    if file_prefix in vocabs_lowercase and vocabulary_id.lower() != file_prefix:
                         invalid_vocabs.add(vocabulary_id)
 
                 session.add_all(records)
