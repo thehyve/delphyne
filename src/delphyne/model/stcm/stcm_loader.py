@@ -3,12 +3,12 @@ import logging
 from collections import Counter
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, Set, Optional
+from typing import Dict, Set
 
 from sqlalchemy import MetaData
 from sqlalchemy.exc import InvalidRequestError
 
-from ..etl_stats import EtlTransformation, etl_stats
+from ..etl_stats import open_transformation
 from ..._paths import STCM_DIR, STCM_VERSION_FILE
 from ...cdm._schema_placeholders import VOCAB_SCHEMA
 from ...cdm.vocabularies import BaseSourceToConceptMapVersion
@@ -133,39 +133,36 @@ class StcmLoader:
 
     def _load_stcm_from_file(self, stcm_file: Path) -> None:
         logger.info(f'Loading STCM file: {stcm_file.name}')
-        transformation_metadata = EtlTransformation(name=f'load_{stcm_file.stem}')
-        with self._db.session_scope(metadata=transformation_metadata) as session, \
-                stcm_file.open('r') as f_in:
-            rows = csv.DictReader(f_in)
-            ignored_vocabs = Counter()
-            unrecognized_vocabs = Counter()
+        with open_transformation(name=f'load_{stcm_file.stem}') as transformation_metadata:
+            with self._db.session_scope(metadata=transformation_metadata) as session, \
+                    stcm_file.open('r') as f_in:
+                rows = csv.DictReader(f_in)
+                ignored_vocabs = Counter()
+                unrecognized_vocabs = Counter()
 
-            for i, row in enumerate(rows, start=2):
-                source_vocabulary_id = row['source_vocabulary_id']
-                if source_vocabulary_id not in self._provided_stcm_versions:
-                    unrecognized_vocabs.update([source_vocabulary_id])
-                    continue
-                if source_vocabulary_id not in self._stcm_vocabs_to_update:
-                    ignored_vocabs.update([source_vocabulary_id])
-                    continue
-                # Skip unmapped records
-                target_concept_id = int(row['target_concept_id'])
-                if target_concept_id == 0:
-                    continue
-                if source_vocabulary_id not in self._loaded_vocabulary_ids:
-                    raise ValueError(f'Cannot insert line {i} of {stcm_file.name}. '
-                                     f'{source_vocabulary_id} is not in the vocabulary table')
-                session.add(self._cdm.SourceToConceptMap(**row))
+                for i, row in enumerate(rows, start=2):
+                    source_vocabulary_id = row['source_vocabulary_id']
+                    if source_vocabulary_id not in self._provided_stcm_versions:
+                        unrecognized_vocabs.update([source_vocabulary_id])
+                        continue
+                    if source_vocabulary_id not in self._stcm_vocabs_to_update:
+                        ignored_vocabs.update([source_vocabulary_id])
+                        continue
+                    # Skip unmapped records
+                    target_concept_id = int(row['target_concept_id'])
+                    if target_concept_id == 0:
+                        continue
+                    if source_vocabulary_id not in self._loaded_vocabulary_ids:
+                        raise ValueError(f'Cannot insert line {i} of {stcm_file.name}. '
+                                         f'{source_vocabulary_id} is not in the vocabulary table')
+                    session.add(self._cdm.SourceToConceptMap(**row))
 
-            transformation_metadata.end_now()
-            etl_stats.add_transformation(transformation_metadata)
+                if unrecognized_vocabs:
+                    logger.warning(f'Skipped records with source_vocabulary_id values that '
+                                   f'were not present in {STCM_VERSION_FILE.name}: '
+                                   f'{unrecognized_vocabs.most_common()}')
 
-            if unrecognized_vocabs:
-                logger.warning(f'Skipped records with source_vocabulary_id values that '
-                               f'were not present in {STCM_VERSION_FILE.name}: '
-                               f'{unrecognized_vocabs.most_common()}')
-
-            if ignored_vocabs:
-                logger.info(f'Skipped records with source_vocabulary_id values that '
-                            f'were already loaded under the current version: '
-                            f'{ignored_vocabs.most_common()}')
+                if ignored_vocabs:
+                    logger.info(f'Skipped records with source_vocabulary_id values that '
+                                f'were already loaded under the current version: '
+                                f'{ignored_vocabs.most_common()}')

@@ -7,7 +7,7 @@ from typing import Dict, Union
 from sqlalchemy import text
 from sqlalchemy.engine.result import ResultProxy
 
-from .etl_stats import EtlTransformation, etl_stats
+from .etl_stats import EtlTransformation, open_transformation
 from .._paths import SQL_TRANSFORMATIONS_DIR
 from ..config.models import MainConfig
 from ..database.database import Database
@@ -54,22 +54,19 @@ class RawSqlWrapper:
 
     def execute_sql_query(self, query: str, query_name: str) -> None:
         logger.info(f'Executing raw sql query: {query_name}')
-        transformation_metadata = EtlTransformation(name=query_name)
-        query = self.apply_sql_parameters(query, self.sql_parameters)
+        with open_transformation(name=query_name) as transformation_metadata:
+            query = self.apply_sql_parameters(query, self.sql_parameters)
 
-        with self.db.engine.connect() as con:
-            try:
-                statement = text(query).execution_options(autocommit=True)
-                result = con.execute(statement)
-                self._collect_transformation_statistics(result, query, transformation_metadata)
-            except Exception as msg:
-                logger.error(f'Query failed: {query_name}')
-                logger.error(query)
-                logger.error(msg)
-                transformation_metadata.query_success = False
-
-        transformation_metadata.end_now()
-        etl_stats.add_transformation(transformation_metadata)
+            with self.db.engine.connect() as con:
+                try:
+                    statement = text(query).execution_options(autocommit=True)
+                    result = con.execute(statement)
+                    self._collect_transformation_statistics(result, query, transformation_metadata)
+                except Exception as msg:
+                    logger.error(f'Query failed: {query_name}')
+                    logger.error(query)
+                    logger.error(msg)
+                    transformation_metadata.query_success = False
 
     @staticmethod
     def apply_sql_parameters(parameterized_query: str, sql_parameters: Dict[str, str]):

@@ -22,7 +22,7 @@ from typing import Callable, List
 
 from sqlalchemy.orm.session import Session
 
-from .etl_stats import EtlTransformation, etl_stats
+from .etl_stats import EtlTransformation, open_transformation
 from ..database import Database, events
 
 logger = logging.getLogger(__name__)
@@ -61,22 +61,24 @@ class OrmWrapper(ABC):
             persisting the ORM objects
         """
         logger.info(f'Executing transformation: {statement.__name__}')
-        transformation_metadata = EtlTransformation(name=statement.__name__)
+        with open_transformation(name=statement.__name__) as transformation_metadata:
+            with self.db.session_scope(raise_on_error=False,
+                                       metadata=transformation_metadata) as session:
+                func_args = signature(statement).parameters
+                if 'session' in func_args:
+                    records_to_insert = statement(self, session)
+                else:
+                    records_to_insert = statement(self)
+                logger.info(f'Saving {len(records_to_insert)} objects')
+                if bulk:
+                    session.bulk_save_objects(records_to_insert)
+                    self._collect_query_statistics_bulk_mode(session, records_to_insert,
+                                                             transformation_metadata)
+                else:
+                    session.add_all(records_to_insert)
 
-        with self.db.session_scope(raise_on_error=False,
-                                   metadata=transformation_metadata) as session:
-            func_args = signature(statement).parameters
-            records_to_insert = statement(self, session) if 'session' in func_args else statement(self)
-            logger.info(f'Saving {len(records_to_insert)} objects')
-            if bulk:
-                session.bulk_save_objects(records_to_insert)
-                self._collect_query_statistics_bulk_mode(session, records_to_insert, transformation_metadata)
-            else:
-                session.add_all(records_to_insert)
-
-        transformation_metadata.end_now()
-        logger.info(f'{statement.__name__} completed with success status: {transformation_metadata.query_success}')
-        etl_stats.add_transformation(transformation_metadata)
+            logger.info(f'{statement.__name__} completed with success status: '
+                        f'{transformation_metadata.query_success}')
 
     @staticmethod
     def _collect_query_statistics_bulk_mode(session: Session,
