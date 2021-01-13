@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import List, Dict
 
 from ....database import Database
-from ....model.etl_stats import open_transformation
 
 logger = logging.getLogger(__name__)
 
@@ -135,11 +134,10 @@ class BaseClassManager:
         if not classes_to_drop:
             return
 
-        with open_transformation(name='drop_concepts') as transformation_metadata:
-            with self._db.session_scope(metadata=transformation_metadata) as session:
-                session.query(self._cdm.ConceptClass) \
-                    .filter(self._cdm.ConceptClass.concept_class_id.in_(classes_to_drop)) \
-                    .delete(synchronize_session=False)
+        with self._db.tracked_session_scope(name='drop_concepts') as (session, _):
+            session.query(self._cdm.ConceptClass) \
+                .filter(self._cdm.ConceptClass.concept_class_id.in_(classes_to_drop)) \
+                .delete(synchronize_session=False)
 
     def _load_custom_classes(self) -> None:
         # Load new custom concept_classes to the database
@@ -155,27 +153,25 @@ class BaseClassManager:
         ignored_classes = Counter()
 
         for class_file in self._custom_class_files:
+            with self._db.tracked_session_scope(name=f'load_{class_file.stem}') as (session, _), \
+                    class_file.open('r') as f_in:
+                rows = csv.DictReader(f_in, delimiter='\t')
 
-            with open_transformation(name=f'load_{class_file.stem}') as transformation_metadata:
-                with self._db.session_scope(metadata=transformation_metadata) as session, \
-                        class_file.open('r') as f_in:
-                    rows = csv.DictReader(f_in, delimiter='\t')
+                records = []
 
-                    records = []
+                for row in rows:
+                    class_id = row['concept_class_id']
 
-                    for row in rows:
-                        class_id = row['concept_class_id']
+                    if class_id in classes_to_create:
+                        records.append(self._cdm.ConceptClass(
+                            concept_class_id=row['concept_class_id'],
+                            concept_class_name=row['concept_class_name'],
+                            concept_class_concept_id=row['concept_class_concept_id']
+                        ))
+                    elif class_id not in self._custom_classes_to_update:
+                        ignored_classes.update([class_id])
 
-                        if class_id in classes_to_create:
-                            records.append(self._cdm.ConceptClass(
-                                concept_class_id=row['concept_class_id'],
-                                concept_class_name=row['concept_class_name'],
-                                concept_class_concept_id=row['concept_class_concept_id']
-                            ))
-                        elif class_id not in self._custom_classes_to_update:
-                            ignored_classes.update([class_id])
-
-                    session.add_all(records)
+                session.add_all(records)
 
         if ignored_classes:
             logger.info(f'Skipped records with concept_class_id values that '
@@ -197,26 +193,25 @@ class BaseClassManager:
         ignored_classes = Counter()
 
         for class_file in self._custom_class_files:
-            with open_transformation(name=f'load_{class_file.stem}') as transformation_metadata:
-                with self._db.session_scope(metadata=transformation_metadata) as session, \
-                        class_file.open('r') as f_in:
-                    rows = csv.DictReader(f_in, delimiter='\t')
+            with self._db.tracked_session_scope(name=f'load_{class_file.stem}') as (session, _), \
+                    class_file.open('r') as f_in:
+                rows = csv.DictReader(f_in, delimiter='\t')
 
-                    for row in rows:
-                        class_id = row['concept_class_id']
+                for row in rows:
+                    class_id = row['concept_class_id']
 
-                        if class_id in classes_to_update:
-                            session.query(self._cdm.ConceptClass) \
-                                .filter(self._cdm.ConceptClass.concept_class_id
-                                        == row['concept_class_id']) \
-                                .update({self._cdm.ConceptClass.concept_class_name:
-                                        row['concept_class_name']})
+                    if class_id in classes_to_update:
+                        session.query(self._cdm.ConceptClass) \
+                            .filter(self._cdm.ConceptClass.concept_class_id
+                                    == row['concept_class_id']) \
+                            .update({self._cdm.ConceptClass.concept_class_name:
+                                    row['concept_class_name']})
 
-                        # this check has already been performed in the
-                        # _load_custom_classes transformation, unless
-                        # there were no classes new class_ids to add
-                        elif not self._custom_classes_to_create:
-                            ignored_classes.update([class_id])
+                    # this check has already been performed in the
+                    # _load_custom_classes transformation, unless
+                    # there were no classes new class_ids to add
+                    elif not self._custom_classes_to_create:
+                        ignored_classes.update([class_id])
 
         if ignored_classes:
             logger.info(f'Skipped records with concept_class_id values that '

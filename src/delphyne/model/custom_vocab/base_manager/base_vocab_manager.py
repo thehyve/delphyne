@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import List, Dict
 
 from ....database import Database
-from ....model.etl_stats import open_transformation
 from ....util.io import get_file_prefix
 
 logger = logging.getLogger(__name__)
@@ -143,11 +142,10 @@ class BaseVocabManager:
         if not vocabs_to_drop:
             return
 
-        with open_transformation(name='drop_concepts') as transformation_metadata:
-            with self._db.session_scope(metadata=transformation_metadata) as session:
-                session.query(self._cdm.Vocabulary) \
-                    .filter(self._cdm.Vocabulary.vocabulary_id.in_(vocabs_to_drop)) \
-                    .delete(synchronize_session=False)
+        with self._db.tracked_session_scope(name='drop_concepts') as (session, _):
+            session.query(self._cdm.Vocabulary) \
+                .filter(self._cdm.Vocabulary.vocabulary_id.in_(vocabs_to_drop)) \
+                .delete(synchronize_session=False)
 
     def _load_custom_vocabs(self) -> None:
         # Load new and updated custom vocabularies to the database
@@ -167,40 +165,37 @@ class BaseVocabManager:
             file_prefix = get_file_prefix(vocab_file, 'vocabulary')
             invalid_vocabs = set()
 
-            with open_transformation(name=f'load_{vocab_file.stem}') as transformation_metadata:
+            with self._db.tracked_session_scope(name=f'load_{vocab_file.stem}') \
+                    as (session, _), vocab_file.open('r') as f_in:
+                rows = csv.DictReader(f_in, delimiter='\t')
+                records = []
 
-                with self._db.session_scope(metadata=transformation_metadata) as session, \
-                        vocab_file.open('r') as f_in:
-                    rows = csv.DictReader(f_in, delimiter='\t')
-                    records = []
+                for row in rows:
+                    vocabulary_id = row['vocabulary_id']
 
-                    for row in rows:
-                        vocabulary_id = row['vocabulary_id']
+                    if vocabulary_id in vocabs_to_create:
+                        records.append(self._cdm.Vocabulary(
+                            vocabulary_id=row['vocabulary_id'],
+                            vocabulary_name=row['vocabulary_name'],
+                            vocabulary_reference=row['vocabulary_reference'],
+                            vocabulary_version=row['vocabulary_version'],
+                            vocabulary_concept_id=row['vocabulary_concept_id']
+                        ))
+                    else:
+                        ignored_vocabs.update([vocabulary_id])
 
-                        if vocabulary_id in vocabs_to_create:
-                            records.append(self._cdm.Vocabulary(
-                                vocabulary_id=row['vocabulary_id'],
-                                vocabulary_name=row['vocabulary_name'],
-                                vocabulary_reference=row['vocabulary_reference'],
-                                vocabulary_version=row['vocabulary_version'],
-                                vocabulary_concept_id=row['vocabulary_concept_id']
-                            ))
-                        else:
-                            ignored_vocabs.update([vocabulary_id])
+                    # if file prefix is valid vocab_id,
+                    # vocabulary_ids in file should match it.
+                    # comparison is case-insensitive.
+                    vocabs_lowercase = {vocab.lower() for vocab in self.vocabs_from_disk}
+                    if file_prefix in vocabs_lowercase and vocabulary_id.lower() != file_prefix:
+                        invalid_vocabs.add(vocabulary_id)
 
-                        # if file prefix is valid vocab_id,
-                        # vocabulary_ids in file should match it.
-                        # comparison is case-insensitive.
-                        vocabs_lowercase = {vocab.lower() for vocab in self.vocabs_from_disk}
-                        if (file_prefix in vocabs_lowercase
-                                and vocabulary_id.lower() != file_prefix):
-                            invalid_vocabs.add(vocabulary_id)
+                session.add_all(records)
 
-                    session.add_all(records)
-
-                if invalid_vocabs:
-                    logging.warning(f'{vocab_file.name} contains vocabulary_ids '
-                                    f'that do not match file prefix')
+            if invalid_vocabs:
+                logging.warning(f'{vocab_file.name} contains vocabulary_ids '
+                                f'that do not match file prefix')
 
         if ignored_vocabs:
             logger.info(f'Skipped records with vocabulary_id values that '
