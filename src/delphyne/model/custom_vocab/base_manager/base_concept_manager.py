@@ -63,7 +63,6 @@ class BaseConceptManager:
             with self._db.session_scope(metadata=transformation_metadata) as session, \
                     concept_file.open('r') as f_in:
                 rows = csv.DictReader(f_in, delimiter='\t')
-                records = []
 
                 for row in rows:
                     concept_id = row['concept_id']
@@ -80,7 +79,7 @@ class BaseConceptManager:
                             f'files')
 
                     if vocabulary_id in vocab_ids:
-                        records.append(self._cdm.Concept(
+                        session.add(self._cdm.Concept(
                             concept_id=row['concept_id'],
                             concept_name=row['concept_name'],
                             domain_id=row['domain_id'],
@@ -98,8 +97,6 @@ class BaseConceptManager:
                     # comparison is case-insensitive.
                     if file_prefix in vocabs_lowercase and vocabulary_id.lower() != file_prefix:
                         invalid_vocabs.add(vocabulary_id)
-
-                session.add_all(records)
 
                 transformation_metadata.end_now()
                 etl_stats.add_transformation(transformation_metadata)
