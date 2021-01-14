@@ -101,3 +101,8 @@ def test_load_stcm(cdm600_wrapper_no_constraints: Wrapper, base_stcm_dir: Path, 
         assert records == [('code1', 'MY_VOCAB1'), ('code2', 'MY_VOCAB2')]
     assert "Skipping file MY_VOCAB1_stcm.csv" in caplog.text
     assert "already loaded under the current version: [('MY_VOCAB1', 1)]" in caplog.text
+
+    # Nothing new provided
+    with mock_stcm_paths(base_stcm_dir, 'stcm2'), caplog.at_level(logging.INFO):
+        wrapper.vocab_manager.load_stcm()
+    assert "No new STCM versions provided" in caplog.text
