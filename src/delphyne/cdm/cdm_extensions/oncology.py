@@ -1,3 +1,5 @@
+"""OMOP CDM 6.0.0 oncology extension tables."""
+
 from sqlalchemy import (BigInteger, Column, DateTime, ForeignKey,
                         Integer, String, Date, Numeric)
 from sqlalchemy.ext.declarative import declared_attr

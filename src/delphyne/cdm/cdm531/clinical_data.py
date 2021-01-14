@@ -1,3 +1,5 @@
+"""OMOP CDM 5.3.1 clinical tables."""
+
 from sqlalchemy import (Column, Date, DateTime, ForeignKey, Integer,
                         Numeric, String, Text)
 from sqlalchemy.ext.declarative import declared_attr

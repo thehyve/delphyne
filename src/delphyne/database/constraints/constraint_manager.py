@@ -1,3 +1,14 @@
+"""
+Module for constraint/index operations.
+
+Two different MetaData objects are used within this module. The model
+metadata at Database.base.metadata, which contains the table definitions
+defined by the user in the template, and the reflected metadata at
+Database.reflected_metadata which contains table definitions of what is
+actually present in the database. Add-methods use the model metadata,
+while drop-methods use the reflected metadata.
+"""
+
 from __future__ import annotations
 
 import logging
@@ -13,13 +24,6 @@ from .conventions import VOCAB_TABLES
 
 if TYPE_CHECKING:
     from ..database import Database
-
-# Two different MetaData objects are used within this module. The model
-# metadata at Database.base.metadata, which contains the table
-# definitions defined by the user in the template, and the reflected
-# metadata at Database.reflected_metadata which contains table
-# definitions of what is actually present in the database. Add-methods
-# use the model metadata, while drop-methods use the reflected metadata.
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +57,14 @@ def _create_constraint_lookup(metadata: MetaData) -> Dict[str, ConstraintOrIndex
 
 
 class _TargetModel:
-    """Lookup class for table properties of the target model."""
+    """
+    Lookup class for table properties of the target model.
+
+    Parameters
+    ----------
+    metadata : sqlalchemy.MetaData
+        Metadata instance of the CDM model.
+    """
     def __init__(self, metadata: MetaData):
         self.table_lookup = {t.name: t for t in metadata.tables.values()}
         self.constraint_lookup = _create_constraint_lookup(metadata)
@@ -66,7 +77,19 @@ class _TargetModel:
                             if _is_non_pk_constraint(c)]
 
     def is_model_table(self, table_name: str) -> bool:
-        # Check table exists within the CDM model MetaData instance
+        """
+        Check table exists within the CDM model MetaData instance.
+
+        Parameters
+        ----------
+        table_name : str
+            Database table name.
+
+        Returns
+        -------
+        bool
+            If table_name is part of the model, return True.
+        """
         return table_name in self.table_lookup
 
 
@@ -79,6 +102,11 @@ class ConstraintManager:
 
     Dropping does not cascade; meaning that if a constraint cannot be
     dropped because another object depends on it, it will remain active.
+
+    Parameters
+    ----------
+    database : Database
+        Database instance to interact with.
     """
     def __init__(self, database: Database):
         self._db = database
@@ -96,6 +124,13 @@ class ConstraintManager:
 
     @staticmethod
     def invalidate_current_db_cache() -> None:
+        """
+        Invalidate table/constraint lookups based on reflected metadata.
+
+        Returns
+        -------
+        None
+        """
         logger.debug('Invalidating database tables cache')
         ConstraintManager._reflected_table_lookup.fget.cache_clear()
         ConstraintManager._reflected_constraint_lookup.fget.cache_clear()
@@ -112,13 +147,18 @@ class ConstraintManager:
         there are any additional tables in your database that are not
         bound to Base, they will not be affected by this method.
 
-        :param drop_constraint: bool, default True
+        Parameters
+        ----------
+        drop_constraint : bool, default True
             If True, drop any FK, unique and check constraints.
-        :param drop_pk: bool, default True
+        drop_pk : bool, default True
             If True, drop all PKs.
-        :param drop_index: bool, default True
+        drop_index : bool, default True
             If True, drop all indexes.
-        :return: None
+
+        Returns
+        -------
+        None
         """
         logger.info('Dropping all constraints')
 
@@ -148,13 +188,18 @@ class ConstraintManager:
         called, they will remain active and not be added a second time,
         regardless of constraint names.
 
-        :param add_constraint: bool, default True
+        Parameters
+        ----------
+        add_constraint : bool, default True
             If True, add all FK, unique and check constraints.
-        :param add_pk: bool, default True
+        add_pk : bool, default True
             If True, add all PKs.
-        :param add_index: bool, default True
+        add_index : bool, default True
             If True, add all indexes.
-        :return: None
+
+        Returns
+        -------
+        None
         """
         logger.info('Adding all constraints')
         constraints, pks, indexes = [], [], []
@@ -181,13 +226,18 @@ class ConstraintManager:
         additional tables in your database that are not bound to Base,
         they will not be affected by this method.
 
-        :param drop_constraint: bool, default True
+        Parameters
+        ----------
+        drop_constraint : bool, default True
             If True, drop any FK, unique and check constraints.
-        :param drop_pk: bool, default True
+        drop_pk : bool, default True
             If True, drop all PKs.
-        :param drop_index: bool, default True
+        drop_index : bool, default True
             If True, drop all indexes.
-        :return: None
+
+        Returns
+        -------
+        None
         """
         logger.info('Dropping CDM constraints')
 
@@ -219,13 +269,18 @@ class ConstraintManager:
         called, they will remain active and not be added a second time,
         regardless of constraint names.
 
-        :param add_constraint: bool, default True
+        Parameters
+        ----------
+        add_constraint : bool, default True
             If True, add all FK, unique and check constraints.
-        :param add_pk: bool, default True
+        add_pk : bool, default True
             If True, add all PKs.
-        :param add_index: bool, default True
+        add_index : bool, default True
             If True, add all indexes.
-        :return: None
+
+        Returns
+        -------
+        None
         """
         logger.info('Adding CDM constraints')
         constraints, pks, indexes = [], [], []
@@ -250,15 +305,20 @@ class ConstraintManager:
         """
         Remove constraints/indexes of a CDM table.
 
-        :param table_name: str
+        Parameters
+        ----------
+        table_name : str
             Name of the table, without schema name.
-        :param drop_constraint: bool, default True
+        drop_constraint : bool, default True
             If True, drop any FK, unique and check constraints.
-        :param drop_pk: bool, default True
+        drop_pk : bool, default True
             If True, drop the PK.
-        :param drop_index: bool, default True
+        drop_index : bool, default True
             If True, drop all indexes.
-        :return: None
+
+        Returns
+        -------
+        None
         """
         logger.info(f'Dropping constraints on table {table_name}')
         table = self._reflected_table_lookup.get(table_name)
@@ -288,15 +348,20 @@ class ConstraintManager:
         method is called, they will remain active and not be added a
         second time, regardless of constraint names.
 
-        :param table_name: str
+        Parameters
+        ----------
+        table_name : str
             Name of the table, without schema name.
-        :param add_constraint: bool, default True
+        add_constraint : bool, default True
             If True, add any FK, unique and check constraints.
-        :param add_pk: bool, default True
+        add_pk : bool, default True
             Add the table's PK if there is one.
-        :param add_index: bool, default True
+        add_index : bool, default True
             Add all table indexes.
-        :return: None
+
+        Returns
+        -------
+        None
         """
         logger.info(f'Adding constraints on table {table_name}')
         table = self._model.table_lookup.get(table_name)
@@ -317,9 +382,14 @@ class ConstraintManager:
         This can be either a PK, FK, not null, unique or check
         constraint.
 
-        :param constraint_name: str
+        Parameters
+        ----------
+        constraint_name : str
             Name of the constraint as it exists in the database.
-        :return: None
+
+        Returns
+        -------
+        None
         """
         constraint = self._reflected_constraint_lookup.get(constraint_name)
         if constraint is None:
@@ -332,9 +402,14 @@ class ConstraintManager:
         """
         Drop a single index by name.
 
-        :param index_name: str
+        Parameters
+        ----------
+        index_name : str
             Name of the index as it exists in the database.
-        :return: None
+
+        Returns
+        -------
+        None
         """
         index = self._reflected_constraint_lookup.get(index_name)
         if index is None:
@@ -350,9 +425,14 @@ class ConstraintManager:
         This can be either a PK, FK, not null, unique or check
         constraint.
 
-        :param constraint: str
+        Parameters
+        ----------
+        constraint : str
             Name of the constraint as it exists in the model.
-        :return: None
+
+        Returns
+        -------
+        None
         """
         self._add_constraint_or_index(constraint)
 
@@ -361,9 +441,14 @@ class ConstraintManager:
         """
         Add a single index by name.
 
-        :param index: str
+        Parameters
+        ----------
+        index : str
             Name of the index as it exists in the model.
-        :return: None
+
+        Returns
+        -------
+        None
         """
         self._add_constraint_or_index(index)
 
@@ -378,7 +463,7 @@ class ConstraintManager:
         # Because we don't know in which order the table constraints can
         # be dropped without violating one in the process, we first
         # collect all of them. They can then safely be dropped in the
-        # following order: indexes, non-pk constraints, pks.
+        # following order: non-pk constraints, indexes, pks.
         constraints, pks, indexes = [], [], []
         for table in tables:
             for constraint in table.constraints:
