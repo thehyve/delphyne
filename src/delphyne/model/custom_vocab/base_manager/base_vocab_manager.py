@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import List, Dict
 
 from ....database import Database
-from ....model.etl_stats import EtlTransformation, etl_stats
 from ....util.io import get_file_prefix
 
 logger = logging.getLogger(__name__)
@@ -143,15 +142,10 @@ class BaseVocabManager:
         if not vocabs_to_drop:
             return
 
-        transformation_metadata = EtlTransformation(name='drop_concepts')
-
-        with self._db.session_scope(metadata=transformation_metadata) as session:
+        with self._db.tracked_session_scope(name='drop_vocabs') as (session, _):
             session.query(self._cdm.Vocabulary) \
                 .filter(self._cdm.Vocabulary.vocabulary_id.in_(vocabs_to_drop)) \
                 .delete(synchronize_session=False)
-
-            transformation_metadata.end_now()
-            etl_stats.add_transformation(transformation_metadata)
 
     def _load_custom_vocabs(self) -> None:
         # Load new and updated custom vocabularies to the database
@@ -171,10 +165,8 @@ class BaseVocabManager:
             file_prefix = get_file_prefix(vocab_file, 'vocabulary')
             invalid_vocabs = set()
 
-            transformation_metadata = EtlTransformation(name=f'load_{vocab_file.stem}')
-
-            with self._db.session_scope(metadata=transformation_metadata) as session, \
-                    vocab_file.open('r') as f_in:
+            with self._db.tracked_session_scope(name=f'load_{vocab_file.stem}') \
+                    as (session, _), vocab_file.open('r') as f_in:
                 rows = csv.DictReader(f_in, delimiter='\t')
                 records = []
 
@@ -200,9 +192,6 @@ class BaseVocabManager:
                         invalid_vocabs.add(vocabulary_id)
 
                 session.add_all(records)
-
-                transformation_metadata.end_now()
-                etl_stats.add_transformation(transformation_metadata)
 
             if invalid_vocabs:
                 logging.warning(f'{vocab_file.name} contains vocabulary_ids '

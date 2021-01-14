@@ -1,11 +1,10 @@
 import csv
 import logging
+from collections import Counter
 from pathlib import Path
 from typing import List, Dict
-from collections import Counter
 
 from ....database import Database
-from ....model.etl_stats import EtlTransformation, etl_stats
 
 logger = logging.getLogger(__name__)
 
@@ -135,15 +134,10 @@ class BaseClassManager:
         if not classes_to_drop:
             return
 
-        transformation_metadata = EtlTransformation(name='drop_concepts')
-
-        with self._db.session_scope(metadata=transformation_metadata) as session:
+        with self._db.tracked_session_scope(name='drop_concepts') as (session, _):
             session.query(self._cdm.ConceptClass) \
                 .filter(self._cdm.ConceptClass.concept_class_id.in_(classes_to_drop)) \
                 .delete(synchronize_session=False)
-
-            transformation_metadata.end_now()
-            etl_stats.add_transformation(transformation_metadata)
 
     def _load_custom_classes(self) -> None:
         # Load new custom concept_classes to the database
@@ -159,10 +153,7 @@ class BaseClassManager:
         ignored_classes = Counter()
 
         for class_file in self._custom_class_files:
-
-            transformation_metadata = EtlTransformation(name=f'load_{class_file.stem}')
-
-            with self._db.session_scope(metadata=transformation_metadata) as session, \
+            with self._db.tracked_session_scope(name=f'load_{class_file.stem}') as (session, _), \
                     class_file.open('r') as f_in:
                 rows = csv.DictReader(f_in, delimiter='\t')
 
@@ -181,9 +172,6 @@ class BaseClassManager:
                         ignored_classes.update([class_id])
 
                 session.add_all(records)
-
-                transformation_metadata.end_now()
-                etl_stats.add_transformation(transformation_metadata)
 
         if ignored_classes:
             logger.info(f'Skipped records with concept_class_id values that '
@@ -205,9 +193,7 @@ class BaseClassManager:
         ignored_classes = Counter()
 
         for class_file in self._custom_class_files:
-            transformation_metadata = EtlTransformation(name=f'load_{class_file.stem}')
-
-            with self._db.session_scope(metadata=transformation_metadata) as session, \
+            with self._db.tracked_session_scope(name=f'load_{class_file.stem}') as (session, _), \
                     class_file.open('r') as f_in:
                 rows = csv.DictReader(f_in, delimiter='\t')
 
@@ -226,9 +212,6 @@ class BaseClassManager:
                     # there were no classes new class_ids to add
                     elif not self._custom_classes_to_create:
                         ignored_classes.update([class_id])
-
-                transformation_metadata.end_now()
-                etl_stats.add_transformation(transformation_metadata)
 
         if ignored_classes:
             logger.info(f'Skipped records with concept_class_id values that '
