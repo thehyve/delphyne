@@ -57,9 +57,10 @@ class StcmLoader:
         self._delete_outdated_stcm_records()
 
         stcm_files = self._get_stcm_files()
+        vocab_ids_all = set(self._provided_stcm_versions.keys())
         for stcm_file in stcm_files:
             if not file_has_valid_prefix(stcm_file, 'stcm',
-                                         all_prefixes=self._provided_stcm_versions,
+                                         all_prefixes=vocab_ids_all,
                                          valid_prefixes=self._stcm_vocabs_to_update):
                 logger.info(f'Skipping file {stcm_file.name} as this STCM file '
                             f'has no new version available.')
