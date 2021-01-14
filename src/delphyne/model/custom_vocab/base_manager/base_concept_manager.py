@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Set, List
 
 from ....database import Database
-from ....model.etl_stats import EtlTransformation, etl_stats
 from ....util.io import get_file_prefix
 
 logger = logging.getLogger(__name__)
@@ -30,15 +29,10 @@ class BaseConceptManager:
         if not vocab_ids:
             return
 
-        transformation_metadata = EtlTransformation(name='drop_concepts')
-
-        with self._db.session_scope(metadata=transformation_metadata) as session:
+        with self._db.tracked_session_scope(name='drop_concepts') as (session, _):
             session.query(self._cdm.Concept) \
                 .filter(self._cdm.Concept.vocabulary_id.in_(vocab_ids)) \
                 .delete(synchronize_session=False)
-
-            transformation_metadata.end_now()
-            etl_stats.add_transformation(transformation_metadata)
 
     def _load_custom_concepts(self, vocab_ids: Set[str], valid_prefixes: Set[str]) -> None:
         # Load concept_ids associated with a set of custom
@@ -55,13 +49,12 @@ class BaseConceptManager:
 
         for concept_file in self._custom_concept_files:
 
-            transformation_metadata = EtlTransformation(name=f'load_{concept_file.stem}')
-
             file_prefix = get_file_prefix(concept_file, 'concept')
             invalid_vocabs = set()
 
-            with self._db.session_scope(metadata=transformation_metadata) as session, \
-                    concept_file.open('r') as f_in:
+            with self._db.tracked_session_scope(name=f'load_{concept_file.stem}') \
+                    as (session, _), concept_file.open('r') as f_in:
+
                 rows = csv.DictReader(f_in, delimiter='\t')
 
                 for row in rows:
@@ -97,9 +90,6 @@ class BaseConceptManager:
                     # comparison is case-insensitive.
                     if file_prefix in vocabs_lowercase and vocabulary_id.lower() != file_prefix:
                         invalid_vocabs.add(vocabulary_id)
-
-                transformation_metadata.end_now()
-                etl_stats.add_transformation(transformation_metadata)
 
             if invalid_vocabs:
                 logging.warning(f'{concept_file.name} contains vocabulary_ids '

@@ -3,12 +3,11 @@ import logging
 from collections import Counter
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, Set, Optional
+from typing import Dict, Set
 
 from sqlalchemy import MetaData
 from sqlalchemy.exc import InvalidRequestError
 
-from ..etl_stats import EtlTransformation, etl_stats
 from ..._paths import STCM_DIR, STCM_VERSION_FILE
 from ...cdm._schema_placeholders import VOCAB_SCHEMA
 from ...cdm.vocabularies import BaseSourceToConceptMapVersion
@@ -134,8 +133,7 @@ class StcmLoader:
 
     def _load_stcm_from_file(self, stcm_file: Path) -> None:
         logger.info(f'Loading STCM file: {stcm_file.name}')
-        transformation_metadata = EtlTransformation(name=f'load_{stcm_file.stem}')
-        with self._db.session_scope(metadata=transformation_metadata) as session, \
+        with self._db.tracked_session_scope(name=f'load_{stcm_file.stem}') as (session, _), \
                 stcm_file.open('r') as f_in:
             rows = csv.DictReader(f_in)
             ignored_vocabs = Counter()
@@ -157,9 +155,6 @@ class StcmLoader:
                     raise ValueError(f'Cannot insert line {i} of {stcm_file.name}. '
                                      f'{source_vocabulary_id} is not in the vocabulary table')
                 session.add(self._cdm.SourceToConceptMap(**row))
-
-            transformation_metadata.end_now()
-            etl_stats.add_transformation(transformation_metadata)
 
             if unrecognized_vocabs:
                 logger.warning(f'Skipped records with source_vocabulary_id values that '

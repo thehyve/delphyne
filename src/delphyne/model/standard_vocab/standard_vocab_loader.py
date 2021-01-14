@@ -3,7 +3,7 @@ from collections import Counter
 from pathlib import Path
 from typing import List, Set, Dict
 
-from ..etl_stats import EtlTransformation, etl_stats
+from ..etl_stats import open_transformation
 from ..._paths import STANDARD_VOCAB_DIR
 from ...cdm import vocabularies
 from ...cdm._schema_placeholders import VOCAB_SCHEMA
@@ -74,20 +74,18 @@ class StandardVocabLoader:
 
     def _insert_vocab_file(self, table: str, vocab_file: Path) -> None:
         # postgresql-specific implementation
-        transformation_metadata = EtlTransformation(name=f'load_{vocab_file.stem}')
-        connection = self._db.engine.raw_connection()
-        try:
-            cursor = connection.cursor()
-            statement = f"COPY {table} FROM STDIN WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';"
-            with vocab_file.open('rb') as f:
-                cursor.copy_expert(sql=statement, file=f)
-            transformation_metadata.insertion_counts += Counter({table: cursor.rowcount})
-            cursor.close()
-            connection.commit()
-        finally:
-            connection.close()
-        transformation_metadata.end_now()
-        etl_stats.add_transformation(transformation_metadata)
+        with open_transformation(name=f'load_{vocab_file.stem}') as transformation_metadata:
+            connection = self._db.engine.raw_connection()
+            try:
+                cursor = connection.cursor()
+                statement = f"COPY {table} FROM STDIN WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';"
+                with vocab_file.open('rb') as f:
+                    cursor.copy_expert(sql=statement, file=f)
+                transformation_metadata.insertion_counts += Counter({table: cursor.rowcount})
+                cursor.close()
+                connection.commit()
+            finally:
+                connection.close()
 
     def _check_vocab_tables_are_empty(self) -> None:
         # We require all vocabulary tables to be empty beforehand, to

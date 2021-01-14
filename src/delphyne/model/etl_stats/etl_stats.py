@@ -17,8 +17,9 @@ import datetime
 import logging
 from abc import ABC, abstractmethod
 from collections import Counter
+from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Optional, Union, List, Dict, ClassVar
+from typing import Optional, Union, List, Dict, ClassVar, ContextManager
 
 import pandas as pd
 from itertools import chain
@@ -177,3 +178,35 @@ class EtlStats:
 
 
 etl_stats = EtlStats()
+
+
+@contextmanager
+def open_transformation(name: str, **kwargs) -> ContextManager[EtlTransformation]:
+    """
+    Wrap an EtlTransformation for tracking changes.
+
+    Unless provided otherwise via kwargs, start and end time will be set
+    to the time of entering and closing the with statement respectively.
+    The created instance will be automatically added to the etl_stats
+    collection.
+
+    Parameters
+    ----------
+    name : str
+        Name describing the current transformation.
+    **kwargs
+        These parameters will be passed on to the EtlTransformation
+        constructor.
+
+    Yields
+    -------
+    EtlTransformation
+        Instance to track table changes.
+    """
+    transformation = EtlTransformation(name=name, **kwargs)
+    try:
+        yield transformation
+    finally:
+        if transformation.end is None:
+            transformation.end_now()
+        etl_stats.add_transformation(transformation)

@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from contextlib import contextmanager
 from getpass import getpass
-from typing import Dict, Optional, Set, FrozenSet
+from typing import Dict, Set, FrozenSet, ContextManager, Tuple
 
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.exc import OperationalError
@@ -14,7 +14,7 @@ from sqlalchemy_utils.functions import database_exists
 from .constraints import ConstraintManager
 from .session_tracker import SessionTracker
 from ..config.models import MainConfig
-from ..model.etl_stats import EtlTransformation
+from ..model.etl_stats import EtlTransformation, open_transformation
 
 logger = logging.getLogger(__name__)
 
@@ -90,37 +90,81 @@ class Database:
     @contextmanager
     def session_scope(self,
                       raise_on_error: bool = True,
-                      metadata: Optional[EtlTransformation] = None
-                      ) -> None:
+                      ) -> ContextManager[Session]:
         """
-        Provide a transactional scope around a series of operations.
+        Provide a transactional scope.
 
-        :param raise_on_error: bool, default True
-            if True, raise the exception when the session cannot be
-            committed
-        :param metadata: EtlTransformation, default None
-            if provided, all flushed table mutations (i.e. inserts,
-            updates, deletions) will be stored in this object
-        :return: None
+        Before closing, the session will try to commit any changes that
+        were made. If the commit fails, a rollback is performed.
+
+        Parameters
+        ----------
+        raise_on_error : bool, default True
+            If False, when the session cannot be committed, close
+            session and return. Otherwise raise the exception.
+
+        Yields
+        -------
+        Session
+            SQLAlchemy open session.
         """
         session = self.get_new_session()
-        session_id = id(session)
-        if metadata is not None:
-            SessionTracker.sessions[session_id] = metadata
-
         try:
             yield session
             session.commit()
         except Exception as e:
             logging.error(e, exc_info=True)
             self.perform_rollback(session)
-            if metadata is not None:
-                metadata.query_success = False
             if raise_on_error:
                 raise
         finally:
-            SessionTracker.remove_session(session_id)
             session.close()
+
+    @contextmanager
+    def tracked_session_scope(self,
+                              name: str,
+                              raise_on_error: bool = True,
+                              ) -> ContextManager[Tuple[Session, EtlTransformation]]:
+        """
+        Provide a transactional scope, tracking table record changes.
+
+        Before closing, the session will try to commit any changes that
+        were made. If the commit fails, a rollback is performed.
+        Changes made in the session will be captured in an
+        EtlTransformation instance that will be added to etl_stats.
+
+        Parameters
+        ----------
+        name : str
+            Name of the transformation as captured in an
+            EtlTransformation metadata instance.
+        raise_on_error : bool, default True
+            If False, when the session cannot be committed, close
+            session and return. Otherwise raise the exception.
+
+        Yields
+        -------
+        Session
+            SQLAlchemy open session.
+        EtlTransformation
+            Container storing metadata about the session.
+        """
+        session = self.get_new_session()
+        session_id = id(session)
+        with open_transformation(name=name) as metadata:
+            SessionTracker.sessions[session_id] = metadata
+            try:
+                yield session, metadata
+                session.commit()
+            except Exception as e:
+                logging.error(e, exc_info=True)
+                self.perform_rollback(session)
+                metadata.query_success = False
+                if raise_on_error:
+                    raise
+            finally:
+                SessionTracker.remove_session(session_id)
+                session.close()
 
     @staticmethod
     def can_connect(uri: str) -> bool:
