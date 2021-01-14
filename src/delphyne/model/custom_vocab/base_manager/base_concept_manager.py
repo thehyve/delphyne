@@ -51,6 +51,7 @@ class BaseConceptManager:
             return
 
         unique_concepts_check = set()
+        vocabs_lowercase = {vocab.lower() for vocab in valid_prefixes}
 
         for concept_file in self._custom_concept_files:
 
@@ -95,7 +96,6 @@ class BaseConceptManager:
                     # if file prefix is valid vocab_id,
                     # vocabulary_ids in file should match it.
                     # comparison is case-insensitive.
-                    vocabs_lowercase = {vocab.lower() for vocab in valid_prefixes}
                     if file_prefix in vocabs_lowercase and vocabulary_id.lower() != file_prefix:
                         invalid_vocabs.add(vocabulary_id)
 
