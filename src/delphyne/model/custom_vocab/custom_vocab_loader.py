@@ -44,11 +44,11 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         # vocabulary_id to be updated), no prefix, or a prefix
         # unrelated to vocabulary_ids; a valid but mismatching prefix
         # will cause the file to be ignored.
-        vocab_ids_all = self.vocabs_from_disk
-        vocabs_ids_to_update = self._custom_vocabs_to_update
-        return [f for f in file_list if file_has_valid_prefix(f, omop_table,
-                                                              all_prefixes=vocab_ids_all,
-                                                              valid_prefixes=vocabs_ids_to_update)]
+        vocab_ids_all = set(self.vocabs_from_disk.keys())
+        return [f for f in file_list
+                if file_has_valid_prefix(f, omop_table,
+                                         all_prefixes=vocab_ids_all,
+                                         valid_prefixes=self._custom_vocabs_to_update)]
 
     def load_custom_vocabulary_tables(self) -> None:
         self._initialize_table_managers()

@@ -157,21 +157,17 @@ class BaseClassManager:
                     class_file.open('r') as f_in:
                 rows = csv.DictReader(f_in, delimiter='\t')
 
-                records = []
-
                 for row in rows:
                     class_id = row['concept_class_id']
 
                     if class_id in classes_to_create:
-                        records.append(self._cdm.ConceptClass(
+                        session.add(self._cdm.ConceptClass(
                             concept_class_id=row['concept_class_id'],
                             concept_class_name=row['concept_class_name'],
                             concept_class_concept_id=row['concept_class_concept_id']
                         ))
                     elif class_id not in self._custom_classes_to_update:
                         ignored_classes.update([class_id])
-
-                session.add_all(records)
 
         if ignored_classes:
             logger.info(f'Skipped records with concept_class_id values that '

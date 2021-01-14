@@ -159,6 +159,7 @@ class BaseVocabManager:
             return
 
         ignored_vocabs = Counter()
+        vocabs_lowercase = {vocab.lower() for vocab in self.vocabs_from_disk}
 
         for vocab_file in self._custom_vocab_files:
 
@@ -168,13 +169,12 @@ class BaseVocabManager:
             with self._db.tracked_session_scope(name=f'load_{vocab_file.stem}') \
                     as (session, _), vocab_file.open('r') as f_in:
                 rows = csv.DictReader(f_in, delimiter='\t')
-                records = []
 
                 for row in rows:
                     vocabulary_id = row['vocabulary_id']
 
                     if vocabulary_id in vocabs_to_create:
-                        records.append(self._cdm.Vocabulary(
+                        session.add(self._cdm.Vocabulary(
                             vocabulary_id=row['vocabulary_id'],
                             vocabulary_name=row['vocabulary_name'],
                             vocabulary_reference=row['vocabulary_reference'],
@@ -187,11 +187,8 @@ class BaseVocabManager:
                     # if file prefix is valid vocab_id,
                     # vocabulary_ids in file should match it.
                     # comparison is case-insensitive.
-                    vocabs_lowercase = {vocab.lower() for vocab in self.vocabs_from_disk}
                     if file_prefix in vocabs_lowercase and vocabulary_id.lower() != file_prefix:
                         invalid_vocabs.add(vocabulary_id)
-
-                session.add_all(records)
 
             if invalid_vocabs:
                 logging.warning(f'{vocab_file.name} contains vocabulary_ids '

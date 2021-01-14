@@ -45,6 +45,7 @@ class BaseConceptManager:
             return
 
         unique_concepts_check = set()
+        vocabs_lowercase = {vocab.lower() for vocab in valid_prefixes}
 
         for concept_file in self._custom_concept_files:
 
@@ -55,7 +56,6 @@ class BaseConceptManager:
                     as (session, _), concept_file.open('r') as f_in:
 
                 rows = csv.DictReader(f_in, delimiter='\t')
-                records = []
 
                 for row in rows:
                     concept_id = row['concept_id']
@@ -72,7 +72,7 @@ class BaseConceptManager:
                             f'files')
 
                     if vocabulary_id in vocab_ids:
-                        records.append(self._cdm.Concept(
+                        session.add(self._cdm.Concept(
                             concept_id=row['concept_id'],
                             concept_name=row['concept_name'],
                             domain_id=row['domain_id'],
@@ -88,11 +88,8 @@ class BaseConceptManager:
                     # if file prefix is valid vocab_id,
                     # vocabulary_ids in file should match it.
                     # comparison is case-insensitive.
-                    vocabs_lowercase = {vocab.lower() for vocab in valid_prefixes}
                     if file_prefix in vocabs_lowercase and vocabulary_id.lower() != file_prefix:
                         invalid_vocabs.add(vocabulary_id)
-
-                session.add_all(records)
 
             if invalid_vocabs:
                 logging.warning(f'{concept_file.name} contains vocabulary_ids '
