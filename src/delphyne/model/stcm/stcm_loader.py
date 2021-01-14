@@ -53,6 +53,9 @@ class StcmLoader:
             raise FileNotFoundError(f'{STCM_DIR.resolve()} folder not found')
         self._get_loaded_stcm_versions()
         self._get_provided_stcm_versions()
+        if not self._stcm_vocabs_to_update:
+            logger.info('No new STCM versions provided')
+            return
         self._delete_outdated_stcm_records()
 
         stcm_files = self._get_stcm_files()
