@@ -142,7 +142,7 @@ class BaseVocabManager:
         if not vocabs_to_drop:
             return
 
-        with self._db.tracked_session_scope(name='drop_concepts') as (session, _):
+        with self._db.tracked_session_scope(name='drop_vocabs') as (session, _):
             session.query(self._cdm.Vocabulary) \
                 .filter(self._cdm.Vocabulary.vocabulary_id.in_(vocabs_to_drop)) \
                 .delete(synchronize_session=False)
