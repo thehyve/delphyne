@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from contextlib import contextmanager
 from getpass import getpass
+from types import MappingProxyType
 from typing import Dict, Set, FrozenSet, ContextManager, Tuple
 
 from sqlalchemy import create_engine, MetaData
@@ -20,10 +21,31 @@ logger = logging.getLogger(__name__)
 
 
 class Database:
-    schema_translate_map: Dict = {}
+    """
+    Handler for all interactions with the database.
+
+    Parameters
+    ----------
+    uri : str
+        Database URI for creating the SQLAlchemy engine.
+    schema_translate_map: dict of {str : str}
+        Contains the schema placeholder to actual schema name mappings.
+    base : SQLAlchemy declarative base
+        SQLAlchemy declarative base to which all CDM tables are bound.
+
+    Attributes
+    ----------
+    schemas
+    reflected_metadata
+    engine : sqlalchemy.engine.base.Engine
+        Database engine.
+    constraint_manager : ConstraintManager
+        Access point to alter constraints/indexes of the database.
+    """
+    schema_translate_map: MappingProxyType = None
 
     def __init__(self, uri: str, schema_translate_map: Dict[str, str], base):
-        Database.schema_translate_map = schema_translate_map
+        Database.schema_translate_map = MappingProxyType(schema_translate_map)
         self.engine = create_engine(uri, executemany_mode='values',
                                     execution_options={
                                         "schema_translate_map": schema_translate_map
@@ -38,12 +60,17 @@ class Database:
         """
         Create an instance of Database from a configuration file.
 
-        :param config: MainConfig
+        Parameters
+        ----------
+        config : MainConfig
             Contents of the configuration file.
-        :param base: SQLAlchemy declarative Base
+        base : SQLAlchemy declarative Base
             Base to which the CDM tables are bound via SQLAlchemy's
             declarative model
-        :return: Database
+
+        Returns
+        -------
+        Database
         """
         db_config = config.database
         hostname = db_config.host
@@ -72,17 +99,33 @@ class Database:
 
     @property
     def schemas(self) -> FrozenSet[str]:
+        """Database schemas used in CDM."""
         return self._schemas
 
     def get_new_session(self) -> Session:
+        """
+        Get a new database session.
+
+        Returns
+        -------
+        Session
+            SQLAlchemy open session.
+        """
         logger.debug('Creating new session')
         return self._sessionmaker()
 
     def close_connection(self) -> None:
+        """
+        Dispose database engine.
+
+        Returns
+        -------
+        None
+        """
         self.engine.dispose()
 
     @staticmethod
-    def perform_rollback(session: Session) -> None:
+    def _perform_rollback(session: Session) -> None:
         logger.info('Performing rollback')
         session.rollback()
         logger.info('Rollback completed')
@@ -104,7 +147,7 @@ class Database:
             session and return. Otherwise raise the exception.
 
         Yields
-        -------
+        ------
         Session
             SQLAlchemy open session.
         """
@@ -114,7 +157,7 @@ class Database:
             session.commit()
         except Exception as e:
             logging.error(e, exc_info=True)
-            self.perform_rollback(session)
+            self._perform_rollback(session)
             if raise_on_error:
                 raise
         finally:
@@ -143,7 +186,7 @@ class Database:
             session and return. Otherwise raise the exception.
 
         Yields
-        -------
+        ------
         Session
             SQLAlchemy open session.
         EtlTransformation
@@ -158,7 +201,7 @@ class Database:
                 session.commit()
             except Exception as e:
                 logging.error(e, exc_info=True)
-                self.perform_rollback(session)
+                self._perform_rollback(session)
                 metadata.query_success = False
                 if raise_on_error:
                     raise
@@ -172,9 +215,15 @@ class Database:
         Check whether a database connection can be established for the
         given URI.
 
-        :param uri: str
-            URI including database name
-        :return: bool
+        Parameters
+        ----------
+        uri : str
+            URI including database name.
+
+        Returns
+        -------
+        bool
+            Returns True if connection to database could be established.
         """
         try:
             db_exists = database_exists(uri)
@@ -190,8 +239,6 @@ class Database:
     def reflected_metadata(self) -> MetaData:
         """
         Get Metadata of the current state of tables in the database.
-
-        :return: SQLAlchemy MetaData
         """
         metadata = MetaData(bind=self.engine)
         for schema in self.schemas:

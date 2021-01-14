@@ -69,8 +69,8 @@ class EtlStatsReporter:
         if successful_transformations:
             logger.info(f'Successful transformations ({len(successful_transformations)}):')
             for transformation in successful_transformations:
-                # if not transformation.is_empty:
-                self._log_transformation_counts(transformation)
+                if not transformation.is_empty:
+                    self._log_transformation_counts(transformation)
 
         failed_transformations = [t for t in transformations if not t.query_success]
         if failed_transformations:
