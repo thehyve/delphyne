@@ -49,7 +49,7 @@ def _invalidate_db_cache(func: Callable) -> Callable:
 
 
 def _create_constraint_lookup(metadata: MetaData) -> Dict[str, ConstraintOrIndex]:
-    lookup = dict()
+    lookup = {}
     for table in metadata.tables.values():
         for constraint in chain(table.constraints, table.indexes):
             lookup[constraint.name] = constraint
