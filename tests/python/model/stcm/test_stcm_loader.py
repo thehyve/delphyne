@@ -58,27 +58,27 @@ def test_stcm_exceptions(cdm600_wrapper_no_constraints: Wrapper, base_stcm_dir: 
     with mock_stcm_paths(base_stcm_dir, 'dir_not_found'):
         message = 'dir_not_found folder not found'
         with pytest.raises(FileNotFoundError, match=message):
-            wrapper.vocab_manager.load_stcm()
+            wrapper.vocab_manager.stcm.load()
 
     with mock_stcm_paths(base_stcm_dir, 'no_version_file'):
         message = 'source to concept map version file not found'
         with pytest.raises(FileNotFoundError, match=message):
-            wrapper.vocab_manager.load_stcm()
+            wrapper.vocab_manager.stcm.load()
 
     with mock_stcm_paths(base_stcm_dir, 'bad_version_file'):
         message = 'stcm_versions.tsv may not contain empty values'
         with pytest.raises(ValueError, match=message):
-            wrapper.vocab_manager.load_stcm()
+            wrapper.vocab_manager.stcm.load()
 
     with mock_stcm_paths(base_stcm_dir, 'stcm1'):
         message = 'MY_VOCAB1 is not present in the vocabulary table'
         with pytest.raises(ValueError, match=message):
-            wrapper.vocab_manager.load_stcm()
+            wrapper.vocab_manager.stcm.load()
 
     with mock_stcm_paths(base_stcm_dir, 'stcm1'):
         wrapper.drop_cdm(tables_to_drop=[SourceToConceptMapVersion.__table__])
         with pytest.raises(InvalidRequestError):
-            wrapper.vocab_manager.load_stcm()
+            wrapper.vocab_manager.stcm.load()
         assert 'Table vocab.source_to_concept_map_version does not exist' in caplog.text
 
 
@@ -90,13 +90,13 @@ def test_load_stcm(cdm600_wrapper_no_constraints: Wrapper, base_stcm_dir: Path, 
     wrapper.db.constraint_manager.add_all_constraints()
 
     with mock_stcm_paths(base_stcm_dir, 'stcm1'):
-        wrapper.vocab_manager.load_stcm()
+        wrapper.vocab_manager.stcm.load()
         records = get_all_stcm_records(wrapper)
         assert records == [('code1', 'MY_VOCAB1')]
 
     # New MY_VOCAB2 vocabulary, MY_VOCAB1 unchanged
     with mock_stcm_paths(base_stcm_dir, 'stcm2'), caplog.at_level(logging.INFO):
-        wrapper.vocab_manager.load_stcm()
+        wrapper.vocab_manager.stcm.load()
         records = get_all_stcm_records(wrapper)
         assert records == [('code1', 'MY_VOCAB1'), ('code2', 'MY_VOCAB2')]
     assert "Skipping file MY_VOCAB1_stcm.csv" in caplog.text
