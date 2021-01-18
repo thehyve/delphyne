@@ -85,6 +85,8 @@ def get_file_prefix(path: Path, suffix: str) -> Optional[str]:
     """
     Extract the part of the file name preceding the provided suffix.
 
+    Parameters
+    ----------
     path : pathlib.Path
         File to get prefix from.
     suffix : str

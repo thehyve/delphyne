@@ -97,6 +97,8 @@ class SourceFile:
         """
         Return a delimited text file as a pandas.DataFrame.
 
+        Parameters
+        ----------
         apply_dtypes : bool
             Apply source_config dtypes to the columns in the DataFrame.
             If False, all columns will be loaded as 'object' dtype.
@@ -125,6 +127,8 @@ class SourceFile:
         """
         Read a SAS source file and return as pandas DataFrame.
 
+        Parameters
+        ----------
         apply_dtypes : bool
             Apply source_config dtypes to the columns in the DataFrame.
             If False, dtypes will stay as specified in the SAS file.
@@ -155,6 +159,8 @@ class SourceFile:
         Calling this method will overwrite any existing cached DataFrame
         for this source file.
 
+        Parameters
+        ----------
         df : pandas.DataFrame
             The DataFrame to save in memory.
 
@@ -221,6 +227,8 @@ class SourceFile:
         directly to the source_file, i.e. some manual preprocessing is
         needed before they can safely be applied.
 
+        Parameters
+        ----------
         df : pandas.DataFrame
         **kwargs
             Additional keyword arguments are passed on directly to
@@ -278,6 +286,8 @@ class SourceFile:
         Reading in this way keeps memory use very low, but you can only
         access one row at a time.
 
+        Parameters
+        ----------
         **kwargs
             Additional keyword arguments are passed on directly to the
             csv module's DictReader.
@@ -307,6 +317,8 @@ class SourceFile:
         This method loads the entire file into memory, meaning you can
         access all rows in any order.
 
+        Parameters
+        ----------
         cache : bool, default False
             If True, keep the full list of dictionaries in memory for
             future use.

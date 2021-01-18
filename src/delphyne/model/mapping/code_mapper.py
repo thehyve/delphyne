@@ -149,6 +149,8 @@ class MappingDict:
         if source code is not found: returns a single mapping with
         source_concept_id = 0 and target_concept_id = 0.
 
+        Parameters
+        ----------
         source_code : str
             The source code to lookup.
         first_only : bool, default False

@@ -32,6 +32,8 @@ def replace_substrings(string: str, mapping: Dict[str, str]) -> str:
     """
     Replace substrings in string, based on the items in mapping.
 
+    Parameters
+    ----------
     string: str
         The string to be edited.
     mapping: dict of {str : str}
