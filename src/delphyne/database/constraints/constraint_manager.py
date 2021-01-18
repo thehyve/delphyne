@@ -65,6 +65,7 @@ class _TargetModel:
     metadata : sqlalchemy.MetaData
         Metadata instance of the CDM model.
     """
+
     def __init__(self, metadata: MetaData):
         self.table_lookup = {t.name: t for t in metadata.tables.values()}
         self.constraint_lookup = _create_constraint_lookup(metadata)
@@ -108,6 +109,7 @@ class ConstraintManager:
     database : Database
         Database instance to interact with.
     """
+
     def __init__(self, database: Database):
         self._db = database
         self._model = _TargetModel(metadata=database.base.metadata)

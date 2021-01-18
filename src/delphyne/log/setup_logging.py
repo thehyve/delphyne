@@ -1,3 +1,5 @@
+"""Logging setup."""
+
 import logging.config
 import time
 
@@ -6,7 +8,13 @@ from ..util.io import read_yaml_file
 
 
 def setup_logging() -> None:
-    """Setup logging configuration."""
+    """
+    Set up logging configuration.
+
+    Returns
+    -------
+    None
+    """
     log_dir = LOG_OUTPUT_DIR
     log_dir.mkdir(exist_ok=True)
     time_string = time.strftime('%Y-%m-%dT%H%M%S')

@@ -1,3 +1,5 @@
+"""CDM vocabulary tables package."""
+
 from .vocabularies import (
     BaseVocabulary,
     BaseSourceToConceptMap,

@@ -1,3 +1,5 @@
+"""Code mapping."""
+
 from __future__ import annotations
 
 import logging
@@ -11,8 +13,9 @@ from ...util.helper import is_null_or_falsy
 logger = logging.getLogger(__name__)
 
 
-# only needed for type checking of SQLAlchemy query result
 class Record(NamedTuple):
+    """Type checking proxy for SQLAlchemy query results."""
+
     source_concept_code: str
     source_concept_id: int
     source_concept_name: str
@@ -26,6 +29,8 @@ class Record(NamedTuple):
 
 
 class CodeMapping:
+    """A single source to target mapping."""
+
     def __init__(self):
         self.source_concept_code = None
         self.source_concept_id = None
@@ -40,6 +45,17 @@ class CodeMapping:
 
     @classmethod
     def create_mapping_for_no_match(cls, source_code) -> CodeMapping:
+        """
+        Return CodeMapping instance specifying no mapping is available.
+
+        Parameters
+        ----------
+        source_code : str
+
+        Returns
+        -------
+        CodeMapping
+        """
         mapping = cls()
         mapping.source_concept_code = source_code
         mapping.source_concept_id = 0
@@ -47,6 +63,7 @@ class CodeMapping:
         return mapping
 
     def __str__(self):
+        """Instance properties as str."""
         # note: omitting standard concept and invalid reason
         return (f'{self.source_concept_code} '
                 f'({self.source_vocabulary_id}) '
@@ -58,6 +75,14 @@ class CodeMapping:
 
 
 class MappingDict:
+    """
+    Container of one or multiple source code to target mappings.
+
+    Attributes
+    ----------
+    mapping_dict : dict
+        Source code to target dictionary.
+    """
 
     def __init__(self):
         self.mapping_dict: Dict[str, List[CodeMapping]] = {}
@@ -65,15 +90,20 @@ class MappingDict:
     @classmethod
     def from_records(cls, records: List[Record]) -> MappingDict:
         """
-        Create MappingDict from a list of results from a SQLAlchemy
-        query compliant with the required Record format. The method
-        also works on a list of named tuples as long as they have the
-        required Record fields.
-        :param records: a list of named tuples compliant with the Record
-            format, e.g. as the result of a SQLAlchemy query.
-        :return: a MappingDict object.
-        """
+        Create MappingDict from a query result list.
 
+        Query result list needs to originate from a SQLAlchemy query
+        compliant with the required Record format. The method also works
+        on a list of named tuples, as long as they have the required
+        Record fields.
+        records : list of Record
+            A list of named tuples compliant with the Record format,
+            e.g. as the result of a SQLAlchemy query.
+
+        Returns
+        -------
+        MappingDict
+        """
         mapping_dict_from_records = cls()
         mapping_dict = {}
 
@@ -104,6 +134,8 @@ class MappingDict:
                target_concept_id_only: bool = False,
                ) -> Union[List[str], List[CodeMapping], str, CodeMapping]:
         """
+        Retrieve mapping list for a given source code.
+
         Given a source concept_code, retrieves a list of mappings to
         standard_concept_id from the stored mapping dictionary.
 
@@ -117,17 +149,19 @@ class MappingDict:
         if source code is not found: returns a single mapping with
         source_concept_id = 0 and target_concept_id = 0.
 
-        :param source_code: str
-            Representing the source code to lookup
-        :param first_only: bool, default False
-            If True, return the first available match only
-        :param target_concept_id_only: bool, default False
-            If True, return the target_concept_id only (as string)
+        source_code : str
+            The source code to lookup.
+        first_only : bool, default False
+            If True, return the first available match only.
+        target_concept_id_only : bool, default False
+            If True, return the target_concept_id only (as string).
 
-        :return: A single match or list of matches, either standard
-            concept_ids (string) or CodeMapping objects
+        Returns
+        -------
+        mapping
+            A single match or list of matches, either standard
+            concept_ids (string) or CodeMapping objects.
         """
-
         # full CodeMapping object
         mappings = self.mapping_dict.get(source_code, [])
 
@@ -151,6 +185,7 @@ class MappingDict:
 
 
 class CodeMapper:
+    """Creator of code mappings."""
 
     def __init__(self, database, cdm):
         self.db = database
@@ -164,8 +199,10 @@ class CodeMapper:
             standard_concept: Optional[Union[str, List[str]]] = None
     ) -> MappingDict:
         """
-        Creates a dictionary of mappings from non-standard concept_codes
-        to standard concept_ids for the specified OMOP vocabularies.
+        Create a dictionary of mapping codes.
+
+        The mappings will be from non-standard concept_codes to standard
+        concept_ids for the specified OMOP vocabularies.
 
         Accepts one or more non-standard OMOP vocabulary names (e.g.
         Read, ICD10); the lookup can be restricted to a specific list of
@@ -181,18 +218,21 @@ class CodeMapper:
         Returns a dictionary with source concept_codes as keys, and
         mappings (in the form of CodeMapping objects) as values.
 
-        :param vocabulary_id: List[str] or str
-            Valid non-standard OMOP vocabulary_id(s)
-        :param restrict_to_codes: List[str], default None
-            Subset of vocabulary codes to retrieve mappings for
-        :param invalid_reason: List[str] or str, default None
-            Any of 'U', 'D', 'R', 'NULL'
-        :param standard_concept: List[str] or str, default None
-            Any of 'S', 'C', 'NULL'
+        Parameters
+        ----------
+        vocabulary_id : str or list of str
+            Valid non-standard OMOP vocabulary_id(s).
+        restrict_to_codes : list of str, optional
+            Subset of vocabulary codes to retrieve mappings for.
+        invalid_reason : str or list of str, optional
+            Any of 'U', 'D', 'R', 'NULL'.
+        standard_concept : str or list of str, optional
+            Any of 'S', 'C', 'NULL'.
 
-        :return: MappingDict
+        Returns
+        -------
+        MappingDict
         """
-
         if restrict_to_codes:
             # remove redundant codes
             restrict_to_codes = list(set(restrict_to_codes))

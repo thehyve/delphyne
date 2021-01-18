@@ -1,3 +1,5 @@
+"""Database conventions module."""
+
 import inspect
 from typing import Set
 

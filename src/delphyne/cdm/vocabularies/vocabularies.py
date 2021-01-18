@@ -1,5 +1,6 @@
 """
 OMOP CDM vocabulary tables.
+
 CDM 6.0.0 check constraints are included.
 """
 

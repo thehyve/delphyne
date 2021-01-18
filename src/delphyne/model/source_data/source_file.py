@@ -1,3 +1,5 @@
+"""Source file module."""
+
 import csv
 import logging
 from copy import deepcopy
@@ -22,6 +24,17 @@ _FULL_CSV_PARAMS = _CSV_DIALECT_PARAMS.union(_CSV_DICT_READER_PARAMS)
 
 
 class SourceFile:
+    """
+    Source data file handler.
+
+    Parameters
+    ----------
+    path : pathlib.Path
+        Path of the source data file.
+    params : dict
+        Config options describing the source file properties.
+    """
+
     def __init__(self, path: Path, params: Dict):
         self._path = path
         self._params = params
@@ -31,10 +44,12 @@ class SourceFile:
         self._csv: List[OrderedDict] = []
 
     def __repr__(self):
+        """Path and file parameters."""
         return f'path={self.path}\n' + 'parameters=' + str(self._params)
 
     @property
     def path(self) -> Path:
+        """Read-only source file path."""
         return self._path
 
     @property
@@ -80,21 +95,23 @@ class SourceFile:
                       **kwargs
                       ) -> pd.DataFrame:
         """
-        Return a delimited text file as a pandas DataFrame.
+        Return a delimited text file as a pandas.DataFrame.
 
-        :param apply_dtypes: bool
+        apply_dtypes : bool
             Apply source_config dtypes to the columns in the DataFrame.
             If False, all columns will be loaded as 'object' dtype.
-        :param force_reload: bool, default False
+        force_reload : bool, default False
             If True, remove the cached df (if there is one), and reload
             from source file.
-        :param cache: bool, default False
+        cache : bool, default False
             If True, keep the returned df in memory for future use.
-        :param kwargs:
+        **kwargs
             Additional keyword arguments are passed on directly to
-            pandas read_csv method.
+            pandas.read_csv method.
 
-        :return: pd.DataFrame
+        Returns
+        -------
+        pandas.DataFrame
         """
         return self._get_df(read_func=self._read_csv_as_df, apply_dtypes=apply_dtypes,
                             force_reload=force_reload, cache=cache, **kwargs)
@@ -108,18 +125,21 @@ class SourceFile:
         """
         Read a SAS source file and return as pandas DataFrame.
 
-        :param apply_dtypes: bool
+        apply_dtypes : bool
             Apply source_config dtypes to the columns in the DataFrame.
             If False, dtypes will stay as specified in the SAS file.
-        :param force_reload: bool, default False
+        force_reload : bool, default False
             If True, remove the cached df (if there is one), and reload
             from source file.
-        :param cache: bool, default False
+        cache : bool, default False
             If True, keep the returned df in memory for future use.
-        :param kwargs:
+        **kwargs
             Additional keyword arguments are passed on directly to
             pandas read_sas method.
-        :return: pd.DataFrame
+
+        Returns
+        -------
+        pandas.DataFrame
         """
         return self._get_df(read_func=self._read_sas_as_df, apply_dtypes=apply_dtypes,
                             force_reload=force_reload, cache=cache, **kwargs)
@@ -135,9 +155,12 @@ class SourceFile:
         Calling this method will overwrite any existing cached DataFrame
         for this source file.
 
-        :param df: pd.DataFrame
+        df : pandas.DataFrame
             The DataFrame to save in memory.
-        :return: None
+
+        Returns
+        -------
+        None
         """
         self._cache_df_copy(df)
 
@@ -198,11 +221,14 @@ class SourceFile:
         directly to the source_file, i.e. some manual preprocessing is
         needed before they can safely be applied.
 
-        :param df: pd.DataFrame
-        :param kwargs:
+        df : pandas.DataFrame
+        **kwargs
             Additional keyword arguments are passed on directly to
             pandas.DataFrame.astype.
-        :return: pd.Dataframe
+
+        Returns
+        -------
+        pandas.Dataframe
         """
         return self._apply_dtypes(df, **kwargs)
 
@@ -225,7 +251,9 @@ class SourceFile:
         Only if the file is explicitly specified as not binary in the
         source_config, will the line count be calculated.
 
-        :return: int or None
+        Returns
+        -------
+        int or None
         """
         is_binary = self._params.get('binary')
         if is_binary is False:
@@ -250,10 +278,13 @@ class SourceFile:
         Reading in this way keeps memory use very low, but you can only
         access one row at a time.
 
-        :param kwargs:
-            Additional keyword arguments are passed on directly to
-            the csv module's DictReader.
-        :return: OrderedDict generator
+        **kwargs
+            Additional keyword arguments are passed on directly to the
+            csv module's DictReader.
+
+        Returns
+        -------
+        OrderedDict generator
         """
         logger.info(f'Reading {self._path.name} as csv records')
         full_kwargs = {**self._params, **kwargs}
@@ -276,13 +307,16 @@ class SourceFile:
         This method loads the entire file into memory, meaning you can
         access all rows in any order.
 
-        :param cache:
+        cache : bool, default False
             If True, keep the full list of dictionaries in memory for
             future use.
-        :param kwargs:
-            Additional keyword arguments are passed on directly to
-            the csv module's DictReader.
-        :return: List[OrderedDict]
+        **kwargs
+            Additional keyword arguments are passed on directly to the
+            csv module's DictReader.
+
+        Returns
+        -------
+        list of OrderedDict or dict
         """
         if self._csv:
             csv_records = self._retrieve_cached_csv()

@@ -1,16 +1,4 @@
-# Copyright 2020 The Hyve
-#
-# Licensed under the GNU General Public License, version 3,
-# or (at your option) any later version (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# https://www.gnu.org/licenses/
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+"""ETL metadata statistics."""
 
 import copy
 import datetime
@@ -40,6 +28,7 @@ class _AbstractEtlBase(ABC):
 
     @property
     def duration(self) -> Optional[datetime.timedelta]:
+        """Time between start and end."""
         if self.start is not None and self.end is not None:
             return self.end - self.start
 
@@ -48,6 +37,7 @@ class _AbstractEtlBase(ABC):
         self.end = datetime.datetime.now()
 
     def to_dict(self) -> Dict:
+        """Convert all properties into a dictionary."""
         d = self.__dict__
         d['duration'] = self.duration
         return d
@@ -56,24 +46,28 @@ class _AbstractEtlBase(ABC):
 @dataclass
 class EtlSource(_AbstractEtlBase):
     """Metadata storage unit for source tables/files."""
+
     source_name: str = ''
     n_rows: Optional[int] = None
 
     df_column_order: ClassVar = ['source_name', 'n_rows', 'duration', 'start', 'end']
 
     def __str__(self):
+        """Return name, rows and duration (if available)."""
         if self.duration is not None:
             return f'{self.source_name}: {self.n_rows} ({self.duration})'
         else:
             return f'{self.source_name}: {self.n_rows}'
 
     def to_dict(self) -> Dict:
+        """Convert all properties into a dictionary."""
         return super().to_dict()
 
 
 @dataclass
 class EtlTransformation(_AbstractEtlBase):
     """Metadata storage unit for data mutation calls."""
+
     name: str = ''
     query_success: bool = True
     insertion_counts: Counter = field(default_factory=Counter)
@@ -84,10 +78,12 @@ class EtlTransformation(_AbstractEtlBase):
                                  'deletion_counts', 'duration', 'start', 'end']
 
     def __str__(self):
+        """Return name and duration."""
         return f'{self.name} ({self.duration})'
 
     @property
     def is_empty(self) -> bool:
+        """Return True if there are no insertions/updates/deletions."""
         return (not self.insertion_counts
                 and not self.deletion_counts
                 and not self.update_counts)
@@ -102,10 +98,7 @@ class EtlTransformation(_AbstractEtlBase):
         return all(is_vocab_table)
 
     def to_dict(self) -> Dict:
-        """
-        Return dict with empty Counters as None, otherwise convert to
-        string.
-        """
+        """Return dict with empty Counters as None, otherwise string."""
         d = copy.deepcopy(super().to_dict())
         for key, value in d.items():
             if isinstance(value, Counter):
@@ -126,9 +119,19 @@ class EtlStats:
      - list of transformations executed with script name, target table,
        start time, end time, status (exceptions) and number of affected
        rows (**EtlTransformation**).
-     - list of source tables with file/tablename and raw input row
+     - list of source tables with file/table name and raw input row
        counts (**EtlSource**).
+
+    Attributes
+    ----------
+    start_time : datetime.datetime
+        Time of initialization.
+    transformations : list of EtlTransformation
+        Stores all ETL transformation metadata.
+    sources : list of EtlSource
+        Stores all source file metadata.
     """
+
     def __init__(self):
         self.start_time = datetime.datetime.now()
         self.transformations: List[EtlTransformation] = []
@@ -136,30 +139,41 @@ class EtlStats:
 
     @property
     def n_queries_executed(self) -> int:
+        """Total number of transformations stored."""
         return len(self.transformations)
 
     @property
     def successful_transformations(self) -> List[EtlTransformation]:
+        """Total number of successful transformations."""
         return [t for t in self.transformations if t.query_success]
 
     @property
     def total_insertions(self) -> Counter:
+        """Total insertion counts of all transformations."""
         return sum([t.insertion_counts for t in self.successful_transformations], Counter())
 
     @property
     def sources_df(self) -> pd.DataFrame:
+        """pandas.DataFrame of all ETL sources."""
         sources_df = pd.DataFrame(columns=EtlSource.df_column_order)
         sources_df = sources_df.append([s.to_dict() for s in self.sources])
         return sources_df[EtlSource.df_column_order]
 
     @property
     def transformations_df(self) -> pd.DataFrame:
+        """pandas.DataFrame of all ETL transformations."""
         transformations_df = pd.DataFrame(columns=EtlTransformation.df_column_order)
         transformations_df = transformations_df.append([t.to_dict() for t in self.transformations])
         return transformations_df[EtlTransformation.df_column_order]
 
     def reset(self) -> None:
-        """Remove all stored Etl objects from this instance."""
+        """
+        Remove all stored Etl objects from this instance.
+
+        Returns
+        -------
+        None
+        """
         self.start_time = datetime.datetime.now()
         self.transformations = []
         self.sources = []
@@ -167,13 +181,48 @@ class EtlStats:
     @staticmethod
     def get_total_duration(etl_objects: Union[List[EtlTransformation], List[EtlSource]]
                            ) -> datetime.timedelta:
+        """
+        Get total duration of all provided objects combined.
+
+        Parameters
+        ----------
+        etl_objects : list of EtlTransformation or EtlSource
+            Objects to get total duration of.
+
+        Returns
+        -------
+        datetime.timedelta
+            Total duration.
+        """
         durations = (obj.duration for obj in etl_objects if obj.start and obj.end)
         return sum(durations, datetime.timedelta())
 
     def add_transformation(self, transformation: EtlTransformation) -> None:
+        """
+        Add EtlTransformation to stored transformations.
+
+        Parameters
+        ----------
+        transformation : EtlTransformation
+
+        Returns
+        -------
+        None
+        """
         self.transformations.append(transformation)
 
     def add_source(self, source: EtlSource) -> None:
+        """
+        Add EtlSource to stored sources.
+
+        Parameters
+        ----------
+        source : EtlSource
+
+        Returns
+        -------
+        None
+        """
         self.sources.append(source)
 
 
@@ -199,7 +248,7 @@ def open_transformation(name: str, **kwargs) -> ContextManager[EtlTransformation
         constructor.
 
     Yields
-    -------
+    ------
     EtlTransformation
         Instance to track table changes.
     """

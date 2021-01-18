@@ -1,3 +1,5 @@
+"""Standard vocabulary loading."""
+
 import logging
 from collections import Counter
 from pathlib import Path
@@ -31,15 +33,44 @@ _STANDARD_VOCAB_TABLE_NAMES: List[str] = [
 
 
 class StandardVocabLoader:
-    def __init__(self, db: Database, cdm):
+    """
+    Loader of standard vocabularies into the respective tables.
+
+    Parameters
+    ----------
+    db : Database
+        Database instance to interact with.
+    cdm : module
+        Module containing all CDM table definitions.
+    block_loading : bool
+        If True, calls to load tables will be ignored.
+    """
+
+    def __init__(self, db: Database, cdm, block_loading: bool):
         self._db = db
         self._dialect = db.engine.name
         self._cdm = cdm
+        self._block_loading = block_loading
 
         self._standard_vocab_files: Set[Path] = set()
         self._table_file_mapping: Dict[str, Path] = dict()
 
-    def load_standard_vocabs(self) -> None:
+    def load(self) -> None:
+        """
+        Insert all Athena vocabulary files into the vocabulary tables.
+
+        All vocabulary tables must be empty before any data can be
+        inserted. All constraints and indexes will be dropped before
+        insertion and restored afterwards.
+
+        Returns
+        -------
+        None
+        """
+        logger.info(f'Loading standard vocabularies: {not self._block_loading}')
+        if self._block_loading:
+            return
+
         self._check_engine_support()
         self._check_vocab_tables_are_empty()
         self._standard_vocab_files = self._get_vocab_files()

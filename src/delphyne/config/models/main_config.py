@@ -31,9 +31,8 @@ class _RunOptions(BaseModel):
 
 
 class MainConfig(BaseModel):
-    """
-    Data schema and validator of the main config properties.
-    """
+    """Data schema and validator of the main config properties."""
+
     database: _DataBase
     source_data_folder: Optional[DirectoryPath]
     schema_translate_map: Dict[str, str]

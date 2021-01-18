@@ -1,5 +1,7 @@
-from __future__ import annotations
+"""Database table utility functions."""
 
+from __future__ import annotations
+from types import MappingProxyType
 from typing import Union, Callable, Optional, Dict, TYPE_CHECKING
 
 from sqlalchemy import Table
@@ -12,12 +14,17 @@ def table_is_empty(mapped_table: Union[Callable, Table], database: Database) -> 
     """
     Check whether a database table contains no records.
 
-    :param mapped_table: Union[Callable, Table]
-        A declarative SQLAlchemy table class or Table instance
-    :param database: Database
-        Database instance
-    :return: bool
-        Return True if the table is empty
+    Parameters
+    ----------
+    mapped_table : mapped table class or sqlalchemy.Table
+        A declarative SQLAlchemy table class or Table instance.
+    database : Database
+        Database in which the table is present.
+
+    Returns
+    -------
+    bool
+        Return True if the table is empty.
     """
     with database.session_scope() as session:
         return session.query(mapped_table).first() is None
@@ -25,7 +32,7 @@ def table_is_empty(mapped_table: Union[Callable, Table], database: Database) -> 
 
 def get_full_table_name(table: str,
                         schema: Optional[str],
-                        schema_map: Optional[Dict[str, str]] = None
+                        schema_map: Optional[Union[MappingProxyType, Dict[str, str]]] = None
                         ) -> str:
     """
     '.' join schema and table name to get the full table name.
@@ -33,12 +40,21 @@ def get_full_table_name(table: str,
     If schema is not available, return only the table name. Placeholder
     schema names will be replaced according to the schema_map.
 
-    :param table: str
-    :param schema: str
-    :param schema_map: Dict[str, str], default None
+    Parameters
+    ----------
+    table : str
+        Table name.
+    schema : str, optional
+        Schema name.
+    schema_map : dict {str : str}, optional
         Schema map dictionary with placeholder names as keys and actual
         schema names as values.
-    :return: str
+
+    Returns
+    -------
+    str
+        Full table name if possible, otherwise only the original table
+        name.
     """
     if schema is None:
         return table

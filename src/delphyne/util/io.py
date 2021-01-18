@@ -1,3 +1,5 @@
+"""I/O utility module."""
+
 import hashlib
 from pathlib import Path
 from typing import List, Set, Dict, Optional, Union
@@ -6,23 +8,75 @@ import yaml
 
 
 def read_yaml_file(path: Path) -> Dict:
+    """
+    Read yaml file and return as dict.
+
+    Parameters
+    ----------
+    path : pathlib.Path
+        File to read.
+
+    Returns
+    -------
+    dict
+        Contents of yaml file as dict.
+    """
     with path.open('rt') as f:
         contents = yaml.safe_load(f.read())
     return contents
 
 
 def write_yaml_file(contents: Dict, out_path: Path) -> None:
+    """
+    Write dict to a yaml file.
+
+    Parameters
+    ----------
+    contents : dict
+        Dict contents to write.
+    out_path : pathlib.Path
+        Output file.
+
+    Returns
+    -------
+    None
+    """
     with out_path.open('w') as out:
         yaml.dump(contents, out)
 
 
 def is_hidden(path: Path) -> bool:
-    """Return True if a path is hidden."""
+    """
+    Check whether a file is hidden.
+
+    Parameters
+    ----------
+    path : pathlib.Path
+        The file to check.
+
+    Returns
+    -------
+    bool
+        Return True if the path is hidden.
+    """
     return path.name.startswith(('.', '~'))
 
 
 def get_all_files_in_dir(directory: Path) -> List[Path]:
-    """Return all but hidden files"""
+    """
+    Return all but the hidden files in dir.
+
+    Parameters
+    ----------
+    directory : pathlib.Path
+        Directory to get the contents of.
+
+    Returns
+    -------
+    list of pathlib.Path
+        All files that are present in the provided directory
+        (non-recursive).
+    """
     return [f for f in directory.glob('*')
             if f.is_file() and not is_hidden(f)]
 
@@ -31,14 +85,19 @@ def get_file_prefix(path: Path, suffix: str) -> Optional[str]:
     """
     Extract the part of the file name preceding the provided suffix.
 
-    :param path: File path
-    :param suffix: String to be matched to the file name. The match only
+    path : pathlib.Path
+        File to get prefix from.
+    suffix : str
+        String to be matched to the file name. The match only
         succeeds if the suffix is immediately preceding the file
         extension, and separated by previous characters by a dash ('_').
         The file name and prefix are both converted to lowercase before
         the matching is performed.
 
-    :return: str (lowercase) or None
+    Returns
+    -------
+    str
+        Lowercase file prefix or None.
     """
     suffix = suffix.lower()
     stem = path.stem.lower()
@@ -64,14 +123,22 @@ def file_has_valid_prefix(path: Path, suffix: str,
     valid_prefixes should be a subset of all_prefixes.
     All comparisons are performed in lowercase.
 
-    :param path: Path
-    :param suffix: str
-    :param all_prefixes: Union[List[str], Set[str]]
-    :param valid_prefixes: Union[List[str], Set[str]]
+    Parameters
+    ----------
+    path : pathlib.Path
+        File to check for valid prefix.
+    suffix : str
+        Expected file suffix.
+    all_prefixes : list of str or set of str
+        Recognized prefixes that will be ignored.
+    valid_prefixes : list of str or set of str
+        Accepted prefixes.
 
-    :return: bool
+    Returns
+    -------
+    bool
+        Return True if file has a valid prefix.
     """
-
     # convert prefixes to lowercase
     valid_prefixes = {prefix.lower() for prefix in valid_prefixes}
     all_prefixes = {prefix.lower() for prefix in all_prefixes}
@@ -90,10 +157,17 @@ def get_file_line_count(file_path: Path, skip_header: bool = True) -> int:
     """
     Get the line count of a text (non-binary) file.
 
-    :param file_path: Path
-    :param skip_header: bool, default True
+    Parameters
+    ----------
+    file_path : pahlib.Path
+        File to get the line count of.
+    skip_header : bool, default True
         If True, the first line is not added to the line count.
-    :return: int
+
+    Returns
+    -------
+    int
+        The file line count.
     """
     if file_path.stat().st_size == 0:  # Empty file
         return 0
@@ -107,6 +181,19 @@ def get_file_line_count(file_path: Path, skip_header: bool = True) -> int:
 
 
 def get_file_checksum(path: Path) -> str:
+    """
+    Get MD5 checksum of a file.
+
+    Parameters
+    ----------
+    path : pathlib.Path
+        File to get checksum of.
+
+    Returns
+    -------
+    str
+        Resulting checksum.
+    """
     hash_md5 = hashlib.md5()
     with path.open("rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):

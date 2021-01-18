@@ -11,9 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class SourceConfig(BaseModel):
-    """
-    Data schema and validator of the source data config properties.
-    """
+    """Data schema/validator of the source data config properties."""
+
     source_data_folder: DirectoryPath
     count_source_rows: bool
     file_defaults: Optional[Dict[str, Any]]

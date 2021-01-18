@@ -1,3 +1,5 @@
+"""Source data module."""
+
 from __future__ import annotations
 
 import logging
@@ -14,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class SourceData:
     """Handle for all interactions related to source data files."""
+
     def __init__(self, config: Dict):
         self.source_config: SourceConfig = SourceConfig(**config)
         self._source_dir = self.source_config.source_data_folder
@@ -25,6 +28,7 @@ class SourceData:
 
     @property
     def source_dir(self) -> Path:
+        """Read-only source dir property."""
         return self._source_dir
 
     def _collect_source_files(self) -> Dict[str, SourceFile]:
@@ -40,6 +44,18 @@ class SourceData:
         return source_file_dict
 
     def get_source_file(self, file_name: str) -> SourceFile:
+        """
+        Get source file for the given file_name.
+
+        Parameters
+        ----------
+        file_name : str
+            Name of the source_data file.
+
+        Returns
+        -------
+        SourceFile
+        """
         source_file = self._source_files.get(file_name)
         if source_file is None:
             raise FileNotFoundError(f'Could not find source file {file_name} in source folder')

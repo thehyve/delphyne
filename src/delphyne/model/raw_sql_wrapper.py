@@ -1,3 +1,5 @@
+"""Raw SQL query module."""
+
 import logging
 import re
 from collections import Counter
@@ -19,7 +21,15 @@ logger = logging.getLogger(__name__)
 class RawSqlWrapper:
     """
     Wrapper which coordinates the execution of raw SQL transformations.
+
+    Parameters
+    ----------
+    database : Database
+        Database instance to interact with.
+    config : MainConfig
+        Main configuration contents.
     """
+
     def __init__(self, database: Database, config: MainConfig):
         self.db = database
         self.sql_parameters = self._get_sql_parameters(config)
@@ -37,12 +47,17 @@ class RawSqlWrapper:
 
     def execute_sql_file(self, file_path: Union[Path, str]) -> None:
         """
-        Executes raw SQL file.
+        Execute a raw SQL query from a file.
 
-        :param file_path: relative SQL file path inside the directory
-            for SQL transformations
-            (the root will be automatically added).
-        :return: None
+        Parameters
+        ----------
+        file_path : pathlib.Path or str
+            Relative SQL file path inside the directory for SQL
+            transformations (the root will be automatically added).
+
+        Returns
+        -------
+        None
         """
         file_path = SQL_TRANSFORMATIONS_DIR / file_path
         # Open and read the file as a single buffer
@@ -53,6 +68,20 @@ class RawSqlWrapper:
         self.execute_sql_query(query=query, query_name=file_path.name)
 
     def execute_sql_query(self, query: str, query_name: str) -> None:
+        """
+        Execute a raw SQL query.
+
+        Parameters
+        ----------
+        query : str
+            Full SQL query as string.
+        query_name : str
+            Name of the transformation.
+
+        Returns
+        -------
+        None
+        """
         logger.info(f'Executing raw sql query: {query_name}')
         with open_transformation(name=query_name) as transformation_metadata:
             query = self.apply_sql_parameters(query, self.sql_parameters)
@@ -69,15 +98,22 @@ class RawSqlWrapper:
                     transformation_metadata.query_success = False
 
     @staticmethod
-    def apply_sql_parameters(parameterized_query: str, sql_parameters: Dict[str, str]):
+    def apply_sql_parameters(parameterized_query: str, sql_parameters: Dict[str, str]) -> str:
         """
-        Create finalized SQL query by replacing the parameters.
+        Create finalized SQL query by replacing any parameters.
 
-        :param parameterized_query: str
-            Query containing parameters indicated by a '@'
-        :param sql_parameters: Dict[str, str]
-            Parameter name to value mapping
-        :return: str
+        Parameters
+        ----------
+        parameterized_query : str
+            SQL query optionally containing placeholders as indicated
+            by an '@'.
+        sql_parameters : dict of {str : str}
+            Placeholder to final value mapping.
+
+        Returns
+        -------
+        str
+            The finalized SQL query.
         """
         replacement_dict = {'@' + key: value for key, value in sql_parameters.items()}
         return replace_substrings(parameterized_query, replacement_dict)
@@ -103,11 +139,16 @@ class RawSqlWrapper:
         """
         Find the target table of the provided query.
 
-        :param query: str
-            The SQL query to be parsed for a target table
-        :return target table: str
+        Parameters
+        ----------
+        query : str
+            The SQL query to be parsed for a target table.
+
+        Returns
+        -------
+        str
             The target table as present in the query. If not found
-            return '?'
+            return '?'.
         """
         match = re.search(r'^\s*((?:INSERT )?INTO|CREATE TABLE|DELETE\s+FROM|UPDATE)\s+(.+?)\s',
                           query,

@@ -1,3 +1,5 @@
+"""Wrapper module."""
+
 import logging
 from pathlib import Path
 from typing import Optional, List
@@ -26,18 +28,20 @@ _HERE = Path(__file__).parent
 
 class Wrapper(OrmWrapper, RawSqlWrapper):
     """
-    Task coordinator supporting the process of converting source data
-    into the OMOP CDM.
+    Task coordinator for converting source data into the OMOP CDM.
+
+    Parameters
+    ----------
+    config : MainConfig
+        The run configuration as read from config.yml.
+    cdm_ : module
+        Module containing the SQLAlchemy declarative Base
+        and the CDM tables.
     """
+
     cdm = cdm
 
     def __init__(self, config: MainConfig, cdm_):
-        """
-        :param config: MainConfig
-            The run configuration as read from config.yml.
-        :param cdm_: Module containing the SQLAlchemy declarative Base
-            and the CDM tables.
-        """
         etl_stats.reset()
         self._config = config
         self.db = Database.from_config(config, cdm_.Base)
@@ -66,14 +70,18 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         source_config['source_data_folder'] = source_data_path
         return SourceData(source_config)
 
-    def run(self) -> None:
-        print('OMOP wrapper goes brrrrrrrr')
-
     def stem_table_to_domains(self) -> None:
         """
-        Transfer all stem table records to the OMOP clinical data
-        tables. Which OMOP table each records is copied into, is
-        determined by the target concept's domain_id.
+        Transfer all stem table records to the OMOP tables.
+
+        To which OMOP table each record is copied into, is determined by
+        the target concept's domain_id. Records without a mapping
+        (target_concept_id == 0) will be copied into the observation
+        table.
+
+        Returns
+        -------
+        None
         """
         logger.info('Starting stem table to domain queries')
         post_processing_path = _HERE / 'post_processing'
@@ -98,11 +106,16 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         """
         Drop non-vocabulary tables defined in the ORM (if they exist).
 
-        :param tables_to_drop: List, default None
+        Parameters
+        ----------
+        tables_to_drop : list of sqlalchemy.Table, optional
             List of SQLAlchemy table definitions that should be dropped.
             If not provided, all tables that by default are not part of
             the CDM vocabulary tables will be dropped.
-        :return: None
+
+        Returns
+        -------
+        None
         """
         logger.info('Dropping OMOP CDM (non-vocabulary) tables if existing')
         if tables_to_drop is None:
@@ -111,7 +124,13 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
             self.db.base.metadata.drop_all(bind=conn, tables=tables_to_drop)
 
     def create_cdm(self) -> None:
-        """Create all OMOP CDM tables as defined in base.metadata."""
+        """
+        Create all OMOP CDM tables as defined in base.metadata.
+
+        Returns
+        -------
+        None
+        """
         logger.info('Creating OMOP CDM (non-vocabulary) tables')
         with self.db.engine.connect() as conn:
             self.db.base.metadata.create_all(bind=conn)
@@ -123,6 +142,10 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         If table definitions include schema names that are present in
         the schema_translate_map, the mapped schema value is used.
         Schemas that already exist remain untouched.
+
+        Returns
+        -------
+        None
         """
         with self.db.engine.connect() as conn:
             for schema_name in self.db.schemas:
@@ -139,7 +162,9 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         True in the main config file, two overview files will be written
         to the logs folder with more detailed information.
 
-        :return: None
+        Returns
+        -------
+        None
         """
         etl_stats_logger = EtlStatsReporter(etl_stats)
         if self._config.run_options.write_reports:

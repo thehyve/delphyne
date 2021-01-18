@@ -1,3 +1,5 @@
+"""Database operations module."""
+
 from __future__ import annotations
 
 import logging
@@ -42,6 +44,7 @@ class Database:
     constraint_manager : ConstraintManager
         Access point to alter constraints/indexes of the database.
     """
+
     schema_translate_map: MappingProxyType = None
 
     def __init__(self, uri: str, schema_translate_map: Dict[str, str], base):
@@ -212,8 +215,7 @@ class Database:
     @staticmethod
     def can_connect(uri: str) -> bool:
         """
-        Check whether a database connection can be established for the
-        given URI.
+        Check whether a connection can be established for the given URI.
 
         Parameters
         ----------
@@ -237,9 +239,7 @@ class Database:
 
     @property
     def reflected_metadata(self) -> MetaData:
-        """
-        Get Metadata of the current state of tables in the database.
-        """
+        """Metadata of the current state of tables in the database."""
         metadata = MetaData(bind=self.engine)
         for schema in self.schemas:
             metadata.reflect(schema=schema)
