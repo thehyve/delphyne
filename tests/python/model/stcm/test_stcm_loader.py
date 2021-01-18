@@ -105,5 +105,5 @@ def test_load_stcm(cdm600_wrapper_no_constraints: Wrapper, base_stcm_dir: Path, 
     # Nothing new provided
     caplog.clear()
     with mock_stcm_paths(base_stcm_dir, 'stcm2'), caplog.at_level(logging.INFO):
-        wrapper.vocab_manager.load_stcm()
+        wrapper.vocab_manager.stcm.load()
     assert "No new STCM versions provided" in caplog.text
