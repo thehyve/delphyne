@@ -166,7 +166,7 @@ class BaseCostCdm531:
         return Column(Integer)
 
     @declared_attr
-    def reveue_code_source_value(cls):
+    def revenue_code_source_value(cls):
         return Column(String(50))
 
     @declared_attr
