@@ -53,7 +53,7 @@ class StandardVocabLoader:
         self._block_loading = block_loading
 
         self._standard_vocab_files: Set[Path] = set()
-        self._table_file_mapping: Dict[str, Path] = dict()
+        self._table_file_mapping: Dict[str, Path] = {}
 
     def load(self) -> None:
         """

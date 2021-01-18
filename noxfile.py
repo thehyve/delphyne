@@ -8,6 +8,7 @@ python = ["3.7", "3.8", "3.9"]
 
 lint_dependencies = [
     "flake8",
+    "flake8-comprehensions",
     "flake8-bugbear",
     "check-manifest",
 ]

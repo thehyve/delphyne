@@ -35,7 +35,7 @@ class SourceData:
         source_files = self._source_dir.glob('*')
         source_files = [f for f in source_files if f.is_file() and not io.is_hidden(f)]
 
-        source_file_dict = dict()
+        source_file_dict = {}
         file_config = self.source_config.source_files or {}
         for f in source_files:
             # Merge the default params with the file specific params

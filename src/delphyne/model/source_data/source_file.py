@@ -341,7 +341,7 @@ class SourceFile:
 
             with self.path.open('r', encoding=full_kwargs['encoding']) as f:
                 reader = csv.DictReader(f, **dict_reader_params)
-                csv_records = [row for row in reader]
+                csv_records = list(reader)
 
         if cache:
             self._cache_csv_copy(csv_records)
