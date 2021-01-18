@@ -96,6 +96,9 @@ class MappingDict:
         compliant with the required Record format. The method also works
         on a list of named tuples, as long as they have the required
         Record fields.
+
+        Parameters
+        ----------
         records : list of Record
             A list of named tuples compliant with the Record format,
             e.g. as the result of a SQLAlchemy query.

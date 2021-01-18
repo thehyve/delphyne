@@ -105,6 +105,8 @@ class OrmWrapper(ABC):
         """
         Query the STCM table to get the target_concept_id.
 
+        Parameters
+        ----------
         source_vocabulary_id : str
             Vocabulary ID of the source code.
         source_code : str
