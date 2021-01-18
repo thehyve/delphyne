@@ -1,9 +1,27 @@
-from typing import Dict, Optional
+"""General utility module."""
+
+from typing import Dict, Any
 
 import pandas as pd
 
 
-def is_null_or_falsy(value) -> bool:
+def is_null_or_falsy(value: Any) -> bool:
+    """
+    Check whether the provided value is null/falsy.
+
+    pandas.isnull is used to determine whether a value qualifies as
+    null.
+
+    Parameters
+    ----------
+    value : Any
+        Value to check.
+
+    Returns
+    -------
+    bool
+        Return True if value is null or falsy.
+    """
     if pd.isnull(value) or not value:
         return True
     else:
@@ -14,41 +32,18 @@ def replace_substrings(string: str, mapping: Dict[str, str]) -> str:
     """
     Replace substrings in string, based on the items in mapping.
 
-    :param string: str
-        The string to be edited
-    :param mapping: Dict[str, str]
-        Dictionary containing the replacements as {old: new}
-    :return: str
+    Parameters
+    ----------
+    string: str
+        The string to be edited.
+    mapping: dict of {str : str}
+        Dictionary containing the replacements as {old: new}.
+
+    Returns
+    -------
+    str
+        The provided string after replacements.
     """
     for old, new in mapping.items():
         string = string.replace(old, new)
     return string
-
-
-# TODO: if we need this method it should go to the template repo.
-def construct_full_date_value(date: Optional[str],
-                              fallback_date: Optional[str] = None
-                              ) -> Optional[str]:
-    """
-    Turn a partial date value into a full yyyy-mm-dd date string.
-    If only year is available, return yyyy-07-01.
-    If year and month are available, return yyyy-mm-15.
-
-    :param date: str
-        date value as present in the source data
-    :param fallback_date: str
-        if true, a fallback date will be returned when date is empty
-    :return: str or NaN
-        the full date value, if available
-    """
-    if pd.isnull(date) or date == '':
-        if fallback_date is not None:
-            return fallback_date
-        return date
-    elif len(date) == 10:  # a full date requires no changes
-        return date
-    date_parts = date.split('-')
-    year = date_parts[0]
-    month = date_parts[1] if len(date_parts) == 2 else '07'
-    day = '01' if len(date_parts) == 1 else '15'
-    return '-'.join([year, month, day])

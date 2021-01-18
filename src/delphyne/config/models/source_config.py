@@ -1,3 +1,5 @@
+"""Source data config models and validation."""
+
 import logging
 from pathlib import Path
 from typing import Optional, Dict, Any
@@ -9,6 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class SourceConfig(BaseModel):
+    """Data schema/validator of the source data config properties."""
+
     source_data_folder: DirectoryPath
     count_source_rows: bool
     file_defaults: Optional[Dict[str, Any]]
@@ -19,6 +23,22 @@ class SourceConfig(BaseModel):
                                    config_source_files: Optional[Dict[str, Dict]],
                                    values: Dict,
                                    ) -> Optional[Dict[str, Dict]]:
+        """
+        Check all provided source files exist.
+
+        Parameters
+        ----------
+        config_source_files : dict, optional
+            Source file properties dictionary.
+        values : dict
+            Dictionary of all provided properties of the current
+            instance.
+
+        Returns
+        -------
+        dict or None
+            The validated source file properties dictionary if provided.
+        """
         if config_source_files is None or 'source_data_folder' not in values:
             return config_source_files
         source_dir: Path = values['source_data_folder']

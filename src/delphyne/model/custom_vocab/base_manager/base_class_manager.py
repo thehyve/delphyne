@@ -1,3 +1,5 @@
+"""concept_class vocabulary table operations."""
+
 import csv
 import logging
 from collections import Counter
@@ -11,7 +13,16 @@ logger = logging.getLogger(__name__)
 
 class BaseClassManager:
     """
-    Collects functions that interact with the Concept Class table.
+    Collection of concept_class vocabulary table functions.
+
+    Parameters
+    ----------
+    db : Database
+        Database instance to interact with.
+    cdm : module
+        Module containing all CDM table definitions.
+    custom_class_files : list of pathlib.Path
+        Collection of files containing custom concept_class data.
     """
 
     def __init__(self, db: Database, cdm, custom_class_files: List[Path]):

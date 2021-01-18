@@ -1,3 +1,5 @@
+"""OMOP CDM 6.0.0 derived elements tables."""
+
 from sqlalchemy import (BigInteger, Column, DateTime, ForeignKey,
                         Integer, Numeric)
 from sqlalchemy.ext.declarative import declared_attr

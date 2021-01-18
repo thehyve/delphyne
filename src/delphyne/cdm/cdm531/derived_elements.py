@@ -1,3 +1,5 @@
+"""OMOP CDM 5.3.1 derived elements tables."""
+
 from sqlalchemy import Column, ForeignKey, Integer, Date, Numeric
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship

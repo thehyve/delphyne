@@ -1,5 +1,10 @@
 [flake8]
 max-line-length = 99
 max-doc-length = 72
+docstring-convention = numpy
+
 ignore = E501, E203, F401, W503
+per-file-ignores =
+    src/delphyne/cdm/*:D101,D102
+
 exclude = _version.py

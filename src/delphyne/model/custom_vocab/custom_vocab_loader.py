@@ -1,3 +1,5 @@
+"""Custom vocabulary loading."""
+
 import logging
 from pathlib import Path
 from typing import List
@@ -11,9 +13,24 @@ logger = logging.getLogger(__name__)
 
 
 class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
-    def __init__(self, db: Database, cdm):
+    """
+    Loader of custom vocabularies into the respective tables.
+
+    Parameters
+    ----------
+    db : Database
+        Database instance to interact with.
+    cdm : module
+        Module containing all CDM table definitions.
+    block_loading : bool
+        If True, calls to load_custom_vocabulary_tables will be
+        ignored.
+    """
+
+    def __init__(self, db: Database, cdm, block_loading: bool):
         self._db = db
         self._cdm = cdm
+        self._block_loading = block_loading
         self._custom_vocab_files: List[str] = []
         self._custom_class_files: List[str] = []
         self._custom_concept_files: List[str] = []
@@ -50,7 +67,26 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
                                          all_prefixes=vocab_ids_all,
                                          valid_prefixes=self._custom_vocabs_to_update)]
 
-    def load_custom_vocabulary_tables(self) -> None:
+    def load(self) -> None:
+        """
+        Load custom vocabularies to the vocabulary schema.
+
+        - Checks for the presence of custom vocabularies and
+          concept_classes at a predefined folder location;
+        - Compares the version of custom vocabularies and
+          concept_classes in the folder to that of custom vocabularies
+          and tables already present in the database;
+        - Deletes obsolete versions from the database;
+        - Loads the new versions to the database.
+
+        Returns
+        -------
+        None
+        """
+        logger.info(f'Loading custom vocabulary tables: {not self._block_loading}')
+        if self._block_loading:
+            return
+
         self._initialize_table_managers()
         # check vocabs and classes to drop and update
         self._get_custom_vocabulary_sets()

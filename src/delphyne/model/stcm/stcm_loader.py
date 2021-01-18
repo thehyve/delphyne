@@ -1,3 +1,5 @@
+"""Source to concept map loading."""
+
 import csv
 import logging
 from collections import Counter
@@ -20,9 +22,23 @@ _STCM_VERSION_TABLE_NAME = BaseSourceToConceptMapVersion.__tablename__
 
 
 class StcmLoader:
-    def __init__(self, db: Database, cdm):
+    """
+    Loader of source to concept map data into the respective tables.
+
+    Parameters
+    ----------
+    db : Database
+        Database instance to interact with.
+    cdm : module
+        Module containing all CDM table definitions.
+    block_loading : bool
+        If True, calls to load tables will be ignored.
+    """
+
+    def __init__(self, db: Database, cdm, block_loading: bool):
         self._db = db
         self._cdm = cdm
+        self._block_loading = block_loading
         # STCM versions previously loaded into the db
         self._loaded_stcm_versions: Dict[str, str] = {}
         # Newly provided STCM versions from stcm_versions.tsv
@@ -46,8 +62,26 @@ class StcmLoader:
         StcmLoader._stcm_vocabs_to_update.fget.cache_clear()
         StcmLoader._loaded_vocabulary_ids.fget.cache_clear()
 
-    def load_stcm(self) -> None:
-        logger.info('Loading STCM files')
+    def load(self) -> None:
+        """
+        Load STCM files into the source_to_concept_map table.
+
+        Only new STCM mappings, as specified in stcm_versions.tsv, will
+        be inserted. All records in the source_to_concept_map table that
+        belong to vocabulary_ids that need updating, will be deleted
+        before the new records are inserted.
+        If an STCM file contains exclusively records of one
+        source_vocabulary_id, it can be named as
+        <vocab_id>_stcm.<file_extension> to make sure it will not be
+        parsed if no new version is available for that vocabulary.
+
+        Returns
+        -------
+        None
+        """
+        logger.info(f'Loading source_to_concept_map files: {not self._block_loading}')
+        if self._block_loading:
+            return
         self._invalidate_cache()
         if not STCM_DIR.exists():
             raise FileNotFoundError(f'{STCM_DIR.resolve()} folder not found')

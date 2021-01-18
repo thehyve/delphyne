@@ -1,16 +1,4 @@
-# Copyright 2019 The Hyve
-#
-# Licensed under the GNU General Public License, version 3,
-# or (at your option) any later version (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# https://www.gnu.org/licenses/
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+"""ORM wrapper module."""
 
 import logging
 import os
@@ -30,35 +18,55 @@ logger = logging.getLogger(__name__)
 
 class OrmWrapper(ABC):
     """
-    Wrapper which coordinates the execution of python ORM
-    transformations.
+    Wrapper coordinating the execution of python ORM transformations.
+
+    Parameters
+    ----------
+    database : Database
+        Database instance to interact with.
     """
+
     def __init__(self, database: Database):
         self.db = database
 
     @property
     @abstractmethod
     def cdm(cls):
+        """CDM module."""
         return NotImplementedError('Missing class variable: cdm')
 
     def run(self):
-        """Run ETL procedure"""
+        """Run ETL procedure."""
         raise NotImplementedError('Method is not implemented')
 
     @staticmethod
     def is_git_repo() -> bool:
+        """
+        Check whether current working dir is a git repository.
+
+        Returns
+        -------
+        bool
+            Return True if CWD is a git repository.
+        """
         return os.path.exists('./.git')
 
     def execute_transformation(self, statement: Callable, bulk: bool = False) -> None:
         """
-        Execute an ETL transformation via a python statement (function
-        that will be called).
+        Execute an ETL transformation via a python statement.
 
-        :param statement: Callable
-            python function which takes this wrapper as input
-        :param bulk: bool
-            Use SQLAlchemy's bulk_save_objects instead of add_all for
-            persisting the ORM objects
+        Parameters
+        ----------
+        statement : Callable
+            Python function which takes this wrapper as input. It will
+            be called as a transformation.
+        bulk : bool
+            If True, use SQLAlchemy's bulk_save_objects instead of
+            add_all for persisting the ORM objects.
+
+        Returns
+        -------
+        None
         """
         logger.info(f'Executing transformation: {statement.__name__}')
         with self.db.tracked_session_scope(name=statement.__name__, raise_on_error=False) \
@@ -97,10 +105,18 @@ class OrmWrapper(ABC):
         """
         Query the STCM table to get the target_concept_id.
 
-        :param source_vocabulary_id: str
-        :param source_code: str
-        :return: int
-            target_concept_id if present, otherwise 0
+        Parameters
+        ----------
+        source_vocabulary_id : str
+            Vocabulary ID of the source code.
+        source_code : str
+            Code belonging to the source vocabulary for which to look up
+            the mapping.
+
+        Returns
+        -------
+        int
+            Target_concept_id if present, otherwise 0.
         """
         with self.db.session_scope() as session:
             q = session.query(self.cdm.SourceToConceptMap)

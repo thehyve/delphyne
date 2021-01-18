@@ -1,6 +1,8 @@
 """
-Module for all relative path constants, as they are expected to be
-present in the template repository.
+Module for all relative path constants.
+
+These are the paths as they are expected to be present in the template
+repository.
 """
 
 from pathlib import Path

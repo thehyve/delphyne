@@ -1,3 +1,5 @@
+"""Table record events module."""
+
 from __future__ import annotations
 
 import logging
@@ -17,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 @event.listens_for(Session, "before_flush")
-def track_instances_before_flush(session: Session, context, instances):
+def _track_instances_before_flush(session: Session, context, instances):
     if id(session) not in SessionTracker.sessions:
         return
     deletion_counts = Counter(get_record_targets(session.deleted))
@@ -31,12 +33,12 @@ def track_instances_before_flush(session: Session, context, instances):
 
 
 @event.listens_for(Session, 'after_bulk_update')
-def receive_after_bulk_update(update_context: BulkUpdate):
+def _receive_after_bulk_update(update_context: BulkUpdate):
     _process_bulk_event(update_context)
 
 
 @event.listens_for(Session, 'after_bulk_delete')
-def receive_after_bulk_delete(delete_context: BulkDelete):
+def _receive_after_bulk_delete(delete_context: BulkDelete):
     _process_bulk_event(delete_context)
 
 
@@ -46,10 +48,15 @@ def get_record_targets(record_containing_object: Iterable) -> Iterable[str]:
 
     Includes the target schema if available.
 
-    :param record_containing_object: Iterable
-        container of new, updated, or deleted ORM objects
-    :return: Iterable[str]
-        target table
+    Parameters
+    ----------
+    record_containing_object : iterable
+        Container of new, updated, or deleted ORM objects.
+
+    Yields
+    ------
+    str
+        The (full) target table name.
     """
     for record in record_containing_object:
         placeholder_schema = record.__table__.schema

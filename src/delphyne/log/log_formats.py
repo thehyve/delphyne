@@ -1,3 +1,5 @@
+"""Storage module for custom logging formats."""
+
 from logging import Formatter
 
 

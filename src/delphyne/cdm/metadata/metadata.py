@@ -1,3 +1,5 @@
+"""OMOP CDM metadata tables."""
+
 from sqlalchemy import Column, Date, DateTime, Integer, String, Text
 from sqlalchemy.ext.declarative import declared_attr
 

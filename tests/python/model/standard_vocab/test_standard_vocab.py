@@ -46,12 +46,12 @@ def test_standard_vocab_exceptions(cdm600_wrapper_with_tables_created: Wrapper,
     with mock_standard_vocab_paths(base_standard_vocab_dir, 'dir_not_found'):
         message = 'standard vocabulary folder not found'
         with pytest.raises(FileNotFoundError, match=message):
-            wrapper.vocab_manager.load_standard_vocabularies()
+            wrapper.vocab_manager.standard_vocabularies.load()
 
     with mock_standard_vocab_paths(base_standard_vocab_dir, 'vocab_incomplete'):
         message = 'No corresponding file was found for table "concept"'
         with pytest.raises(FileNotFoundError, match=message):
-            wrapper.vocab_manager.load_standard_vocabularies()
+            wrapper.vocab_manager.standard_vocabularies.load()
 
     # Temporarily remove the Base metadata, to check whether an
     # exception is raised about vocabulary tables not being part of
@@ -60,7 +60,7 @@ def test_standard_vocab_exceptions(cdm600_wrapper_with_tables_created: Wrapper,
     wrapper.db.base.metadata = MetaData()
     with mock_standard_vocab_paths(base_standard_vocab_dir, 'vocab1'):
         with pytest.raises(ValueError, match='Missing table "concept"'):
-            wrapper.vocab_manager.load_standard_vocabularies()
+            wrapper.vocab_manager.standard_vocabularies.load()
     wrapper.db.base.metadata = original_metadata
 
     # pre-existing records in a vocabulary table will raise an exception
@@ -68,7 +68,7 @@ def test_standard_vocab_exceptions(cdm600_wrapper_with_tables_created: Wrapper,
     insert_dummy_domain_record(wrapper)
     with mock_standard_vocab_paths(base_standard_vocab_dir, 'vocab1'):
         with pytest.raises(ValueError, match='Table "domain" is not empty'):
-            wrapper.vocab_manager.load_standard_vocabularies()
+            wrapper.vocab_manager.standard_vocabularies.load()
 
 
 @pytest.mark.usefixtures("container", "test_db")
@@ -78,7 +78,7 @@ def test_standard_vocab_loading(cdm600_wrapper_with_tables_created: Wrapper,
     wrapper = cdm600_wrapper_with_tables_created
 
     with mock_standard_vocab_paths(base_standard_vocab_dir, 'vocab1'):
-        wrapper.vocab_manager.load_standard_vocabularies()
+        wrapper.vocab_manager.standard_vocabularies.load()
 
     with wrapper.db.session_scope() as session:
         # All vocabulary files contain a header and one data row

@@ -1,3 +1,5 @@
+"""OMOP CDM 5.3.1 health system data tables."""
+
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship

@@ -1,3 +1,5 @@
+"""Main config models and validation."""
+
 from typing import Optional, Dict
 
 from pydantic import BaseModel, validator, SecretStr, DirectoryPath
@@ -29,6 +31,8 @@ class _RunOptions(BaseModel):
 
 
 class MainConfig(BaseModel):
+    """Data schema and validator of the main config properties."""
+
     database: _DataBase
     source_data_folder: Optional[DirectoryPath]
     schema_translate_map: Dict[str, str]
@@ -37,6 +41,19 @@ class MainConfig(BaseModel):
 
     @validator('schema_translate_map')
     def check_required_schemas(cls, schema_map: Dict[str, str]) -> Dict[str, str]:
+        """
+        Check whether the required schemas are present in schema_map.
+
+        Parameters
+        ----------
+        schema_map : dict of {str : str}
+            Placeholder to actual schema name mapping.
+
+        Returns
+        -------
+        dict of {str : str}
+            The validated schema_map.
+        """
         for schema in _REQUIRED_SCHEMAS:
             if schema not in schema_map:
                 raise ValueError(f'Missing required key in schema_translate_map: {schema}')
@@ -44,6 +61,19 @@ class MainConfig(BaseModel):
 
     @validator('schema_translate_map', 'sql_parameters')
     def no_empty_strings(cls, str_dict: Optional[Dict[str, str]]) -> Optional[Dict[str, str]]:
+        """
+        Check no empty strings are provided in the dictionary.
+
+        Parameters
+        ----------
+        str_dict : dict of {str : str}, optional
+            Mapping object to validate.
+
+        Returns
+        -------
+        dict of {str : str} or None
+            The validated dictionary if provided.
+        """
         if str_dict is None:
             return str_dict
         for k, v in str_dict.items():
@@ -55,8 +85,19 @@ class MainConfig(BaseModel):
     def values_are_not_also_keys(cls,
                                  str_dict: Optional[Dict[str, str]]
                                  ) -> Optional[Dict[str, str]]:
-        # Make sure that a value is not used in another mapping as a
-        # key.
+        """
+        Make sure that a value is not also a key.
+
+        Parameters
+        ----------
+        str_dict : dict of {str : str}, optional
+            Mapping object to validate.
+
+        Returns
+        -------
+        dict of {str : str} or None
+            The validated dictionary if provided.
+        """
         if str_dict is None:
             return str_dict
         for k, v in str_dict.items():

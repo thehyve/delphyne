@@ -1,3 +1,5 @@
+"""OMOP CDM 5.3.1 health economics tables."""
+
 from sqlalchemy import (Column, ForeignKey, Integer, String, Date,
                         Numeric)
 from sqlalchemy.ext.declarative import declared_attr

@@ -1,3 +1,5 @@
+"""vocabulary table operations."""
+
 import csv
 import logging
 from collections import Counter
@@ -13,7 +15,16 @@ logger = logging.getLogger(__name__)
 
 class BaseVocabManager:
     """
-    Collects functions that interact with the Vocabulary table.
+    Collection of vocabulary table functions.
+
+    Parameters
+    ----------
+    db : Database
+        Database instance to interact with.
+    cdm : module
+        Module containing all CDM table definitions.
+    custom_vocab_files : list of pathlib.Path
+        Collection of files containing custom vocabulary data.
     """
 
     def __init__(self, db: Database, cdm, custom_vocab_files: List[Path]):
@@ -25,18 +36,18 @@ class BaseVocabManager:
 
     @property
     def vocabs_updated(self):
+        """Set of vocabulary IDs to update."""
         return self._custom_vocabs_to_update
 
     @property
     def vocabs_unused(self):
+        """Vocabulary IDs of no longer used vocabularies."""
         return self._custom_vocabs_unused
 
     @property
     @lru_cache()
     def vocabs_from_disk(self) -> Dict[str, str]:
-        # Retrieve all user-provided custom vocabularies from disk
-        # and return a dictionary {id : version}.
-
+        """User-provided custom vocabulary IDs and versions."""
         vocab_dict = {}
 
         for vocab_file in self._custom_vocab_files:
@@ -73,9 +84,7 @@ class BaseVocabManager:
     @property
     @lru_cache()
     def vocabs_from_database(self) -> Dict[str, str]:
-        # Retrieve all custom vocabularies (vocabulary_concept_id == 0)
-        # currently in database and return a dictionary {id : version}.
-
+        """Get custom vocabularies (vocabulary_concept_id == 0)."""
         vocab_dict = {}
 
         with self._db.session_scope() as session:
