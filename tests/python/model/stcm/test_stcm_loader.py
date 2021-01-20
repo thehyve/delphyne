@@ -107,3 +107,38 @@ def test_load_stcm(cdm600_wrapper_no_constraints: Wrapper, base_stcm_dir: Path, 
     with mock_stcm_paths(base_stcm_dir, 'stcm2'), caplog.at_level(logging.INFO):
         wrapper.vocab_manager.stcm.load()
     assert "No new STCM versions provided" in caplog.text
+
+
+@pytest.mark.usefixtures("container", "test_db")
+def test_stcm_delete(cdm600_wrapper_no_constraints: Wrapper, base_stcm_dir: Path):
+    wrapper = cdm600_wrapper_no_constraints
+
+    # Load 2 STCM source vocabs (3 STCM records total)
+    load_minimal_vocabulary(wrapper=wrapper)
+    load_custom_vocab_records(wrapper=wrapper, vocab_ids=['MY_VOCAB1', 'MY_VOCAB2'])
+    wrapper.db.constraint_manager.add_all_constraints()
+    with mock_stcm_paths(base_stcm_dir, 'stcm2'):
+        wrapper.vocab_manager.stcm.load()
+    with wrapper.db.session_scope() as session:
+        assert session.query(SourceToConceptMap).count() == 3
+        assert session.query(SourceToConceptMapVersion).count() == 2
+
+    # Calling delete without arguments should drop all STCM records
+    wrapper.vocab_manager.stcm.delete()
+    with wrapper.db.session_scope() as session:
+        assert session.query(SourceToConceptMap).count() == 0
+        assert session.query(SourceToConceptMapVersion).count() == 0
+
+    # Reload the two STCM source vocabs
+    with mock_stcm_paths(base_stcm_dir, 'stcm2'):
+        wrapper.vocab_manager.stcm.load()
+
+    # Calling delete with vocab_ids={'MY_VOCAB1'} should leave only
+    # MY_VOCAB2 records
+    wrapper.vocab_manager.stcm.delete(vocab_ids={'MY_VOCAB1'})
+    with wrapper.db.session_scope() as session:
+        records = get_all_stcm_records(wrapper)
+        assert records == [('code2', 'MY_VOCAB2')]
+        v_record = session.query(SourceToConceptMapVersion).one()
+        expected = ('MY_VOCAB2', '0.1')
+        assert (v_record.source_vocabulary_id, v_record.stcm_version) == expected
