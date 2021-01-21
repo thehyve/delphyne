@@ -52,14 +52,19 @@ class VocabManager:
         """
         stcm_table_name = self._cdm.SourceToConceptMap.__tablename__
         stcm_version_table_name = self._cdm.SourceToConceptMapVersion.__tablename__
-
-        self._db.constraint_manager.drop_table_constraints(stcm_table_name,
-                                                           drop_pk=False, drop_index=False)
-        self._db.constraint_manager.drop_table_constraints(stcm_version_table_name,
-                                                           drop_pk=False, drop_index=False)
+        self._drop_stcm_fks(stcm_table_name, stcm_version_table_name)
         self.custom_vocabularies.load()
         self.stcm.load()
-        self._db.constraint_manager.add_table_constraints(stcm_table_name,
+        self._add_stcm_fks(stcm_table_name, stcm_version_table_name)
+
+    def _drop_stcm_fks(self, stcm_table: str, stcm_version_table: str):
+        self._db.constraint_manager.drop_table_constraints(table_name=stcm_table,
+                                                           drop_pk=False, drop_index=False)
+        self._db.constraint_manager.drop_table_constraints(stcm_version_table,
+                                                           drop_pk=False, drop_index=False)
+
+    def _add_stcm_fks(self, stcm_table: str, stcm_version_table: str):
+        self._db.constraint_manager.add_table_constraints(table_name=stcm_table,
                                                           add_pk=False, add_index=False)
-        self._db.constraint_manager.add_table_constraints(stcm_version_table_name,
+        self._db.constraint_manager.add_table_constraints(stcm_version_table,
                                                           add_pk=False, add_index=False)
