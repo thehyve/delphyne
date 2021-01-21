@@ -1,3 +1,3 @@
 source_code,source_concept_id,source_vocabulary_id,source_code_description,target_concept_id,target_vocabulary_id,valid_start_date,valid_end_date,invalid_reason
-Munster cheese left outside the fridge,0,MY_VOCAB1,pcspec,4252696,SNOMED,1970-01-01,2099-12-31,
+Munster cheese left outside the fridge,0,MY_VOCAB1,pcspec,1,ARTIFICIAL_VOCAB,1970-01-01,2099-12-31,
 code2,0,MY_VOCAB2,pcspec,1,ARTIFICIAL_VOCAB,1970-01-01,2099-12-31,
