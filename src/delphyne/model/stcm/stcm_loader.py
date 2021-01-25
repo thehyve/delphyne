@@ -70,6 +70,7 @@ class StcmLoader:
         be inserted. All records in the source_to_concept_map table that
         belong to vocabulary_ids that need updating, will be deleted
         before the new records are inserted.
+
         If an STCM file contains exclusively records of one
         source_vocabulary_id, it can be named as
         <vocab_id>_stcm.<file_extension> to make sure it will not be
