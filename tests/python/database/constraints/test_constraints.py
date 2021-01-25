@@ -3,6 +3,7 @@ from typing import Set
 
 import pytest
 from sqlalchemy import Table, Index, Constraint, MetaData
+from sqlalchemy.exc import InternalError, ProgrammingError
 from src.delphyne import Wrapper
 
 from tests.python.conftest import docker_not_available
@@ -54,14 +55,14 @@ def test_drop_and_add_single_index(cdm531_wrapper_with_tables_created: Wrapper):
     expected_full = expected_sets.measurement_indexes_full
     assert get_index_names(meas_table.indexes) == expected_full
 
-    # Calling drop_index will remove the index on person_id
-    wrapper.db.constraint_manager.drop_index(person_id_index)
+    # Calling drop_constraint will remove the index on person_id
+    wrapper.db.constraint_manager.drop_constraint(person_id_index)
     meas_table = reflect_table(wrapper, full_table_name)
     expected = expected_sets.measurement_indexes_without_person_index
     assert get_index_names(meas_table.indexes) == expected
 
     # Calling add_index will restore the index on person_id
-    wrapper.db.constraint_manager.add_index(person_id_index)
+    wrapper.db.constraint_manager.add_constraint(person_id_index)
     meas_table = reflect_table(wrapper, full_table_name)
     assert get_index_names(meas_table.indexes) == expected_full
 
@@ -86,7 +87,7 @@ def test_drop_and_add_pk(cdm600_wrapper_with_tables_created: Wrapper):
 
 
 @pytest.mark.usefixtures("container", "test_db")
-def test_raise_keyerror_if_object_not_found(cdm600_wrapper_with_tables_created: Wrapper):
+def test_exceptions(cdm600_wrapper_with_tables_created: Wrapper):
     wrapper = cdm600_wrapper_with_tables_created
 
     # Cannot add/drop for non-existing tables
@@ -97,16 +98,31 @@ def test_raise_keyerror_if_object_not_found(cdm600_wrapper_with_tables_created: 
 
     # Cannot add index that doesn't exist
     with pytest.raises(KeyError):
-        wrapper.db.constraint_manager.add_index('but_now_alone_i_lie')
+        wrapper.db.constraint_manager.add_constraint('but_now_alone_i_lie')
     # Cannot drop index that never existed
     with pytest.raises(KeyError):
-        wrapper.db.constraint_manager.drop_index('and_weep_beside_the_tree')
+        wrapper.db.constraint_manager.drop_constraint('and_weep_beside_the_tree')
 
     # This index can be dropped
-    wrapper.db.constraint_manager.drop_index('ix_measurement_person_id')
+    wrapper.db.constraint_manager.drop_constraint('ix_measurement_person_id')
     # But not again once already dropped
     with pytest.raises(KeyError):
-        wrapper.db.constraint_manager.drop_index('ix_measurement_person_id')
+        wrapper.db.constraint_manager.drop_constraint('ix_measurement_person_id')
+
+    # Invalid errors value is not accepted
+    with pytest.raises(AssertionError):
+        wrapper.db.constraint_manager.drop_constraint('pk_person', errors='divine_intervention')
+
+    # If a valid constraint cannot be added/dropped, raise an exception,
+    # unless specified otherwise.
+    with pytest.raises(InternalError):
+        wrapper.db.constraint_manager.drop_constraint('pk_person')
+    wrapper.db.constraint_manager.drop_constraint('pk_person', errors='ignore')
+
+    wrapper.db.constraint_manager.drop_cdm_constraints()
+    with pytest.raises(ProgrammingError):
+        wrapper.db.constraint_manager.add_table_constraints('observation')
+    wrapper.db.constraint_manager.add_table_constraints('observation', errors='ignore')
 
 
 @pytest.mark.usefixtures("container", "test_db")
@@ -126,7 +142,7 @@ def test_diff_index_name_is_recognized(cdm600_wrapper_with_tables_created: Wrapp
 
     # Trying to add the original index will have no effect
     with caplog.at_level(logging.INFO):
-        wrapper.db.constraint_manager.add_index('ix_specimen_person_id')
+        wrapper.db.constraint_manager.add_constraint('ix_specimen_person_id')
     specimen_table = reflect_table(wrapper, full_table_name)
     indexes = get_index_names(specimen_table.indexes)
     assert indexes == {'ix_specimen_specimen_concept_id', 'indexus_anderus'}
