@@ -18,12 +18,15 @@ from typing import TYPE_CHECKING, Union, Dict, Callable, List, Tuple
 
 from itertools import chain
 from sqlalchemy import Index, Table, PrimaryKeyConstraint, Constraint, MetaData
+from sqlalchemy.exc import InternalError, ProgrammingError
 from sqlalchemy.schema import DropConstraint, AddConstraint, DropIndex, CreateIndex
 
 from .conventions import VOCAB_TABLES
 
 if TYPE_CHECKING:
     from ..database import Database
+
+_VALID_ERRORS_OPTIONS = {'raise', 'ignore'}
 
 logger = logging.getLogger(__name__)
 
@@ -140,7 +143,8 @@ class ConstraintManager:
     def drop_all_constraints(self,
                              drop_constraint: bool = True,
                              drop_pk: bool = True,
-                             drop_index: bool = True
+                             drop_index: bool = True,
+                             errors: str = 'raise',
                              ) -> None:
         """
         Remove constraints/indexes of all tables (including vocabulary).
@@ -157,6 +161,13 @@ class ConstraintManager:
             If True, drop all PKs.
         drop_index : bool, default True
             If True, drop all indexes.
+        errors : {'ignore', 'raise'}, default 'raise'
+            Behavior in case one or more constraints cannot be dropped,
+            because dependent objects still exist.
+            If 'raise', an exception will be raised upon first
+            encountering an object that cannot be dropped.
+            If 'ignore', raise no exception and try to drop the
+            remaining constraints (if any).
 
         Returns
         -------
@@ -171,13 +182,14 @@ class ConstraintManager:
                                                             drop_pk, drop_index)
 
         for constraint in chain(constraints, indexes, pks):
-            self._drop_constraint_in_db(constraint)
+            self._drop_constraint_in_db(constraint, errors)
 
     @_invalidate_db_cache
     def add_all_constraints(self,
                             add_constraint: bool = True,
                             add_pk: bool = True,
-                            add_index: bool = True
+                            add_index: bool = True,
+                            errors: str = 'raise',
                             ) -> None:
         """
         Add constraints/indexes of all tables (including vocabulary).
@@ -198,6 +210,13 @@ class ConstraintManager:
             If True, add all PKs.
         add_index : bool, default True
             If True, add all indexes.
+        errors : {'ignore', 'raise'}, default 'raise'
+            Behavior in case one or more constraints cannot be added,
+            because prerequisite objects are missing.
+            If 'raise', an exception will be raised upon first
+            encountering an object that cannot be added.
+            If 'ignore', raise no exception and try to add the remaining
+            constraints (if any).
 
         Returns
         -------
@@ -213,12 +232,13 @@ class ConstraintManager:
             constraints = self._model.constraints
 
         for constraint in chain(indexes, pks, constraints):
-            self._add_constraint_in_db(constraint)
+            self._add_constraint_in_db(constraint, errors)
 
     def drop_cdm_constraints(self,
                              drop_constraint: bool = True,
                              drop_pk: bool = True,
-                             drop_index: bool = True
+                             drop_index: bool = True,
+                             errors: str = 'raise',
                              ) -> None:
         """
         Remove constraints/indexes of all non-vocabulary tables.
@@ -236,6 +256,13 @@ class ConstraintManager:
             If True, drop all PKs.
         drop_index : bool, default True
             If True, drop all indexes.
+        errors : {'ignore', 'raise'}, default 'raise'
+            Behavior in case one or more constraints cannot be dropped,
+            because dependent objects still exist.
+            If 'raise', an exception will be raised upon first
+            encountering an object that cannot be dropped.
+            If 'ignore', raise no exception and try to drop the
+            remaining constraints (if any).
 
         Returns
         -------
@@ -251,13 +278,14 @@ class ConstraintManager:
                                                             drop_pk, drop_index)
 
         for constraint in chain(constraints, indexes, pks):
-            self._drop_constraint_in_db(constraint)
+            self._drop_constraint_in_db(constraint, errors)
 
     @_invalidate_db_cache
     def add_cdm_constraints(self,
                             add_constraint: bool = True,
                             add_pk: bool = True,
-                            add_index: bool = True
+                            add_index: bool = True,
+                            errors: str = 'raise',
                             ) -> None:
         """
         Add constraints/indexes of all non-vocabulary tables.
@@ -279,6 +307,13 @@ class ConstraintManager:
             If True, add all PKs.
         add_index : bool, default True
             If True, add all indexes.
+        errors : {'ignore', 'raise'}, default 'raise'
+            Behavior in case one or more constraints cannot be added,
+            because prerequisite objects are missing.
+            If 'raise', an exception will be raised upon first
+            encountering an object that cannot be added.
+            If 'ignore', raise no exception and try to add the remaining
+            constraints (if any).
 
         Returns
         -------
@@ -295,14 +330,15 @@ class ConstraintManager:
 
         for constraint in chain(indexes, pks, constraints):
             if constraint.table.name not in VOCAB_TABLES:
-                self._add_constraint_in_db(constraint)
+                self._add_constraint_in_db(constraint, errors)
 
     @_invalidate_db_cache
     def drop_table_constraints(self,
                                table_name: str,
                                drop_constraint: bool = True,
                                drop_pk: bool = True,
-                               drop_index: bool = True
+                               drop_index: bool = True,
+                               errors: str = 'raise',
                                ) -> None:
         """
         Remove constraints/indexes of a CDM table.
@@ -317,6 +353,13 @@ class ConstraintManager:
             If True, drop the PK.
         drop_index : bool, default True
             If True, drop all indexes.
+        errors : {'ignore', 'raise'}, default 'raise'
+            Behavior in case one or more constraints cannot be dropped,
+            because dependent objects still exist.
+            If 'raise', an exception will be raised upon first
+            encountering an object that cannot be dropped.
+            If 'ignore', raise no exception and try to drop the
+            remaining constraints for this table (if any).
 
         Returns
         -------
@@ -331,14 +374,15 @@ class ConstraintManager:
                                                             drop_pk, drop_index)
 
         for constraint in chain(constraints, indexes, pks):
-            self._drop_constraint_in_db(constraint)
+            self._drop_constraint_in_db(constraint, errors)
 
     @_invalidate_db_cache
     def add_table_constraints(self,
                               table_name: str,
                               add_constraint: bool = True,
                               add_pk: bool = True,
-                              add_index: bool = True
+                              add_index: bool = True,
+                              errors: str = 'raise',
                               ) -> None:
         """
         Add constraints/indexes on a CDM table.
@@ -360,6 +404,13 @@ class ConstraintManager:
             Add the table's PK if there is one.
         add_index : bool, default True
             Add all table indexes.
+        errors : {'ignore', 'raise'}, default 'raise'
+            Behavior in case one or more constraints cannot be added,
+            because prerequisite objects are missing.
+            If 'raise', an exception will be raised upon first
+            encountering an object that cannot be added.
+            If 'ignore', raise no exception and try to add the remaining
+            constraints for this table (if any).
 
         Returns
         -------
@@ -374,85 +425,62 @@ class ConstraintManager:
                                                             add_pk, add_index)
 
         for constraint in chain(indexes, pks, constraints):
-            self._add_constraint_in_db(constraint)
+            self._add_constraint_in_db(constraint, errors)
 
     @_invalidate_db_cache
-    def drop_constraint(self, constraint_name: str) -> None:
+    def drop_constraint(self, name: str, errors: str = 'raise') -> None:
         """
-        Drop a single constraint by name.
+        Drop a single constraint/index by name.
 
-        This can be either a PK, FK, not null, unique or check
-        constraint.
+        This can be either an index, or a PK, FK, not null, unique or
+        check constraint.
 
         Parameters
         ----------
-        constraint_name : str
-            Name of the constraint as it exists in the database.
+        name : str
+            Name of the constraint/index as it exists in the database.
+        errors : {'ignore', 'raise'}, default 'raise'
+            Behavior in case the constraint cannot be dropped, because
+            dependent objects still exist.
+            If 'raise', an exception will be raised when the object
+            cannot be dropped.
+            If 'ignore', do not raise the exception.
 
         Returns
         -------
         None
         """
-        constraint = self._reflected_constraint_lookup.get(constraint_name)
+        constraint = self._reflected_constraint_lookup.get(name)
         if constraint is None:
-            raise KeyError(f'Constraint "{constraint_name}" not found')
+            raise KeyError(f'Constraint "{name}" not found')
         else:
-            self._drop_constraint_in_db(constraint)
+            self._drop_constraint_in_db(constraint, errors)
 
     @_invalidate_db_cache
-    def drop_index(self, index_name: str) -> None:
+    def add_constraint(self, name: str, errors: str = 'raise') -> None:
         """
-        Drop a single index by name.
+        Add a single constraint/index by name.
+
+        This can be either an index, or a PK, FK, not null, unique or
+        check constraint.
 
         Parameters
         ----------
-        index_name : str
-            Name of the index as it exists in the database.
+        name : str
+            Name of the constraint/index as it exists in the model.
+        errors : {'ignore', 'raise'}, default 'raise'
+            Behavior in case the constraint cannot be added, because
+            prerequisite objects are missing.
+            If 'raise', an exception will be raised when the object
+            cannot be added.
+            If 'ignore', do not raise the exception.
 
         Returns
         -------
         None
         """
-        index = self._reflected_constraint_lookup.get(index_name)
-        if index is None:
-            raise KeyError(f'Index "{index_name}" not found')
-        else:
-            self._drop_constraint_in_db(index)
-
-    @_invalidate_db_cache
-    def add_constraint(self, constraint: str) -> None:
-        """
-        Add a single constraint by name.
-
-        This can be either a PK, FK, not null, unique or check
-        constraint.
-
-        Parameters
-        ----------
-        constraint : str
-            Name of the constraint as it exists in the model.
-
-        Returns
-        -------
-        None
-        """
-        self._add_constraint_or_index(constraint)
-
-    @_invalidate_db_cache
-    def add_index(self, index: str) -> None:
-        """
-        Add a single index by name.
-
-        Parameters
-        ----------
-        index : str
-            Name of the index as it exists in the model.
-
-        Returns
-        -------
-        None
-        """
-        self._add_constraint_or_index(index)
+        constraint = self._get_constraint_from_model(name)
+        self._add_constraint_in_db(constraint, errors)
 
     @staticmethod
     def _get_table_objects(tables: List[Table],
@@ -480,27 +508,37 @@ class ConstraintManager:
                     indexes.append(index)
         return constraints, pks, indexes
 
-    def _add_constraint_or_index(self, constraint_name: str) -> None:
+    def _get_constraint_from_model(self, constraint_name: str) -> ConstraintOrIndex:
         constraint = self._model.constraint_lookup.get(constraint_name)
         if constraint is None:
             raise KeyError(f'"{constraint_name}" not found')
-        else:
-            self._add_constraint_in_db(constraint)
+        return constraint
 
-    def _add_constraint_in_db(self, constraint: ConstraintOrIndex) -> None:
+    def _add_constraint_in_db(self,
+                              constraint: ConstraintOrIndex,
+                              errors: str = 'raise',
+                              ) -> None:
+        assert errors in _VALID_ERRORS_OPTIONS
         if self._constraint_already_active(constraint):
             return
         with self._db.engine.connect() as conn:
             logger.info(f'Adding {constraint.name}')
-            if isinstance(constraint, Index):
-                conn.execute(CreateIndex(constraint))
-            else:
-                # We add a copy instead of the original constraint.
-                # Otherwise, when you later call metadata.create_all to
-                # create tables, SQLAlchemy thinks the constraints have
-                # already been created and skips them.
-                c = copy(constraint)
-                conn.execute(AddConstraint(c))
+            try:
+                if isinstance(constraint, Index):
+                    conn.execute(CreateIndex(constraint))
+                else:
+                    # We add a copy instead of the original constraint.
+                    # Otherwise, when you later call metadata.create_all
+                    # to create tables, SQLAlchemy thinks the
+                    # constraints have already been created and skips
+                    # them.
+                    c = copy(constraint)
+                    conn.execute(AddConstraint(c))
+            except ProgrammingError:
+                if errors == 'raise':
+                    raise
+                elif errors == 'ignore':
+                    logger.info(f'Unable to add {constraint.name}')
 
     def _constraint_already_active(self, new_constraint: ConstraintOrIndex) -> bool:
         base_message = f'Cannot add {type(new_constraint).__name__} "{new_constraint.name}"'
@@ -514,19 +552,29 @@ class ConstraintManager:
                 return True
         return False
 
-    def _drop_constraint_in_db(self, constraint: ConstraintOrIndex) -> None:
+    def _drop_constraint_in_db(self,
+                               constraint: ConstraintOrIndex,
+                               errors: str = 'raise',
+                               ) -> None:
         # SQLAlchemy reflects empty PK objects in tables that don't have
         # a PK (anymore). These cannot be dropped because they have
         # no name and are therefore ignored here.
+        assert errors in _VALID_ERRORS_OPTIONS
         if constraint.name is None:
             return
 
         with self._db.engine.connect() as conn:
             logger.info(f'Dropping {constraint.name}')
-            if isinstance(constraint, Index):
-                conn.execute(DropIndex(constraint))
-            else:
-                conn.execute(DropConstraint(constraint))
+            try:
+                if isinstance(constraint, Index):
+                    conn.execute(DropIndex(constraint))
+                else:
+                    conn.execute(DropConstraint(constraint))
+            except InternalError:
+                if errors == 'raise':
+                    raise
+                elif errors == 'ignore':
+                    logger.info(f'Unable to drop {constraint.name}')
 
     @staticmethod
     def _constraints_functionally_equal(c1: ConstraintOrIndex,
