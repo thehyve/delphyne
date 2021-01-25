@@ -38,7 +38,7 @@ class VocabManager:
         self.custom_vocabularies = CustomVocabLoader(db, cdm, skip_custom_vocabs)
         self.stcm = StcmLoader(db, cdm, skip_stcm)
 
-    def process_updates(self) -> None:
+    def load_custom_vocab_and_stcm_tables(self) -> None:
         """
         Process any updates in custom vocabulary/STCM files.
 
