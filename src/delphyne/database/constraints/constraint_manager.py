@@ -428,7 +428,7 @@ class ConstraintManager:
             self._add_constraint_in_db(constraint, errors)
 
     @_invalidate_db_cache
-    def drop_constraint(self, name: str, errors: str = 'raise') -> None:
+    def drop_constraint_or_index(self, name: str, errors: str = 'raise') -> None:
         """
         Drop a single constraint/index by name.
 
@@ -457,7 +457,7 @@ class ConstraintManager:
             self._drop_constraint_in_db(constraint, errors)
 
     @_invalidate_db_cache
-    def add_constraint(self, name: str, errors: str = 'raise') -> None:
+    def add_constraint_or_index(self, name: str, errors: str = 'raise') -> None:
         """
         Add a single constraint/index by name.
 
