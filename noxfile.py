@@ -58,13 +58,15 @@ def build(session):
 
 @nox.session(python="3.8")
 def publish(session):
+    """Build and publish on PyPI."""
     build(session)
     print("REMINDER: Has the changelog been updated?")
     session.run("python", "-m", "twine", "upload", "dist/*")
 
 
 @nox.session(python="3.8")
-def publish_test_pypi(session):
+def publish_test(session):
+    """Build and publish on TestPyPI."""
     build(session)
     print("REMINDER: Has the changelog been updated?")
     session.run("python", "-m", "twine", "upload",
