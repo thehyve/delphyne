@@ -61,3 +61,11 @@ def publish(session):
     build(session)
     print("REMINDER: Has the changelog been updated?")
     session.run("python", "-m", "twine", "upload", "dist/*")
+
+
+@nox.session(python="3.8")
+def publish_test_pypi(session):
+    build(session)
+    print("REMINDER: Has the changelog been updated?")
+    session.run("python", "-m", "twine", "upload",
+                "--repository", "testpypi", "dist/*")
