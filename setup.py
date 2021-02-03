@@ -32,7 +32,7 @@ setup(
         "click >= 7.0, <8",
         "psycopg2-binary >= 2.8, <3",
         "pydantic >= 1.7, <2",
-        "SQLAlchemy >= 1.3, <2",
+        "SQLAlchemy >= 1.3, <1.4",
         "SQLAlchemy-Utils >= 0.36, <1",
         "pandas >= 1.0, <2",
         "PyYAML >= 5.3, <6",
