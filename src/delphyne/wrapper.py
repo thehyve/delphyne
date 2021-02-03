@@ -2,6 +2,7 @@
 
 import logging
 from pathlib import Path
+from types import ModuleType
 from typing import Optional, List
 
 import sys
@@ -41,7 +42,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
 
     cdm = cdm
 
-    def __init__(self, config: MainConfig, cdm_):
+    def __init__(self, config: MainConfig, cdm_: ModuleType):
         etl_stats.reset()
         self._config = config
         self.db = Database.from_config(config, cdm_.Base)

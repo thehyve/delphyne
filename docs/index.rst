@@ -5,12 +5,10 @@ delphyne
    :maxdepth: 2
    :hidden:
 
-   more
    standard_vocab
+   custom_vocab
    reference
    changelog_link
-
-The example project for the article series.
 
 
 Installation
