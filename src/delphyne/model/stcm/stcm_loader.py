@@ -5,7 +5,7 @@ import logging
 from collections import Counter
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, Set
+from typing import Dict, Set, Optional
 
 from sqlalchemy import MetaData
 from sqlalchemy.exc import InvalidRequestError
@@ -70,6 +70,7 @@ class StcmLoader:
         be inserted. All records in the source_to_concept_map table that
         belong to vocabulary_ids that need updating, will be deleted
         before the new records are inserted.
+
         If an STCM file contains exclusively records of one
         source_vocabulary_id, it can be named as
         <vocab_id>_stcm.<file_extension> to make sure it will not be
@@ -103,6 +104,34 @@ class StcmLoader:
                 continue
             self._load_stcm_from_file(stcm_file)
         self._update_stcm_version_table()
+
+    def delete(self, vocab_ids: Optional[Set[str]] = None) -> None:
+        """
+        Drop records from STCM and STCM version tables.
+
+        Parameters
+        ----------
+        vocab_ids : set of str, default None
+            A set of source_vocabulary_id values for which the records
+            should be deleted. If None, all records will be deleted.
+
+        Returns
+        -------
+        None
+        """
+        logger.info(f'Deleting STCM records for source vocabulary ids: '
+                    f'{"All" if vocab_ids is None else vocab_ids}')
+        with self._db.tracked_session_scope(name='drop_stcm') as (session, _):
+            stcm_table = self._cdm.SourceToConceptMap
+            stcm_version_table = self._cdm.SourceToConceptMapVersion
+
+            for table in [stcm_table, stcm_version_table]:
+                if vocab_ids is None:
+                    session.query(table).delete()
+                else:
+                    q = session.query(table)
+                    q = q.filter(table.source_vocabulary_id.in_(vocab_ids))
+                    q.delete(synchronize_session=False)
 
     @staticmethod
     def _get_stcm_files() -> Set[Path]:

@@ -150,7 +150,7 @@ class EtlStats:
     @property
     def total_insertions(self) -> Counter:
         """Total insertion counts of all transformations."""
-        return sum([t.insertion_counts for t in self.successful_transformations], Counter())
+        return sum((t.insertion_counts for t in self.successful_transformations), Counter())
 
     @property
     def sources_df(self) -> pd.DataFrame:
