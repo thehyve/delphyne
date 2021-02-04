@@ -5,6 +5,7 @@ delphyne
    :maxdepth: 2
    :hidden:
 
+   transformations
    standard_vocab
    custom_vocab
    reference
@@ -14,8 +15,22 @@ delphyne
 Installation
 ------------
 
-To install delphyne from PyPI:
+To install the latest version of delphyne from PyPI:
 
 .. code-block:: console
 
-   $ pip install delphyne
+   pip install delphyne
+
+
+Alternatively, install from sources:
+
+.. code-block:: console
+
+   git clone https://github.com/thehyve/delphyne.git
+   cd delphyne
+
+   # regular installation
+   pip install .
+
+   # or install in editable mode (including test dependencies)
+   pip install -e '.[TEST]'
