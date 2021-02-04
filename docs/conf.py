@@ -24,5 +24,7 @@ autodoc_default_options = {
 
 add_module_names = False
 autosummary_generate = True
-autodoc_typehints='description'
+autodoc_typehints = 'description'
+
+# html_theme = "sphinx_rtd_theme"
 # html_theme = "nature"
