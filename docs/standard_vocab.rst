@@ -14,8 +14,8 @@ Vocabulary files
 
 All standardized data in the OMOP CDM relies on the contents of the vocabulary tables.
 Loading the standard vocabularies is therefore typically one of the first steps in an ETL pipeline.
-To get the vocabulary files, go to the download section of `Athena <https://athena.ohdsi.org/vocabulary/list>`_
-, select the vocabularies you would like to include and click **Download Vocabularies**.
+To get the vocabulary files, go to the download section of `Athena <https://athena.ohdsi.org/vocabulary/list>`_,
+select the vocabularies you would like to include and click **Download Vocabularies**.
 
 The zipped download contains the vocabulary contents as csv files, which should then be added to
 the standard vocabularies folder:

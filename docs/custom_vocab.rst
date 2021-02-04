@@ -10,12 +10,12 @@ Custom Vocabulary files
 
 Non-standard vocabulary data can be provided as tab-delimited (tsv) files.
 The file names must end with the name of the vocabulary table they should be inserted in (e.g. concept.tsv).
-Currently target tables concept, concept_class and vocabulary are supported.
+Currently, target tables concept, concept_class and vocabulary are supported.
 
 The custom vocabulary files may contain data of one or more custom vocabularies.
 When a vocabulary file contains data of only one custom vocabulary,
 it's good practice to prepend the vocabulary_id to the file name (e.g. MYVOCAB_concept.tsv).
-This way, if the vocabulary version hasn't changed (see `Versioning`_.),
+This way, if the vocabulary version hasn't changed (see `Versioning`_),
 the file will be ignored without needing to parse the file contents.
 
 For custom vocabularies, the vocabulary_concept_id (vocabulary) and
