@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Union, Dict, Callable, List, Tuple
 
 from itertools import chain
 from sqlalchemy import Index, Table, PrimaryKeyConstraint, Constraint, MetaData
-from sqlalchemy.exc import InternalError, ProgrammingError
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.schema import DropConstraint, AddConstraint, DropIndex, CreateIndex
 
 from .conventions import VOCAB_TABLES
@@ -534,7 +534,7 @@ class ConstraintManager:
                     # them.
                     c = copy(constraint)
                     conn.execute(AddConstraint(c))
-            except ProgrammingError:
+            except SQLAlchemyError:
                 if errors == 'raise':
                     raise
                 elif errors == 'ignore':
@@ -570,7 +570,7 @@ class ConstraintManager:
                     conn.execute(DropIndex(constraint))
                 else:
                     conn.execute(DropConstraint(constraint))
-            except InternalError:
+            except SQLAlchemyError:
                 if errors == 'raise':
                     raise
                 elif errors == 'ignore':
