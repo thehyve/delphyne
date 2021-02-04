@@ -54,6 +54,8 @@ class OrmWrapper(ABC):
     def execute_batch_transformation(self, batch_statement: Callable, bulk: bool = False, batch_size: int = 10000) -> None:
         """
         Execute an ETL transformation in batches of given size via a python statement.
+        Batches are committed to the database independently and a failed insertion of a batch will
+        not trigger a rollback of the other batches.
 
         Parameters
         ----------
@@ -71,51 +73,56 @@ class OrmWrapper(ABC):
         -------
         None
         """
-        logger.info(f'Executing transformation in batches: {batch_statement.__name__} ')
-        with self.db.tracked_session_scope(name=batch_statement.__name__, raise_on_error=False) \
-                as (session, transformation_metadata):
-            func_args = signature(batch_statement).parameters
-            if 'session' in func_args:
-                records_generator = batch_statement(self, session)
-            else:
-                records_generator = batch_statement(self)
+        logger.info(f'Executing batched transformation: {batch_statement.__name__} ')
+        func_args = signature(batch_statement).parameters
+        if 'session' in func_args:
+            session = self.db.get_new_session()
+            records_generator = batch_statement(self, session)
+        else:
+            records_generator = batch_statement(self)
 
-            records_to_insert = []
-            batch_count = 0
-            total_records_inserted = 0
-            for record in records_generator:
-                records_to_insert.append(record)
-                if len(records_to_insert) >= batch_size:
-                    batch_count += 1
+        records_to_insert = []
+        n_batches_success = 0
+        n_batches_failed = 0
+        total_records_inserted = 0
+        i = 0
+        for record in records_generator:
+            records_to_insert.append(record)
+            if len(records_to_insert) >= batch_size:
+                i += 1
+                success = self._insert_records(records_to_insert, batch_statement.__name__ + str(i), bulk)
+                if success:
+                    n_batches_success += 1
                     total_records_inserted += len(records_to_insert)
-                    logger.info(f'Saving {len(records_to_insert)} objects (batch {batch_count}): '
-                                f'{batch_statement.__name__} ')
-                    if bulk:
-                        session.bulk_save_objects(records_to_insert)
-                        self._collect_query_statistics_bulk_mode(session, records_to_insert,
-                                                                 transformation_metadata)
-                    else:
-                        session.add_all(records_to_insert)
-                    # Both flushing and committing to write from memory to disk
-                    session.commit()  # also flushes: https://docs.sqlalchemy.org/en/14/orm/session_basics.html#committing
-                    records_to_insert = []
-
-            # Insert any remaining records
-            if len(records_to_insert) > 0:
-                batch_count += 1
-                total_records_inserted += len(records_to_insert)
-                logger.info(f'Saving {len(records_to_insert)} objects (batch {batch_count}): '
-                            f'{batch_statement.__name__} ')
-                if bulk:
-                    session.bulk_save_objects(records_to_insert)
-                    self._collect_query_statistics_bulk_mode(session, records_to_insert,
-                                                             transformation_metadata)
                 else:
-                    session.add_all(records_to_insert)
-                session.commit()
+                    n_batches_failed += 1
+                records_to_insert = []
 
-            logger.info(f'{batch_statement.__name__} ({total_records_inserted} records) completed with success status: '
-                        f'{transformation_metadata.query_success}')
+        # Insert any remaining records
+        if len(records_to_insert) > 0:
+            i += 1
+            success = self._insert_records(records_to_insert, batch_statement.__name__ + str(i), bulk)
+            if success:
+                n_batches_success += 1
+                total_records_inserted += len(records_to_insert)
+            else:
+                n_batches_failed += 1
+
+        logger.info(f'Saved a total of {total_records_inserted} records')
+        logger.info(f'{batch_statement.__name__} batches completed with status: '
+                    f'{n_batches_success} success and {n_batches_failed} fails')
+
+    def _insert_records(self, records_to_insert: List, name: str, bulk: bool) -> bool:
+        with self.db.tracked_session_scope(name=name, raise_on_error=False) \
+                as (session, transformation_metadata):
+            logger.info(f'Saving {len(records_to_insert)} objects: {name}')
+            if bulk:
+                session.bulk_save_objects(records_to_insert)
+                self._collect_query_statistics_bulk_mode(session, records_to_insert,
+                                                         transformation_metadata)
+            else:
+                session.add_all(records_to_insert)
+        return transformation_metadata.query_success
 
     def execute_transformation(self, statement: Callable, bulk: bool = False) -> None:
         """
