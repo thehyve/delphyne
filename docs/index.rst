@@ -17,14 +17,14 @@ Installation
 
 To install the latest version of delphyne from PyPI:
 
-.. code-block:: console
+.. code-block:: bash
 
    pip install delphyne
 
 
 Alternatively, install from sources:
 
-.. code-block:: console
+.. code-block:: bash
 
    git clone https://github.com/thehyve/delphyne.git
    cd delphyne
