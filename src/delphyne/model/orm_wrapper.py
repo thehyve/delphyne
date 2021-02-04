@@ -53,21 +53,25 @@ class OrmWrapper(ABC):
 
     def execute_batch_transformation(self, batch_statement: Callable, bulk: bool = False, batch_size: int = 10000) -> None:
         """
-        Execute an ETL transformation in batches of given size via a python statement.
-        Batches are committed to the database independently and a failed insertion of a batch will
+        Execute an ETL transformation in batches of given size via a
+        python statement. Batches are committed to the database
+        independently and a failed insertion of a batch will
         not trigger a rollback of the other batches.
 
         Parameters
         ----------
         batch_statement : Callable
-            Python generator function which takes this wrapper as input and yields one record at a time.
+            Python generator function which takes this wrapper as
+            input and yields one record at a time.
             It will be called as a transformation.
         bulk : bool
             If True, use SQLAlchemy's bulk_save_objects instead of
             add_all for persisting the ORM objects.
         batch_size : int
-            Number of records inserted in each batch. At maximum this number of records is kept in memory.
-            Smaller batch sizes will decrease memory use, bigger batch sizes will increase insert performance.
+            Number of records inserted in each batch.
+            At maximum this number of records is kept in memory.
+            Smaller batch sizes will decrease memory use,
+            bigger batch sizes will increase insert performance.
 
         Returns
         -------
@@ -131,7 +135,8 @@ class OrmWrapper(ABC):
         Parameters
         ----------
         statement : Callable
-            Python function which takes this wrapper as input and returns a list of records to be inserted.
+            Python function which takes this wrapper as input and
+            returns a list of records to be inserted.
             It will be called as a transformation.
         bulk : bool
             If True, use SQLAlchemy's bulk_save_objects instead of
