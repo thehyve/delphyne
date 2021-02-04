@@ -51,6 +51,72 @@ class OrmWrapper(ABC):
         """
         return os.path.exists('./.git')
 
+    def execute_batch_transformation(self, batch_statement: Callable, bulk: bool = False, batch_size: int = 10000) -> None:
+        """
+        Execute an ETL transformation in batches of given size via a python statement.
+
+        Parameters
+        ----------
+        batch_statement : Callable
+            Python generator function which takes this wrapper as input and yields one record at a time.
+            It will be called as a transformation.
+        bulk : bool
+            If True, use SQLAlchemy's bulk_save_objects instead of
+            add_all for persisting the ORM objects.
+        batch_size : int
+            Number of records inserted in each batch. At maximum this number of records is kept in memory.
+            Smaller batch sizes will decrease memory use, bigger batch sizes will increase insert performance.
+
+        Returns
+        -------
+        None
+        """
+        logger.info(f'Executing transformation in batches: {batch_statement.__name__} ')
+        with self.db.tracked_session_scope(name=batch_statement.__name__, raise_on_error=False) \
+                as (session, transformation_metadata):
+            func_args = signature(batch_statement).parameters
+            if 'session' in func_args:
+                records_generator = batch_statement(self, session)
+            else:
+                records_generator = batch_statement(self)
+
+            records_to_insert = []
+            batch_count = 0
+            total_records_inserted = 0
+            for record in records_generator:
+                records_to_insert.append(record)
+                if len(records_to_insert) >= batch_size:
+                    batch_count += 1
+                    total_records_inserted += len(records_to_insert)
+                    logger.info(f'Saving {len(records_to_insert)} objects (batch {batch_count}): '
+                                f'{batch_statement.__name__} ')
+                    if bulk:
+                        session.bulk_save_objects(records_to_insert)
+                        self._collect_query_statistics_bulk_mode(session, records_to_insert,
+                                                                 transformation_metadata)
+                    else:
+                        session.add_all(records_to_insert)
+                    # Both flushing and committing to write from memory to disk
+                    session.commit()  # also flushes: https://docs.sqlalchemy.org/en/14/orm/session_basics.html#committing
+                    records_to_insert = []
+
+            # Insert any remaining records
+            if len(records_to_insert) > 0:
+                batch_count += 1
+                total_records_inserted += len(records_to_insert)
+                logger.info(f'Saving {len(records_to_insert)} objects (batch {batch_count}): '
+                            f'{batch_statement.__name__} ')
+                if bulk:
+                    session.bulk_save_objects(records_to_insert)
+                    self._collect_query_statistics_bulk_mode(session, records_to_insert,
+                                                             transformation_metadata)
+                else:
+                    session.add_all(records_to_insert)
+                session.commit()
+
+            logger.info(f'{batch_statement.__name__} ({total_records_inserted} records) completed with success status: '
+                        f'{transformation_metadata.query_success}')
+
     def execute_transformation(self, statement: Callable, bulk: bool = False) -> None:
         """
         Execute an ETL transformation via a python statement.
@@ -58,8 +124,8 @@ class OrmWrapper(ABC):
         Parameters
         ----------
         statement : Callable
-            Python function which takes this wrapper as input. It will
-            be called as a transformation.
+            Python function which takes this wrapper as input and returns a list of records to be inserted.
+            It will be called as a transformation.
         bulk : bool
             If True, use SQLAlchemy's bulk_save_objects instead of
             add_all for persisting the ORM objects.
