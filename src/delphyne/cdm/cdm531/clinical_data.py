@@ -115,7 +115,7 @@ class BaseDeathCdm531:
 
     @declared_attr
     def death_date(cls):
-        return Column(Date)
+        return Column(Date, nullable=False)
 
     @declared_attr
     def death_datetime(cls):
