@@ -208,7 +208,7 @@ class BaseDeviceExposureCdm531:
 
     @declared_attr
     def device_source_value(cls):
-        return Column(String(100))
+        return Column(String(50))
 
     @declared_attr
     def device_source_concept_id(cls):
