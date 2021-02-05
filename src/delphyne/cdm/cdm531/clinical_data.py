@@ -62,7 +62,7 @@ class BaseConditionOccurrenceCdm531:
 
     @declared_attr
     def visit_detail_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{CDM_SCHEMA}.visit_detail.visit_detail_id'))
 
     @declared_attr
     def condition_source_value(cls):
@@ -103,6 +103,10 @@ class BaseConditionOccurrenceCdm531:
     @declared_attr
     def visit_occurrence(cls):
         return relationship('VisitOccurrence')
+
+    @declared_attr
+    def visit_detail(cls):
+        return relationship('VisitDetail')
 
 
 class BaseDeathCdm531:
@@ -208,7 +212,7 @@ class BaseDeviceExposureCdm531:
 
     @declared_attr
     def visit_detail_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{CDM_SCHEMA}.visit_detail.visit_detail_id'))
 
     @declared_attr
     def device_source_value(cls):
@@ -241,6 +245,10 @@ class BaseDeviceExposureCdm531:
     @declared_attr
     def visit_occurrence(cls):
         return relationship('VisitOccurrence')
+
+    @declared_attr
+    def visit_detail(cls):
+        return relationship('VisitDetail')
 
 
 class BaseDrugExposureCdm531:
@@ -321,7 +329,7 @@ class BaseDrugExposureCdm531:
 
     @declared_attr
     def visit_detail_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{CDM_SCHEMA}.visit_detail.visit_detail_id'))
 
     @declared_attr
     def drug_source_value(cls):
@@ -366,6 +374,10 @@ class BaseDrugExposureCdm531:
     @declared_attr
     def visit_occurrence(cls):
         return relationship('VisitOccurrence')
+
+    @declared_attr
+    def visit_detail(cls):
+        return relationship('VisitDetail')
 
 
 class BaseFactRelationshipCdm531:
@@ -459,7 +471,7 @@ class BaseMeasurementCdm531:
 
     @declared_attr
     def visit_detail_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{CDM_SCHEMA}.visit_detail.visit_detail_id'))
 
     @declared_attr
     def measurement_source_value(cls):
@@ -512,6 +524,10 @@ class BaseMeasurementCdm531:
     @declared_attr
     def visit_occurrence(cls):
         return relationship('VisitOccurrence')
+
+    @declared_attr
+    def visit_detail(cls):
+        return relationship('VisitDetail')
 
 
 class BaseNoteCdm531:
@@ -568,7 +584,7 @@ class BaseNoteCdm531:
 
     @declared_attr
     def visit_detail_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{CDM_SCHEMA}.visit_detail.visit_detail_id'))
 
     @declared_attr
     def note_source_value(cls):
@@ -601,6 +617,10 @@ class BaseNoteCdm531:
     @declared_attr
     def visit_occurrence(cls):
         return relationship('VisitOccurrence')
+
+    @declared_attr
+    def visit_detail(cls):
+        return relationship('VisitDetail')
 
 
 class BaseNoteNlpCdm531:
@@ -734,7 +754,7 @@ class BaseObservationCdm531:
 
     @declared_attr
     def visit_detail_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{CDM_SCHEMA}.visit_detail.visit_detail_id'))
 
     @declared_attr
     def observation_source_value(cls):
@@ -787,6 +807,10 @@ class BaseObservationCdm531:
     @declared_attr
     def visit_occurrence(cls):
         return relationship('VisitOccurrence')
+
+    @declared_attr
+    def visit_detail(cls):
+        return relationship('VisitDetail')
 
 
 class BaseObservationPeriodCdm531:
@@ -981,7 +1005,7 @@ class BaseProcedureOccurrenceCdm531:
 
     @declared_attr
     def visit_detail_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{CDM_SCHEMA}.visit_detail.visit_detail_id'))
 
     @declared_attr
     def procedure_source_value(cls):
@@ -1022,6 +1046,10 @@ class BaseProcedureOccurrenceCdm531:
     @declared_attr
     def visit_occurrence(cls):
         return relationship('VisitOccurrence')
+
+    @declared_attr
+    def visit_detail(cls):
+        return relationship('VisitDetail')
 
 
 class BaseSpecimenCdm531:
