@@ -621,7 +621,7 @@ class BaseNoteNlpCdm531:
 
     @declared_attr
     def offset(cls):
-        return Column(String(250))
+        return Column(String(50))
 
     @declared_attr
     def lexical_variant(cls):
