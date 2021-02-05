@@ -45,6 +45,10 @@ class BaseConditionOccurrenceCdm531:
         return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
 
     @declared_attr
+    def condition_status_concept_id(cls):
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
+
+    @declared_attr
     def stop_reason(cls):
         return Column(String(20))
 
@@ -71,10 +75,6 @@ class BaseConditionOccurrenceCdm531:
     @declared_attr
     def condition_status_source_value(cls):
         return Column(String(50))
-
-    @declared_attr
-    def condition_status_concept_id(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
 
     @declared_attr
     def condition_concept(cls):
