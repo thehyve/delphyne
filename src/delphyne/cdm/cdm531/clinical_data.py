@@ -138,6 +138,10 @@ class BaseDeathCdm531:
         return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
 
     @declared_attr
+    def person(cls):
+        return relationship('Person')
+
+    @declared_attr
     def cause_concept(cls):
         return relationship('Concept', primaryjoin='Death.cause_concept_id == Concept.concept_id')
 
