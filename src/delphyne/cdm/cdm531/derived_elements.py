@@ -1,6 +1,6 @@
 """OMOP CDM 5.3.1 derived elements tables."""
 
-from sqlalchemy import Column, ForeignKey, Integer, Date, Numeric
+from sqlalchemy import Column, ForeignKey, Integer, Date, DateTime, Numeric
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
@@ -46,11 +46,11 @@ class BaseConditionEraCdm531:
 
     @declared_attr
     def condition_era_start_date(cls):
-        return Column(Date, nullable=False)
+        return Column(DateTime, nullable=False)
 
     @declared_attr
     def condition_era_end_date(cls):
-        return Column(Date, nullable=False)
+        return Column(DateTime, nullable=False)
 
     @declared_attr
     def condition_occurrence_count(cls):
@@ -91,11 +91,11 @@ class BaseDoseEraCdm531:
 
     @declared_attr
     def dose_era_start_date(cls):
-        return Column(Date, nullable=False)
+        return Column(DateTime, nullable=False)
 
     @declared_attr
     def dose_era_end_date(cls):
-        return Column(Date, nullable=False)
+        return Column(DateTime, nullable=False)
 
     @declared_attr
     def drug_concept(cls):
@@ -128,11 +128,11 @@ class BaseDrugEraCdm531:
 
     @declared_attr
     def drug_era_start_date(cls):
-        return Column(Date, nullable=False)
+        return Column(DateTime, nullable=False)
 
     @declared_attr
     def drug_era_end_date(cls):
-        return Column(Date, nullable=False)
+        return Column(DateTime, nullable=False)
 
     @declared_attr
     def drug_exposure_count(cls):
