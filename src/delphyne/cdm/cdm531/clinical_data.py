@@ -115,7 +115,7 @@ class BaseDeathCdm531:
 
     @declared_attr
     def death_date(cls):
-        return Column(Date, nullable=False)
+        return Column(Date)
 
     @declared_attr
     def death_datetime(cls):
@@ -123,7 +123,7 @@ class BaseDeathCdm531:
 
     @declared_attr
     def death_type_concept_id(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
 
     @declared_attr
     def cause_concept_id(cls):
