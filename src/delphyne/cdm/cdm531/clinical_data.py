@@ -657,7 +657,7 @@ class BaseNoteNlpCdm531:
 
     @declared_attr
     def note_nlp_source_concept_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
 
     @declared_attr
     def nlp_system(cls):
@@ -690,6 +690,10 @@ class BaseNoteNlpCdm531:
     @declared_attr
     def note_nlp_concept(cls):
         return relationship('Concept', primaryjoin='NoteNlp.note_nlp_concept_id == Concept.concept_id')
+
+    @declared_attr
+    def note_nlp_source_concept(cls):
+        return relationship('Concept', primaryjoin='NoteNlp.note_nlp_source_concept_id == Concept.concept_id')
 
     @declared_attr
     def section_concept(cls):
