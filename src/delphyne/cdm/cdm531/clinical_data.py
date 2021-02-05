@@ -1154,18 +1154,6 @@ class BaseVisitDetailCdm531:
         return Column(ForeignKey(f'{CDM_SCHEMA}.care_site.care_site_id'))
 
     @declared_attr
-    def admitting_source_concept_id(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
-
-    @declared_attr
-    def discharge_to_concept_id(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
-
-    @declared_attr
-    def preceding_visit_detail_id(cls):
-        return Column(ForeignKey(f'{CDM_SCHEMA}.visit_detail.visit_detail_id'))
-
-    @declared_attr
     def visit_detail_source_value(cls):
         return Column(String(50))
 
@@ -1178,8 +1166,20 @@ class BaseVisitDetailCdm531:
         return Column(String(50))
 
     @declared_attr
+    def admitting_source_concept_id(cls):
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
+
+    @declared_attr
     def discharge_to_source_value(cls):
         return Column(String(50))
+
+    @declared_attr
+    def discharge_to_concept_id(cls):
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
+
+    @declared_attr
+    def preceding_visit_detail_id(cls):
+        return Column(ForeignKey(f'{CDM_SCHEMA}.visit_detail.visit_detail_id'))
 
     @declared_attr
     def visit_detail_parent_id(cls):
