@@ -340,7 +340,7 @@ class BaseSourceToConceptMap:
 
     @declared_attr
     def source_code(cls):
-        return Column(Text, primary_key=True, index=True)
+        return Column(String(50), primary_key=True, index=True)
 
     @declared_attr
     def source_concept_id(cls):
