@@ -1248,7 +1248,7 @@ class BaseVisitOccurrenceCdm531:
 
     @declared_attr
     def visit_concept_id(cls):
-        return Column(Integer, nullable=False, index=True)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False, index=True)
 
     @declared_attr
     def visit_start_date(cls):
@@ -1337,6 +1337,10 @@ class BaseVisitOccurrenceCdm531:
     @declared_attr
     def visit_type_concept(cls):
         return relationship('Concept', primaryjoin='VisitOccurrence.visit_type_concept_id == Concept.concept_id')
+
+    @declared_attr
+    def visit_concept(cls):
+        return relationship('Concept', primaryjoin='VisitOccurrence.visit_concept_id == Concept.concept_id')
 
 
 class BaseStemTableCdm531:
