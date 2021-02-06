@@ -83,9 +83,9 @@ class OrmWrapper(ABC):
         records_generator = batch_statement(self)
 
         records_to_insert = []
+        batch_count = 0
         n_batches_success = 0
         total_records_inserted = 0
-        batch_count = 0
         for record in records_generator:
             records_to_insert.append(record)
             if len(records_to_insert) >= batch_size:
@@ -106,14 +106,14 @@ class OrmWrapper(ABC):
                 n_batches_success += 1
                 total_records_inserted += len(records_to_insert)
 
-        logger.info(f'Saved a total of {total_records_inserted} records')
-        logger.info(f'{batch_statement.__name__} batches completed with status: '
+        logger.info(f'Saved a total of {total_records_inserted} records in {batch_count} batches')
+        logger.info(f'{batch_statement.__name__} completed with status: '
                     f'{n_batches_success} success and {batch_count-n_batches_success} fails')
 
     def _insert_records(self, records_to_insert: List, name: str, bulk: bool) -> bool:
         with self.db.tracked_session_scope(name=name, raise_on_error=False) \
                 as (session, transformation_metadata):
-            logger.info(f'Saving {len(records_to_insert)} objects: {name}')
+            logger.info(f'{name} Saving {len(records_to_insert)} objects')
             if bulk:
                 session.bulk_save_objects(records_to_insert)
                 self._collect_query_statistics_bulk_mode(session, records_to_insert,
