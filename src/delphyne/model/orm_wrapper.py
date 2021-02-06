@@ -51,6 +51,43 @@ class OrmWrapper(ABC):
         """
         return os.path.exists('./.git')
 
+    def execute_transformation(self, statement: Callable, bulk: bool = False) -> None:
+        """
+        Execute an ETL transformation via a python statement.
+
+        Parameters
+        ----------
+        statement : Callable
+            Python function which takes this wrapper as input and
+            returns a list of records to be inserted.
+            It will be called as a transformation.
+        bulk : bool
+            If True, use SQLAlchemy's bulk_save_objects instead of
+            add_all for persisting the ORM objects.
+
+        Returns
+        -------
+        None
+        """
+        logger.info(f'Executing transformation: {statement.__name__}')
+        with self.db.tracked_session_scope(name=statement.__name__, raise_on_error=False) \
+                as (session, transformation_metadata):
+            func_args = signature(statement).parameters
+            if 'session' in func_args:
+                records_to_insert = statement(self, session)
+            else:
+                records_to_insert = statement(self)
+            logger.info(f'Saving {len(records_to_insert)} objects')
+            if bulk:
+                session.bulk_save_objects(records_to_insert)
+                self._collect_query_statistics_bulk_mode(session, records_to_insert,
+                                                         transformation_metadata)
+            else:
+                session.add_all(records_to_insert)
+
+            logger.info(f'{statement.__name__} completed with success status: '
+                        f'{transformation_metadata.query_success}')
+
     def execute_batch_transformation(self, batch_statement: Callable, bulk: bool = False, batch_size: int = 10000) -> None:
         """
         Execute an ETL transformation statement in batches.
@@ -121,43 +158,6 @@ class OrmWrapper(ABC):
             else:
                 session.add_all(records_to_insert)
         return transformation_metadata.query_success
-
-    def execute_transformation(self, statement: Callable, bulk: bool = False) -> None:
-        """
-        Execute an ETL transformation via a python statement.
-
-        Parameters
-        ----------
-        statement : Callable
-            Python function which takes this wrapper as input and
-            returns a list of records to be inserted.
-            It will be called as a transformation.
-        bulk : bool
-            If True, use SQLAlchemy's bulk_save_objects instead of
-            add_all for persisting the ORM objects.
-
-        Returns
-        -------
-        None
-        """
-        logger.info(f'Executing transformation: {statement.__name__}')
-        with self.db.tracked_session_scope(name=statement.__name__, raise_on_error=False) \
-                as (session, transformation_metadata):
-            func_args = signature(statement).parameters
-            if 'session' in func_args:
-                records_to_insert = statement(self, session)
-            else:
-                records_to_insert = statement(self)
-            logger.info(f'Saving {len(records_to_insert)} objects')
-            if bulk:
-                session.bulk_save_objects(records_to_insert)
-                self._collect_query_statistics_bulk_mode(session, records_to_insert,
-                                                         transformation_metadata)
-            else:
-                session.add_all(records_to_insert)
-
-            logger.info(f'{statement.__name__} completed with success status: '
-                        f'{transformation_metadata.query_success}')
 
     @staticmethod
     def _collect_query_statistics_bulk_mode(session: Session,
