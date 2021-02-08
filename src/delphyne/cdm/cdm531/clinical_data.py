@@ -404,6 +404,24 @@ class BaseFactRelationshipCdm531:
     def relationship_concept_id(cls):
         return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True, nullable=False, index=True)
 
+    @declared_attr
+    def domain_concept_1(cls):
+        return relationship('Concept',
+                            primaryjoin='FactRelationship.domain_concept_id_1 == '
+                                        'Concept.concept_id')
+
+    @declared_attr
+    def domain_concept_2(cls):
+        return relationship('Concept',
+                            primaryjoin='FactRelationship.domain_concept_id_2 == '
+                                        'Concept.concept_id')
+
+    @declared_attr
+    def relationship_concept(cls):
+        return relationship('Concept',
+                            primaryjoin='FactRelationship.relationship_concept_id == '
+                                        'Concept.concept_id')
+
 
 class BaseMeasurementCdm531:
     __tablename__ = 'measurement'
