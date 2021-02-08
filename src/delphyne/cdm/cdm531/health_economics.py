@@ -30,7 +30,7 @@ class BasePayerPlanPeriodCdm531:
 
     @declared_attr
     def payer_concept_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
 
     @declared_attr
     def payer_source_value(cls):
@@ -38,11 +38,11 @@ class BasePayerPlanPeriodCdm531:
 
     @declared_attr
     def payer_source_concept_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
 
     @declared_attr
     def plan_concept_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
 
     @declared_attr
     def plan_source_value(cls):
@@ -50,11 +50,11 @@ class BasePayerPlanPeriodCdm531:
 
     @declared_attr
     def plan_source_concept_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
 
     @declared_attr
     def sponsor_concept_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
 
     @declared_attr
     def sponsor_source_value(cls):
@@ -62,7 +62,7 @@ class BasePayerPlanPeriodCdm531:
 
     @declared_attr
     def sponsor_source_concept_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
 
     @declared_attr
     def family_source_value(cls):
@@ -70,7 +70,7 @@ class BasePayerPlanPeriodCdm531:
 
     @declared_attr
     def stop_reason_concept_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
 
     @declared_attr
     def stop_reason_source_value(cls):
@@ -78,11 +78,57 @@ class BasePayerPlanPeriodCdm531:
 
     @declared_attr
     def stop_reason_source_concept_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
 
     @declared_attr
     def person(cls):
         return relationship('Person')
+
+    @declared_attr
+    def payer_concept(cls):
+        return relationship('Concept',
+                            primaryjoin='PayerPlanPeriod.payer_concept_id == Concept.concept_id')
+
+    @declared_attr
+    def payer_source_concept(cls):
+        return relationship('Concept',
+                            primaryjoin='PayerPlanPeriod.payer_source_concept_id == '
+                                        'Concept.concept_id')
+
+    @declared_attr
+    def plan_concept(cls):
+        return relationship('Concept',
+                            primaryjoin='PayerPlanPeriod.plan_concept_id == Concept.concept_id')
+
+    @declared_attr
+    def plan_source_concept(cls):
+        return relationship('Concept',
+                            primaryjoin='PayerPlanPeriod.plan_source_concept_id == '
+                                        'Concept.concept_id')
+
+    @declared_attr
+    def sponsor_concept(cls):
+        return relationship('Concept',
+                            primaryjoin='PayerPlanPeriod.sponsor_concept_id == '
+                                        'Concept.concept_id')
+
+    @declared_attr
+    def sponsor_source_concept(cls):
+        return relationship('Concept',
+                            primaryjoin='PayerPlanPeriod.sponsor_source_concept_id == '
+                                        'Concept.concept_id')
+
+    @declared_attr
+    def stop_reason_concept(cls):
+        return relationship('Concept',
+                            primaryjoin='PayerPlanPeriod.stop_reason_concept_id == '
+                                        'Concept.concept_id')
+
+    @declared_attr
+    def stop_reason_source_concept(cls):
+        return relationship('Concept',
+                            primaryjoin='PayerPlanPeriod.stop_reason_source_concept_id == '
+                                        'Concept.concept_id')
 
 
 class BaseCostCdm531:
