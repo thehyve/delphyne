@@ -145,11 +145,11 @@ class BaseCostCdm531:
 
     @declared_attr
     def cost_domain_id(cls):
-        return Column(String(20), nullable=False)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.domain.domain_id'), nullable=False)
 
     @declared_attr
     def cost_type_concept_id(cls):
-        return Column(Integer, nullable=False)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
 
     @declared_attr
     def currency_concept_id(cls):
@@ -209,7 +209,7 @@ class BaseCostCdm531:
 
     @declared_attr
     def revenue_code_concept_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
 
     @declared_attr
     def revenue_code_source_value(cls):
@@ -224,13 +224,27 @@ class BaseCostCdm531:
         return Column(String(3))
 
     @declared_attr
+    def cost_domain(cls):
+        return relationship('Domain')
+
+    @declared_attr
+    def cost_type_concept(cls):
+        return relationship('Concept',
+                            primaryjoin='Cost.cost_type_concept_id == Concept.concept_id')
+
+    @declared_attr
     def currency_concept(cls):
         return relationship('Concept', primaryjoin='Cost.currency_concept_id == Concept.concept_id')
 
     @declared_attr
-    def drg_concept(cls):
-        return relationship('Concept', primaryjoin='Cost.drg_concept_id == Concept.concept_id')
-
-    @declared_attr
     def payer_plan_period(cls):
         return relationship('PayerPlanPeriod')
+
+    @declared_attr
+    def revenue_code_concept(cls):
+        return relationship('Concept',
+                            primaryjoin='Cost.revenue_code_concept_id == Concept.concept_id')
+
+    @declared_attr
+    def drg_concept(cls):
+        return relationship('Concept', primaryjoin='Cost.drg_concept_id == Concept.concept_id')
