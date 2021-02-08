@@ -127,7 +127,7 @@ class BaseDeathCdm531:
 
     @declared_attr
     def death_type_concept_id(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
 
     @declared_attr
     def cause_concept_id(cls):
