@@ -102,7 +102,7 @@ In addition to the default CDM tables, you can also add your own custom tables t
 You can do so by either directly adding the table definitions in the same module, or (preferably) by
 putting them in ``custom/tables.py``.
 
-By adding these tables to the same declarative `Base` as the regular tables, they will become part
+By adding these tables to the same declarative ``Base`` as the regular tables, they will become part
 of the ORM. For example:
 
 .. code-block:: python
