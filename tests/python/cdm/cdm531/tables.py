@@ -34,7 +34,6 @@ from src.delphyne.cdm.cdm531.health_economics import (
 )
 
 from src.delphyne.cdm.cdm531.derived_elements import (
-    BaseCohortCdm531,
     BaseDoseEraCdm531,
     BaseDrugEraCdm531,
     BaseConditionEraCdm531,
@@ -56,8 +55,7 @@ from src.delphyne.cdm.vocabularies import (
     BaseConceptSynonym,
     BaseDomain,
     BaseDrugStrength,
-    BaseRelationship,
-    BaseCohortDefinition,
+    BaseRelationship
 )
 
 Base = declarative_base()
@@ -148,10 +146,6 @@ class PayerPlanPeriod(BasePayerPlanPeriodCdm531, Base):
     pass
 
 
-class Cohort(BaseCohortCdm531, Base):
-    pass
-
-
 class DoseEra(BaseDoseEraCdm531, Base):
     pass
 
@@ -213,8 +207,4 @@ class Vocabulary(BaseVocabulary, Base):
 
 
 class Domain(BaseDomain, Base):
-    pass
-
-
-class CohortDefinition(BaseCohortDefinition, Base):
     pass

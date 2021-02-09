@@ -46,13 +46,13 @@ def test_create_tables_cdm531(wrapper_cdm531: Wrapper):
     assert set(vocab_tables) == {
         'domain', 'concept_ancestor', 'drug_strength', 'concept_relationship', 'vocabulary',
         'concept_synonym', 'relationship', 'concept_class', 'source_to_concept_map',
-        'source_to_concept_map_version', 'concept', 'cohort_definition'}
+        'source_to_concept_map_version', 'concept'}
     cdm_tables = inspect(wrapper_cdm531.db.engine).get_table_names('cdm')
     assert set(cdm_tables) == {
         'cdm_source', 'device_exposure', 'condition_occurrence', 'metadata',
         'fact_relationship', 'drug_exposure', 'measurement', 'death', 'note', 'note_nlp',
         'observation', 'procedure_occurrence', 'observation_period', 'visit_occurrence',
-        'specimen', 'cohort', 'visit_detail', 'condition_era', 'payer_plan_period',
+        'specimen', 'visit_detail', 'condition_era', 'payer_plan_period',
         'provider', 'care_site', 'location', 'cost', 'stem_table', 'person', 'drug_era',
         'dose_era'}
 
