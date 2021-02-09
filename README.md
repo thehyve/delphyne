@@ -25,7 +25,7 @@ Full documentation is available on [Read the Docs](https://delphyne.readthedocs.
 -   Customizable SQLAlchemy ORM of multiple OMOP CDM releases and extensions
 -   Flexible data transformation options using either raw SQL or the ORM
 -   Built-in tracking of ETL transformations to generate an overview of table record changes
--   Comprehensive integration of source data files into transformations, with options for caching and various data formats
+-   Easy use of source data files in transformations, with options for caching and various data formats
 -   Intuitive table constraint management ranging from a single constraint/index to the full CDM
 -   Integrated loading functionality for standard vocabularies, custom vocabularies and source to concept mappings
 
