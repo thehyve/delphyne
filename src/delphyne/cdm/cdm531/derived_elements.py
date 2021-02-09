@@ -7,27 +7,6 @@ from sqlalchemy.orm import relationship
 from .._schema_placeholders import VOCAB_SCHEMA, CDM_SCHEMA
 
 
-class BaseCohortCdm531:
-    __tablename__ = 'cohort'
-    __table_args__ = {'schema': CDM_SCHEMA}
-
-    @declared_attr
-    def cohort_definition_id(cls):
-        return Column(Integer, primary_key=True, nullable=False, index=True)
-
-    @declared_attr
-    def subject_id(cls):
-        return Column(Integer, primary_key=True, nullable=False, index=True)
-
-    @declared_attr
-    def cohort_start_date(cls):
-        return Column(Date, primary_key=True, nullable=False)
-
-    @declared_attr
-    def cohort_end_date(cls):
-        return Column(Date, primary_key=True, nullable=False)
-
-
 class BaseConditionEraCdm531:
     __tablename__ = 'condition_era'
     __table_args__ = {'schema': CDM_SCHEMA}

@@ -416,47 +416,6 @@ class BaseVocabulary:
         return relationship('Concept', primaryjoin='Vocabulary.vocabulary_concept_id == Concept.concept_id', post_update=True)
 
 
-class BaseCohortDefinition:
-    __tablename__ = 'cohort_definition'
-    __table_args__ = {'schema': VOCAB_SCHEMA}
-
-    @declared_attr
-    def cohort_definition_id(cls):
-        return Column(Integer, primary_key=True, index=True)
-
-    @declared_attr
-    def cohort_definition_name(cls):
-        return Column(String(255), nullable=False)
-
-    @declared_attr
-    def cohort_definition_description(cls):
-        return Column(Text)
-
-    @declared_attr
-    def definition_type_concept_id(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
-
-    @declared_attr
-    def cohort_definition_syntax(cls):
-        return Column(Text)
-
-    @declared_attr
-    def subject_concept_id(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
-
-    @declared_attr
-    def cohort_initiation_date(cls):
-        return Column(Date)
-
-    @declared_attr
-    def definition_type_concept(cls):
-        return relationship('Concept', primaryjoin='CohortDefinition.definition_type_concept_id == Concept.concept_id')
-
-    @declared_attr
-    def subject_concept(cls):
-        return relationship('Concept', primaryjoin='CohortDefinition.subject_concept_id == Concept.concept_id')
-
-
 class BaseSourceToConceptMapVersion:
     __tablename__ = 'source_to_concept_map_version'
     __table_args__ = {'schema': VOCAB_SCHEMA}
