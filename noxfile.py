@@ -48,6 +48,14 @@ def lint(session):
 
 
 @nox.session(python="3.8")
+def docs(session):
+    """Build the documentation."""
+    session.install(".", "sphinx")
+    session.run("rm", "-rf", "docs/_build", external=True)
+    session.run("sphinx-build", "docs", "docs/_build")
+
+
+@nox.session(python="3.8")
 def build(session):
     session.install("setuptools")
     session.install("wheel")
