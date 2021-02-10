@@ -11,7 +11,7 @@ from sqlalchemy import MetaData
 from sqlalchemy.exc import InvalidRequestError
 
 from ..._paths import STCM_DIR, STCM_VERSION_FILE
-from ...cdm._schema_placeholders import VOCAB_SCHEMA
+from ...cdm.schema_placeholders import VOCAB_SCHEMA
 from ...cdm.vocabularies import BaseSourceToConceptMapVersion
 from ...database import Database
 from ...util.io import get_all_files_in_dir, file_has_valid_prefix
