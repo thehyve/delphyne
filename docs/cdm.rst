@@ -41,7 +41,7 @@ Some (vocabulary) tables are not version-specific and can be left as they are.
 CDM extensions
 --------------
 In addition to the standard CDM tables, you can also add tables from CDM extensions.
-These can be imported from ``delphyne.cdm.cdm_extensions``. At the bottom of ``cdm/tables.py`` in
+These can be imported from ``delphyne.cdm.cdm_extensions``. Near the bottom of ``cdm/tables.py`` in
 delphyne-template, you'll find an example of how to do this for the
 `oncology extension <https://ohdsi.github.io/CommonDataModel/oncology.html>`_.
 
@@ -49,6 +49,14 @@ Make sure that if an extension contains altered versions of existing CDM tables,
 you only define the class for the version from the extension and not the default version.
 E.g. if the measurement table from the oncology extension is used,
 you cannot also use the regular measurement table, which should therefore be removed.
+
+Legacy tables
+-------------
+At the bottom of ``cdm/tables.py`` in delphyne-template is a segment for CDM legacy tables.
+These tables have been part of the standard CDM in previous releases, but have since been moved
+to the results schema or removed entirely. These are the cohort, cohort_definition, cohort_attribute
+and attribute_definition tables. They are not included by default, but if you do want to use them,
+you can uncomment the lines to make them part of the ``cdm_schema``.
 
 Modify CDM tables
 -----------------
