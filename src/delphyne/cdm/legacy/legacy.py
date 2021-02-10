@@ -4,7 +4,7 @@ from sqlalchemy import Column, Date, DateTime, Integer, String, Text, ForeignKey
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
-from .._schema_placeholders import CDM_SCHEMA, VOCAB_SCHEMA
+from ..schema_placeholders import CDM_SCHEMA, VOCAB_SCHEMA
 
 
 class BaseCohort:

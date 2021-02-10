@@ -8,7 +8,7 @@ from typing import List, Set, Dict
 from ..etl_stats import open_transformation
 from ..._paths import STANDARD_VOCAB_DIR
 from ...cdm import vocabularies
-from ...cdm._schema_placeholders import VOCAB_SCHEMA
+from ...cdm.schema_placeholders import VOCAB_SCHEMA
 from ...database import Database
 from ...util.io import get_all_files_in_dir
 from ...util.table import table_is_empty, get_full_table_name

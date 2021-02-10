@@ -11,7 +11,7 @@ from sqlalchemy import (Column, Date, ForeignKey, Integer, Numeric, String,
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
-from .._schema_placeholders import VOCAB_SCHEMA
+from ..schema_placeholders import VOCAB_SCHEMA
 
 
 class BaseConcept:

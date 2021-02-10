@@ -4,7 +4,7 @@ from typing import Optional, Dict
 
 from pydantic import BaseModel, validator, SecretStr, DirectoryPath
 
-from ...cdm._schema_placeholders import VOCAB_SCHEMA, CDM_SCHEMA
+from ...cdm.schema_placeholders import VOCAB_SCHEMA, CDM_SCHEMA
 
 _REQUIRED_SCHEMAS = [VOCAB_SCHEMA, CDM_SCHEMA]
 

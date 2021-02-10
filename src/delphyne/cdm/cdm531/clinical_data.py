@@ -5,7 +5,7 @@ from sqlalchemy import (Column, Date, DateTime, ForeignKey, Integer,
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
-from .._schema_placeholders import VOCAB_SCHEMA, CDM_SCHEMA
+from ..schema_placeholders import VOCAB_SCHEMA, CDM_SCHEMA
 
 
 class BaseConditionOccurrenceCdm531:
