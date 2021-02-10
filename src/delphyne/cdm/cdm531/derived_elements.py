@@ -1,31 +1,10 @@
 """OMOP CDM 5.3.1 derived elements tables."""
 
-from sqlalchemy import Column, ForeignKey, Integer, Date, Numeric
+from sqlalchemy import Column, ForeignKey, Integer, Date, DateTime, Numeric
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
 from .._schema_placeholders import VOCAB_SCHEMA, CDM_SCHEMA
-
-
-class BaseCohortCdm531:
-    __tablename__ = 'cohort'
-    __table_args__ = {'schema': CDM_SCHEMA}
-
-    @declared_attr
-    def cohort_definition_id(cls):
-        return Column(Integer, primary_key=True, nullable=False, index=True)
-
-    @declared_attr
-    def subject_id(cls):
-        return Column(Integer, primary_key=True, nullable=False, index=True)
-
-    @declared_attr
-    def cohort_start_date(cls):
-        return Column(Date, primary_key=True, nullable=False)
-
-    @declared_attr
-    def cohort_end_date(cls):
-        return Column(Date, primary_key=True, nullable=False)
 
 
 class BaseConditionEraCdm531:
@@ -46,11 +25,11 @@ class BaseConditionEraCdm531:
 
     @declared_attr
     def condition_era_start_date(cls):
-        return Column(Date, nullable=False)
+        return Column(DateTime, nullable=False)
 
     @declared_attr
     def condition_era_end_date(cls):
-        return Column(Date, nullable=False)
+        return Column(DateTime, nullable=False)
 
     @declared_attr
     def condition_occurrence_count(cls):
@@ -91,11 +70,11 @@ class BaseDoseEraCdm531:
 
     @declared_attr
     def dose_era_start_date(cls):
-        return Column(Date, nullable=False)
+        return Column(DateTime, nullable=False)
 
     @declared_attr
     def dose_era_end_date(cls):
-        return Column(Date, nullable=False)
+        return Column(DateTime, nullable=False)
 
     @declared_attr
     def drug_concept(cls):
@@ -128,11 +107,11 @@ class BaseDrugEraCdm531:
 
     @declared_attr
     def drug_era_start_date(cls):
-        return Column(Date, nullable=False)
+        return Column(DateTime, nullable=False)
 
     @declared_attr
     def drug_era_end_date(cls):
-        return Column(Date, nullable=False)
+        return Column(DateTime, nullable=False)
 
     @declared_attr
     def drug_exposure_count(cls):

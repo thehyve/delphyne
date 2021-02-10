@@ -45,6 +45,10 @@ class BaseConditionOccurrenceCdm531:
         return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False)
 
     @declared_attr
+    def condition_status_concept_id(cls):
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
+
+    @declared_attr
     def stop_reason(cls):
         return Column(String(20))
 
@@ -58,7 +62,7 @@ class BaseConditionOccurrenceCdm531:
 
     @declared_attr
     def visit_detail_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{CDM_SCHEMA}.visit_detail.visit_detail_id'))
 
     @declared_attr
     def condition_source_value(cls):
@@ -71,10 +75,6 @@ class BaseConditionOccurrenceCdm531:
     @declared_attr
     def condition_status_source_value(cls):
         return Column(String(50))
-
-    @declared_attr
-    def condition_status_concept_id(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
 
     @declared_attr
     def condition_concept(cls):
@@ -103,6 +103,10 @@ class BaseConditionOccurrenceCdm531:
     @declared_attr
     def visit_occurrence(cls):
         return relationship('VisitOccurrence')
+
+    @declared_attr
+    def visit_detail(cls):
+        return relationship('VisitDetail')
 
 
 class BaseDeathCdm531:
@@ -136,6 +140,10 @@ class BaseDeathCdm531:
     @declared_attr
     def cause_source_concept_id(cls):
         return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
+
+    @declared_attr
+    def person(cls):
+        return relationship('Person')
 
     @declared_attr
     def cause_concept(cls):
@@ -204,11 +212,11 @@ class BaseDeviceExposureCdm531:
 
     @declared_attr
     def visit_detail_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{CDM_SCHEMA}.visit_detail.visit_detail_id'))
 
     @declared_attr
     def device_source_value(cls):
-        return Column(String(100))
+        return Column(String(50))
 
     @declared_attr
     def device_source_concept_id(cls):
@@ -237,6 +245,10 @@ class BaseDeviceExposureCdm531:
     @declared_attr
     def visit_occurrence(cls):
         return relationship('VisitOccurrence')
+
+    @declared_attr
+    def visit_detail(cls):
+        return relationship('VisitDetail')
 
 
 class BaseDrugExposureCdm531:
@@ -317,7 +329,7 @@ class BaseDrugExposureCdm531:
 
     @declared_attr
     def visit_detail_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{CDM_SCHEMA}.visit_detail.visit_detail_id'))
 
     @declared_attr
     def drug_source_value(cls):
@@ -363,6 +375,10 @@ class BaseDrugExposureCdm531:
     def visit_occurrence(cls):
         return relationship('VisitOccurrence')
 
+    @declared_attr
+    def visit_detail(cls):
+        return relationship('VisitDetail')
+
 
 class BaseFactRelationshipCdm531:
     __tablename__ = 'fact_relationship'
@@ -387,6 +403,24 @@ class BaseFactRelationshipCdm531:
     @declared_attr
     def relationship_concept_id(cls):
         return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), primary_key=True, nullable=False, index=True)
+
+    @declared_attr
+    def domain_concept_1(cls):
+        return relationship('Concept',
+                            primaryjoin='FactRelationship.domain_concept_id_1 == '
+                                        'Concept.concept_id')
+
+    @declared_attr
+    def domain_concept_2(cls):
+        return relationship('Concept',
+                            primaryjoin='FactRelationship.domain_concept_id_2 == '
+                                        'Concept.concept_id')
+
+    @declared_attr
+    def relationship_concept(cls):
+        return relationship('Concept',
+                            primaryjoin='FactRelationship.relationship_concept_id == '
+                                        'Concept.concept_id')
 
 
 class BaseMeasurementCdm531:
@@ -455,7 +489,7 @@ class BaseMeasurementCdm531:
 
     @declared_attr
     def visit_detail_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{CDM_SCHEMA}.visit_detail.visit_detail_id'))
 
     @declared_attr
     def measurement_source_value(cls):
@@ -508,6 +542,10 @@ class BaseMeasurementCdm531:
     @declared_attr
     def visit_occurrence(cls):
         return relationship('VisitOccurrence')
+
+    @declared_attr
+    def visit_detail(cls):
+        return relationship('VisitDetail')
 
 
 class BaseNoteCdm531:
@@ -564,7 +602,7 @@ class BaseNoteCdm531:
 
     @declared_attr
     def visit_detail_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{CDM_SCHEMA}.visit_detail.visit_detail_id'))
 
     @declared_attr
     def note_source_value(cls):
@@ -598,6 +636,10 @@ class BaseNoteCdm531:
     def visit_occurrence(cls):
         return relationship('VisitOccurrence')
 
+    @declared_attr
+    def visit_detail(cls):
+        return relationship('VisitDetail')
+
 
 class BaseNoteNlpCdm531:
     __tablename__ = 'note_nlp'
@@ -621,7 +663,7 @@ class BaseNoteNlpCdm531:
 
     @declared_attr
     def offset(cls):
-        return Column(String(250))
+        return Column(String(50))
 
     @declared_attr
     def lexical_variant(cls):
@@ -633,7 +675,7 @@ class BaseNoteNlpCdm531:
 
     @declared_attr
     def note_nlp_source_concept_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
 
     @declared_attr
     def nlp_system(cls):
@@ -666,6 +708,10 @@ class BaseNoteNlpCdm531:
     @declared_attr
     def note_nlp_concept(cls):
         return relationship('Concept', primaryjoin='NoteNlp.note_nlp_concept_id == Concept.concept_id')
+
+    @declared_attr
+    def note_nlp_source_concept(cls):
+        return relationship('Concept', primaryjoin='NoteNlp.note_nlp_source_concept_id == Concept.concept_id')
 
     @declared_attr
     def section_concept(cls):
@@ -730,7 +776,7 @@ class BaseObservationCdm531:
 
     @declared_attr
     def visit_detail_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{CDM_SCHEMA}.visit_detail.visit_detail_id'))
 
     @declared_attr
     def observation_source_value(cls):
@@ -783,6 +829,10 @@ class BaseObservationCdm531:
     @declared_attr
     def visit_occurrence(cls):
         return relationship('VisitOccurrence')
+
+    @declared_attr
+    def visit_detail(cls):
+        return relationship('VisitDetail')
 
 
 class BaseObservationPeriodCdm531:
@@ -977,7 +1027,7 @@ class BaseProcedureOccurrenceCdm531:
 
     @declared_attr
     def visit_detail_id(cls):
-        return Column(Integer)
+        return Column(ForeignKey(f'{CDM_SCHEMA}.visit_detail.visit_detail_id'))
 
     @declared_attr
     def procedure_source_value(cls):
@@ -1018,6 +1068,10 @@ class BaseProcedureOccurrenceCdm531:
     @declared_attr
     def visit_occurrence(cls):
         return relationship('VisitOccurrence')
+
+    @declared_attr
+    def visit_detail(cls):
+        return relationship('VisitDetail')
 
 
 class BaseSpecimenCdm531:
@@ -1123,7 +1177,7 @@ class BaseVisitDetailCdm531:
 
     @declared_attr
     def visit_detail_concept_id(cls):
-        return Column(Integer, nullable=False, index=True)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False, index=True)
 
     @declared_attr
     def visit_detail_start_date(cls):
@@ -1154,18 +1208,6 @@ class BaseVisitDetailCdm531:
         return Column(ForeignKey(f'{CDM_SCHEMA}.care_site.care_site_id'))
 
     @declared_attr
-    def admitting_source_concept_id(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
-
-    @declared_attr
-    def discharge_to_concept_id(cls):
-        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
-
-    @declared_attr
-    def preceding_visit_detail_id(cls):
-        return Column(ForeignKey(f'{CDM_SCHEMA}.visit_detail.visit_detail_id'))
-
-    @declared_attr
     def visit_detail_source_value(cls):
         return Column(String(50))
 
@@ -1178,8 +1220,20 @@ class BaseVisitDetailCdm531:
         return Column(String(50))
 
     @declared_attr
+    def admitting_source_concept_id(cls):
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
+
+    @declared_attr
     def discharge_to_source_value(cls):
         return Column(String(50))
+
+    @declared_attr
+    def discharge_to_concept_id(cls):
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'))
+
+    @declared_attr
+    def preceding_visit_detail_id(cls):
+        return Column(ForeignKey(f'{CDM_SCHEMA}.visit_detail.visit_detail_id'))
 
     @declared_attr
     def visit_detail_parent_id(cls):
@@ -1229,6 +1283,10 @@ class BaseVisitDetailCdm531:
     def visit_occurrence(cls):
         return relationship('VisitOccurrence')
 
+    @declared_attr
+    def visit_detail_concept(cls):
+        return relationship('Concept', primaryjoin='VisitDetail.visit_detail_concept_id == Concept.concept_id')
+
 
 class BaseVisitOccurrenceCdm531:
     __tablename__ = 'visit_occurrence'
@@ -1244,7 +1302,7 @@ class BaseVisitOccurrenceCdm531:
 
     @declared_attr
     def visit_concept_id(cls):
-        return Column(Integer, nullable=False, index=True)
+        return Column(ForeignKey(f'{VOCAB_SCHEMA}.concept.concept_id'), nullable=False, index=True)
 
     @declared_attr
     def visit_start_date(cls):
@@ -1333,6 +1391,10 @@ class BaseVisitOccurrenceCdm531:
     @declared_attr
     def visit_type_concept(cls):
         return relationship('Concept', primaryjoin='VisitOccurrence.visit_type_concept_id == Concept.concept_id')
+
+    @declared_attr
+    def visit_concept(cls):
+        return relationship('Concept', primaryjoin='VisitOccurrence.visit_concept_id == Concept.concept_id')
 
 
 class BaseStemTableCdm531:

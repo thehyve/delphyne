@@ -11,6 +11,5 @@ from .vocabularies import (
     BaseDomain,
     BaseDrugStrength,
     BaseRelationship,
-    BaseCohortDefinition,
     BaseSourceToConceptMapVersion,
 )
