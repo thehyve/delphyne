@@ -33,6 +33,17 @@ def mapping_dictionary(cdm600_wrapper_with_loaded_relationships: Wrapper):
 
 
 @pytest.mark.usefixtures("container", "test_db")
+def test_restrict_to_codes_option(cdm600_wrapper_with_loaded_relationships: Wrapper):
+
+    wrapper = cdm600_wrapper_with_loaded_relationships
+    map_dict = wrapper.code_mapper.generate_code_mapping_dictionary(
+        vocabulary_id='SOURCE', restrict_to_codes=['SOURCE_1', 'SOURCE_2'])
+
+    assert len(map_dict.mapping_dict.keys()) == 2
+    assert all([code in map_dict.mapping_dict.keys() for code in ['SOURCE_1', 'SOURCE_2']])
+
+
+@pytest.mark.usefixtures("container", "test_db")
 def test_unknown_source_code(mapping_dictionary: MappingDict):
 
     map_dict = mapping_dictionary
