@@ -295,6 +295,7 @@ class CodeMapper:
                                 target.standard_concept == 'S',
                                 target.invalid_reason.is_(None))) \
                 .filter(and_(*source_filters)) \
+                .distinct() \
                 .all()
 
         mapping_dict = MappingDict.from_records(records)
