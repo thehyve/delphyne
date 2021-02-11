@@ -45,6 +45,16 @@ def test_restrict_to_codes_option(cdm600_wrapper_with_loaded_relationships: Wrap
 
 
 @pytest.mark.usefixtures("container", "test_db")
+def test_multiple_source_vocabularies(cdm600_wrapper_with_loaded_relationships: Wrapper):
+
+    wrapper = cdm600_wrapper_with_loaded_relationships
+    map_dict = wrapper.code_mapper.generate_code_mapping_dictionary(
+        vocabulary_id=['SOURCE', 'TARGET'])
+
+    assert all(code in map_dict.mapping_dict.keys() for code in ['SOURCE_1', 'TARGET_1'])
+
+
+@pytest.mark.usefixtures("container", "test_db")
 def test_dictionary_warnings(cdm600_wrapper_with_loaded_relationships: Wrapper, caplog):
 
     wrapper = cdm600_wrapper_with_loaded_relationships
