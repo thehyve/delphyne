@@ -62,13 +62,15 @@ def test_dictionary_warnings(cdm600_wrapper_with_loaded_relationships: Wrapper, 
 
 
 @pytest.mark.usefixtures("container", "test_db")
-def test_unknown_source_code(mapping_dictionary: MappingDict):
+def test_unknown_source_code(mapping_dictionary: MappingDict, caplog):
 
     map_dict = mapping_dictionary
 
     # source code not in vocabularies
-    result_no_code = map_dict.lookup('UNKNOWN CODE')
-    result_no_code_concept_only = map_dict.lookup('UNKNOWN CODE', target_concept_id_only=True)
+    with caplog.at_level(logging.DEBUG):
+        result_no_code = map_dict.lookup('UNKNOWN CODE')
+        result_no_code_concept_only = map_dict.lookup('UNKNOWN CODE', target_concept_id_only=True)
+    assert "No mapping available for UNKNOWN CODE, mapping to concept_id == 0" in caplog.text
 
     expected_result_no_code = CodeMapping()
     expected_result_no_code.source_concept_code = 'UNKNOWN CODE'
@@ -81,13 +83,15 @@ def test_unknown_source_code(mapping_dictionary: MappingDict):
 
 
 @pytest.mark.usefixtures("container", "test_db")
-def test_code_with_no_match(mapping_dictionary: MappingDict):
+def test_code_with_no_match(mapping_dictionary: MappingDict, caplog):
 
     map_dict = mapping_dictionary
 
     # non-standard code with no mapping to standard code
-    result_no_match = map_dict.lookup('SOURCE_1')
-    result_no_match_concept_only = map_dict.lookup('SOURCE_1', target_concept_id_only=True)
+    with caplog.at_level(logging.DEBUG):
+        result_no_match = map_dict.lookup('SOURCE_1')
+        result_no_match_concept_only = map_dict.lookup('SOURCE_1', target_concept_id_only=True)
+    assert "Only mapping available for SOURCE_1 is to concept_id == 0" in caplog.text
 
     expected_result_no_match = CodeMapping()
     expected_result_no_match.source_concept_code = 'SOURCE_1'
