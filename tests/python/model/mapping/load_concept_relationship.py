@@ -222,8 +222,49 @@ def load_concept_relationship(wrapper: Wrapper) -> None:
         con_relationship6.valid_end_date = '2099-12-31'
         con_relationship6.invalid_reason = None
 
+        # valid/invalid concepts with valid mapping
+
+        concept11 = cdm600.Concept()
+        concept11.concept_id = 11
+        concept11.concept_name = 'Valid non-standard concept with valid mapping'
+        concept11.domain_id = domain.domain_id
+        concept11.vocabulary_id = vocab1.vocabulary_id
+        concept11.concept_class_id = conc_class.concept_class_id
+        concept11.concept_code = 'SOURCE_6'
+        concept11.invalid_reason = None
+        concept11.valid_start_date = '1970-01-01'
+        concept11.valid_end_date = '2099-12-31'
+
+        concept12 = cdm600.Concept()
+        concept12.concept_id = 12
+        concept12.concept_name = 'Invalid non-standard concept with valid mapping'
+        concept12.domain_id = domain.domain_id
+        concept12.vocabulary_id = vocab1.vocabulary_id
+        concept12.concept_class_id = conc_class.concept_class_id
+        concept12.concept_code = 'SOURCE_7'
+        concept12.invalid_reason = 'D'
+        concept12.valid_start_date = '1970-01-01'
+        concept12.valid_end_date = '2099-12-31'
+
+        con_relationship7 = cdm600.ConceptRelationship()
+        con_relationship7.concept_id_1 = 11
+        con_relationship7.concept_id_2 = 4
+        con_relationship7.relationship_id = 'Maps to'
+        con_relationship7.valid_start_date = '1970-01-01'
+        con_relationship7.valid_end_date = '2099-12-31'
+        con_relationship7.invalid_reason = None
+
+        con_relationship8 = cdm600.ConceptRelationship()
+        con_relationship8.concept_id_1 = 12
+        con_relationship8.concept_id_2 = 4
+        con_relationship8.relationship_id = 'Maps to'
+        con_relationship8.valid_start_date = '1970-01-01'
+        con_relationship8.valid_end_date = '2099-12-31'
+        con_relationship8.invalid_reason = None
+
         session.add_all([vocab1, vocab2, conc_class, domain, relationship1, relationship2,
                          concept, concept1, concept2, concept3, concept4, concept5,
                          con_relationship1, con_relationship2, con_relationship3,
                          concept6, concept7, concept8, con_relationship4, con_relationship5,
-                         concept9, concept10, con_relationship6])
+                         concept9, concept10, con_relationship6,
+                         concept11, concept12, con_relationship7, con_relationship8])

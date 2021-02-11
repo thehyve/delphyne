@@ -259,3 +259,23 @@ def test_code_mapping_to_non_standard_concept(mapping_dictionary: MappingDict):
     assert len(result_no_match) == 1
     for attr, value in expected_result_no_match.__dict__.items():
         assert getattr(result_no_match[0], attr) == value
+
+
+@pytest.mark.usefixtures("container", "test_db")
+def test_source_code_filters(cdm600_wrapper_with_loaded_relationships: Wrapper):
+
+    wrapper = cdm600_wrapper_with_loaded_relationships
+
+    map_dict_all = wrapper.code_mapper.generate_code_mapping_dictionary(
+        vocabulary_id='SOURCE', restrict_to_codes=['SOURCE_6', 'SOURCE_7'])
+
+    map_dict_valid_only = wrapper.code_mapper.generate_code_mapping_dictionary(
+        vocabulary_id='SOURCE', restrict_to_codes=['SOURCE_6', 'SOURCE_7'], invalid_reason='NULL')
+
+    map_dict_invalid_only = wrapper.code_mapper.generate_code_mapping_dictionary(
+        vocabulary_id='SOURCE', restrict_to_codes=['SOURCE_6', 'SOURCE_7'],
+        invalid_reason=['U', 'D', 'R'])
+
+    assert map_dict_all.mapping_dict.keys() == {'SOURCE_6', 'SOURCE_7'}
+    assert map_dict_valid_only.mapping_dict.keys() == {'SOURCE_6'}
+    assert map_dict_invalid_only.mapping_dict.keys() == {'SOURCE_7'}
