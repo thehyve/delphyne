@@ -1,3 +1,4 @@
+import logging
 import pytest
 from src.delphyne import Wrapper
 from src.delphyne.model.mapping import CodeMapping, MappingDict
@@ -168,14 +169,16 @@ def test_code_with_multiple_matches(mapping_dictionary: MappingDict):
 
 
 @pytest.mark.usefixtures("container", "test_db")
-def test_code_with_multiple_matches_only_first(mapping_dictionary: MappingDict):
+def test_code_with_multiple_matches_only_first(mapping_dictionary: MappingDict, caplog):
 
     map_dict = mapping_dictionary
 
     # non-standard code with multiple mappings to standard code
-    result_multi_match = map_dict.lookup('SOURCE_3', first_only=True)
-    result_multi_match_concept_only = map_dict.lookup('SOURCE_3', first_only=True,
-                                                      target_concept_id_only=True)
+    with caplog.at_level(logging.DEBUG):
+        result_multi_match = map_dict.lookup('SOURCE_3', first_only=True)
+        result_multi_match_concept_only = map_dict.lookup('SOURCE_3', first_only=True,
+                                                          target_concept_id_only=True)
+    assert "Multiple mappings available for SOURCE_3, returning only first." in caplog.text
 
     expected_result_match_1 = CodeMapping()
     expected_result_match_1.source_concept_code = 'SOURCE_3'
