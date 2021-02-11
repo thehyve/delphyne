@@ -86,19 +86,19 @@ def test_code_with_one_match(mapping_dictionary: MappingDict):
     result_1_match = map_dict.lookup('SOURCE_2')
     result_1_match_concept_only = map_dict.lookup('SOURCE_2', target_concept_id_only=True)
 
-    expected_result_match_1 = CodeMapping()
-    expected_result_match_1.source_concept_code = 'SOURCE_2'
-    expected_result_match_1.source_concept_id = 2
-    expected_result_match_1.source_concept_name = 'Non-standard concept with 1 mapping ' \
+    expected_result_1_match = CodeMapping()
+    expected_result_1_match.source_concept_code = 'SOURCE_2'
+    expected_result_1_match.source_concept_id = 2
+    expected_result_1_match.source_concept_name = 'Non-standard concept with 1 mapping ' \
                                                   'to standard concept'
-    expected_result_match_1.source_vocabulary_id = 'SOURCE'
-    expected_result_match_1.target_concept_code = 'TARGET_1'
-    expected_result_match_1.target_concept_id = 4
-    expected_result_match_1.target_concept_name = 'Standard concept 1'
-    expected_result_match_1.target_vocabulary_id = 'TARGET'
+    expected_result_1_match.source_vocabulary_id = 'SOURCE'
+    expected_result_1_match.target_concept_code = 'TARGET_1'
+    expected_result_1_match.target_concept_id = 4
+    expected_result_1_match.target_concept_name = 'Standard concept 1'
+    expected_result_1_match.target_vocabulary_id = 'TARGET'
 
     assert len(result_1_match) == 1
-    for attr, value in expected_result_match_1.__dict__.items():
+    for attr, value in expected_result_1_match.__dict__.items():
         assert getattr(result_1_match[0], attr) == value
     assert result_1_match_concept_only == [4]
 
@@ -139,4 +139,52 @@ def test_code_with_multiple_matches(mapping_dictionary: MappingDict):
         assert getattr(result_multi_match[0], attr) == value
     for attr, value in expected_result_match_2.__dict__.items():
         assert getattr(result_multi_match[1], attr) == value
-    assert result_multi_match_concept_only == [4,5]
+    assert result_multi_match_concept_only == [4, 5]
+
+
+@pytest.mark.usefixtures("container", "test_db")
+def test_code_mapping_to_invalid_standard_concepts(mapping_dictionary: MappingDict):
+
+    map_dict = mapping_dictionary
+
+    # non-standard code with no mapping to standard code
+    result_no_match = map_dict.lookup('SOURCE_4')
+
+    expected_result_no_match = CodeMapping()
+    expected_result_no_match.source_concept_code = 'SOURCE_4'
+    expected_result_no_match.source_concept_id = 6
+    expected_result_no_match.source_concept_name = 'Non-standard concept with mappings ' \
+                                                   'to invalid standard concepts'
+    expected_result_no_match.source_vocabulary_id = 'SOURCE'
+    expected_result_no_match.target_concept_code = None
+    expected_result_no_match.target_concept_id = 0
+    expected_result_no_match.target_concept_name = None
+    expected_result_no_match.target_vocabulary_id = None
+
+    assert len(result_no_match) == 1
+    for attr, value in expected_result_no_match.__dict__.items():
+        assert getattr(result_no_match[0], attr) == value
+
+
+@pytest.mark.usefixtures("container", "test_db")
+def test_code_mapping_to_non_standard_concept(mapping_dictionary: MappingDict):
+
+    map_dict = mapping_dictionary
+
+    # non-standard code with no mapping to standard code
+    result_no_match = map_dict.lookup('SOURCE_5')
+
+    expected_result_no_match = CodeMapping()
+    expected_result_no_match.source_concept_code = 'SOURCE_5'
+    expected_result_no_match.source_concept_id = 9
+    expected_result_no_match.source_concept_name = 'Non-standard concept with mapping ' \
+                                                   'to non-standard concept'
+    expected_result_no_match.source_vocabulary_id = 'SOURCE'
+    expected_result_no_match.target_concept_code = None
+    expected_result_no_match.target_concept_id = 0
+    expected_result_no_match.target_concept_name = None
+    expected_result_no_match.target_vocabulary_id = None
+
+    assert len(result_no_match) == 1
+    for attr, value in expected_result_no_match.__dict__.items():
+        assert getattr(result_no_match[0], attr) == value
