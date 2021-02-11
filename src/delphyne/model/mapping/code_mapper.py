@@ -291,7 +291,8 @@ class CodeMapper:
                 target.vocabulary_id.label('target_vocabulary_id')) \
                 .outerjoin(self.cdm.ConceptRelationship,
                            and_(source.concept_id == self.cdm.ConceptRelationship.concept_id_1,
-                                self.cdm.ConceptRelationship.relationship_id == 'Maps to')) \
+                                self.cdm.ConceptRelationship.relationship_id == 'Maps to',
+                                self.cdm.ConceptRelationship.invalid_reason.is_(None))) \
                 .outerjoin(target,
                            and_(self.cdm.ConceptRelationship.concept_id_2 == target.concept_id,
                                 target.standard_concept == 'S',

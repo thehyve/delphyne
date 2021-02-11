@@ -262,9 +262,39 @@ def load_concept_relationship(wrapper: Wrapper) -> None:
         con_relationship8.valid_end_date = '2099-12-31'
         con_relationship8.invalid_reason = None
 
+        # valid source concept with invalid mapping relationship
+
+        concept13 = cdm600.Concept()
+        concept13.concept_id = 13
+        concept13.concept_name = 'Valid non-standard concept with invalid mapping relationships'
+        concept13.domain_id = domain.domain_id
+        concept13.vocabulary_id = vocab1.vocabulary_id
+        concept13.concept_class_id = conc_class.concept_class_id
+        concept13.concept_code = 'SOURCE_8'
+        concept13.invalid_reason = None
+        concept13.valid_start_date = '1970-01-01'
+        concept13.valid_end_date = '2099-12-31'
+
+        con_relationship9 = cdm600.ConceptRelationship()
+        con_relationship9.concept_id_1 = 13
+        con_relationship9.concept_id_2 = 4
+        con_relationship9.relationship_id = 'Maps to'
+        con_relationship9.valid_start_date = '1970-01-01'
+        con_relationship9.valid_end_date = '2099-12-31'
+        con_relationship9.invalid_reason = 'D'
+
+        con_relationship10 = cdm600.ConceptRelationship()
+        con_relationship10.concept_id_1 = 13
+        con_relationship10.concept_id_2 = 5
+        con_relationship10.relationship_id = 'Mapped from'
+        con_relationship10.valid_start_date = '1970-01-01'
+        con_relationship10.valid_end_date = '2099-12-31'
+        con_relationship10.invalid_reason = None
+
         session.add_all([vocab1, vocab2, conc_class, domain, relationship1, relationship2,
                          concept, concept1, concept2, concept3, concept4, concept5,
                          con_relationship1, con_relationship2, con_relationship3,
                          concept6, concept7, concept8, con_relationship4, con_relationship5,
                          concept9, concept10, con_relationship6,
-                         concept11, concept12, con_relationship7, con_relationship8])
+                         concept11, concept12, con_relationship7, con_relationship8,
+                         concept13, con_relationship9, con_relationship10])

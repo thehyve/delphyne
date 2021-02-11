@@ -279,3 +279,15 @@ def test_source_code_filters(cdm600_wrapper_with_loaded_relationships: Wrapper):
     assert map_dict_all.mapping_dict.keys() == {'SOURCE_6', 'SOURCE_7'}
     assert map_dict_valid_only.mapping_dict.keys() == {'SOURCE_6'}
     assert map_dict_invalid_only.mapping_dict.keys() == {'SOURCE_7'}
+
+
+@pytest.mark.usefixtures("container", "test_db")
+def test_valid_code_with_invalid_relationships(mapping_dictionary: MappingDict):
+
+    map_dict = mapping_dictionary
+
+    lookup_result = map_dict.lookup('SOURCE_8', target_concept_id_only=True)
+
+    assert 'SOURCE_8' in map_dict.mapping_dict.keys()
+    assert len(lookup_result) == 1
+    assert lookup_result[0] == 0  # target concept_id
