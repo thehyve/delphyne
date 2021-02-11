@@ -206,12 +206,14 @@ class CodeMapper:
             standard_concept: Optional[Union[str, List[str]]] = None
     ) -> MappingDict:
         """
-        Create a dictionary of mapping codes.
+        Create a dictionary of code mappings.
 
-        The mappings will be from non-standard concept_codes to standard
-        concept_ids for the specified OMOP vocabularies.
+        Mappings from non-standard concept_codes to standard
+        concept_ids will be generated from the vocabulary table
+        concept_relationship by extracting valid "Maps_to" type
+        relationships.
 
-        Accepts one or more non-standard OMOP vocabulary names (e.g.
+        Accepts one or more source OMOP vocabulary names (e.g.
         Read, ICD10); the lookup can be restricted to a specific list of
         source concept_codes within the specified vocabularies to save
         memory.
