@@ -4,7 +4,8 @@ from tests.python.cdm import cdm600
 
 
 def load_concept_relationship(wrapper: Wrapper) -> None:
-    """Load test concept and concept relationship records in the vocabulary tables."""
+    """Load test concept and concept relationship records in the
+    vocabulary tables."""
     with wrapper.db.session_scope() as session:
 
         vocab1 = cdm600.Vocabulary()

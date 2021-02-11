@@ -14,7 +14,8 @@ pytestmark = pytest.mark.skipif(condition=docker_not_available(),
 @pytest.fixture(scope='function')
 def cdm600_wrapper_with_loaded_relationships(cdm600_wrapper_with_tables_created: Wrapper) \
         -> Wrapper:
-    """cdm600 wrapper with tables created and populated with test concept relationships."""
+    """cdm600 wrapper with tables created and populated with test
+    concept relationships."""
     wrapper = cdm600_wrapper_with_tables_created
     wrapper.db.constraint_manager.drop_all_constraints()
     load_concept_relationship(wrapper=wrapper)
