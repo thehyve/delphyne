@@ -174,8 +174,10 @@ class MappingDict:
             logger.warning('Trying to retrieve mappings from an empty dictionary!')
 
         if not mappings:
-            logger.debug(f'No mapping available for {source_code}')
+            logger.debug(f'No mapping available for {source_code}, mapping to concept_id == 0')
             mappings = [CodeMapping.create_mapping_for_no_match(source_code)]
+        elif len(mappings) == 1 and mappings[0].target_concept_id == 0:
+            logger.debug(f'Only mapping available for {source_code} is to concept_id == 0')
 
         if target_concept_id_only:
             mappings = [mapping.target_concept_id for mapping in mappings]
