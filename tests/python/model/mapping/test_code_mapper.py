@@ -39,6 +39,8 @@ def test_unknown_source_code(mapping_dictionary: MappingDict):
 
     # source code not in vocabularies
     result_no_code = map_dict.lookup('UNKNOWN CODE')
+    result_no_code_concept_only = map_dict.lookup('UNKNOWN CODE', target_concept_id_only=True)
+
     expected_result_no_code = CodeMapping()
     expected_result_no_code.source_concept_code = 'UNKNOWN CODE'
     expected_result_no_code.source_concept_id = 0
@@ -46,6 +48,7 @@ def test_unknown_source_code(mapping_dictionary: MappingDict):
     assert len(result_no_code) == 1
     for attr, value in expected_result_no_code.__dict__.items():
         assert getattr(result_no_code[0], attr) == value
+    assert result_no_code_concept_only == [0]
 
 
 @pytest.mark.usefixtures("container", "test_db")
@@ -55,6 +58,7 @@ def test_code_with_no_match(mapping_dictionary: MappingDict):
 
     # non-standard code with no mapping to standard code
     result_no_match = map_dict.lookup('SOURCE_1')
+    result_no_match_concept_only = map_dict.lookup('SOURCE_1', target_concept_id_only=True)
 
     expected_result_no_match = CodeMapping()
     expected_result_no_match.source_concept_code = 'SOURCE_1'
@@ -70,6 +74,7 @@ def test_code_with_no_match(mapping_dictionary: MappingDict):
     assert len(result_no_match) == 1
     for attr, value in expected_result_no_match.__dict__.items():
         assert getattr(result_no_match[0], attr) == value
+    assert result_no_match_concept_only == [0]
 
 
 @pytest.mark.usefixtures("container", "test_db")
@@ -79,6 +84,7 @@ def test_code_with_one_match(mapping_dictionary: MappingDict):
 
     # non-standard code with one mapping to standard code
     result_1_match = map_dict.lookup('SOURCE_2')
+    result_1_match_concept_only = map_dict.lookup('SOURCE_2', target_concept_id_only=True)
 
     expected_result_match_1 = CodeMapping()
     expected_result_match_1.source_concept_code = 'SOURCE_2'
@@ -94,6 +100,7 @@ def test_code_with_one_match(mapping_dictionary: MappingDict):
     assert len(result_1_match) == 1
     for attr, value in expected_result_match_1.__dict__.items():
         assert getattr(result_1_match[0], attr) == value
+    assert result_1_match_concept_only == [4]
 
 
 @pytest.mark.usefixtures("container", "test_db")
@@ -103,6 +110,7 @@ def test_code_with_multiple_matches(mapping_dictionary: MappingDict):
 
     # non-standard code with multiple mappings to standard code
     result_multi_match = map_dict.lookup('SOURCE_3')
+    result_multi_match_concept_only = map_dict.lookup('SOURCE_3', target_concept_id_only=True)
 
     expected_result_match_1 = CodeMapping()
     expected_result_match_1.source_concept_code = 'SOURCE_3'
@@ -131,3 +139,4 @@ def test_code_with_multiple_matches(mapping_dictionary: MappingDict):
         assert getattr(result_multi_match[0], attr) == value
     for attr, value in expected_result_match_2.__dict__.items():
         assert getattr(result_multi_match[1], attr) == value
+    assert result_multi_match_concept_only == [4,5]
