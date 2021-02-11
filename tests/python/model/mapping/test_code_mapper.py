@@ -39,8 +39,22 @@ def test_restrict_to_codes_option(cdm600_wrapper_with_loaded_relationships: Wrap
     map_dict = wrapper.code_mapper.generate_code_mapping_dictionary(
         vocabulary_id='SOURCE', restrict_to_codes=['SOURCE_1', 'SOURCE_2'])
 
-    assert len(map_dict.mapping_dict.keys()) == 2
-    assert all([code in map_dict.mapping_dict.keys() for code in ['SOURCE_1', 'SOURCE_2']])
+    assert len(map_dict.mapping_dict) == 2
+    assert all(code in map_dict.mapping_dict.keys() for code in ['SOURCE_1', 'SOURCE_2'])
+
+
+@pytest.mark.usefixtures("container", "test_db")
+def test_dictionary_creation_warnings(cdm600_wrapper_with_loaded_relationships: Wrapper, caplog):
+
+    wrapper = cdm600_wrapper_with_loaded_relationships
+
+    map_dict = wrapper.code_mapper.generate_code_mapping_dictionary(
+        vocabulary_id='SOURCE', restrict_to_codes=['INVALID_CODE'])
+
+    assert len(map_dict.mapping_dict.keys()) == 0
+    assert "mapping dictionary empty" in caplog.text
+    assert "No mapping to standard concept_id could be generated for 1/1 codes: {'INVALID_CODE'}" \
+           in caplog.text
 
 
 @pytest.mark.usefixtures("container", "test_db")
