@@ -45,7 +45,7 @@ def test_restrict_to_codes_option(cdm600_wrapper_with_loaded_relationships: Wrap
 
 
 @pytest.mark.usefixtures("container", "test_db")
-def test_dictionary_creation_warnings(cdm600_wrapper_with_loaded_relationships: Wrapper, caplog):
+def test_dictionary_warnings(cdm600_wrapper_with_loaded_relationships: Wrapper, caplog):
 
     wrapper = cdm600_wrapper_with_loaded_relationships
 
@@ -56,6 +56,9 @@ def test_dictionary_creation_warnings(cdm600_wrapper_with_loaded_relationships: 
     assert "mapping dictionary empty" in caplog.text
     assert "No mapping to standard concept_id could be generated for 1/1 codes: {'INVALID_CODE'}" \
            in caplog.text
+
+    map_dict.lookup('SOME_CODE')
+    assert "Trying to retrieve mappings from an empty dictionary!" in caplog.text
 
 
 @pytest.mark.usefixtures("container", "test_db")
