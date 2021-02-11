@@ -99,7 +99,7 @@ class MappingDict:
 
         Parameters
         ----------
-        records : list of Record
+        records : list of Record objects
             A list of named tuples compliant with the Record format,
             e.g. as the result of a SQLAlchemy query.
 
@@ -135,7 +135,7 @@ class MappingDict:
                source_code: str,
                first_only: bool = False,
                target_concept_id_only: bool = False,
-               ) -> Union[List[str], List[CodeMapping], str, CodeMapping]:
+               ) -> Union[List[int], List[CodeMapping], int, CodeMapping]:
         """
         Retrieve mapping list for a given source code.
 
@@ -165,7 +165,7 @@ class MappingDict:
         -------
         mapping
             A single match or list of matches, either standard
-            concept_ids (string) or CodeMapping objects.
+            concept_ids (integer) or CodeMapping objects.
         """
         # full CodeMapping object
         mappings = self.mapping_dict.get(source_code, [])
