@@ -76,6 +76,7 @@ def load_concept_relationship(wrapper: Wrapper) -> None:
         concept4.vocabulary_id = vocab2.vocabulary_id
         concept4.concept_class_id = conc_class.concept_class_id
         concept4.concept_code = 'TARGET_1'
+        concept4.standard_concept = 'S'
         concept4.valid_start_date = '1970-01-01'
         concept4.valid_end_date = '2099-12-31'
 
@@ -86,6 +87,7 @@ def load_concept_relationship(wrapper: Wrapper) -> None:
         concept5.vocabulary_id = vocab2.vocabulary_id
         concept5.concept_class_id = conc_class.concept_class_id
         concept5.concept_code = 'TARGET_2'
+        concept5.standard_concept = 'S'
         concept5.valid_start_date = '1970-01-01'
         concept5.valid_end_date = '2099-12-31'
 
