@@ -143,6 +143,32 @@ def test_code_with_multiple_matches(mapping_dictionary: MappingDict):
 
 
 @pytest.mark.usefixtures("container", "test_db")
+def test_code_with_multiple_matches_only_first(mapping_dictionary: MappingDict):
+
+    map_dict = mapping_dictionary
+
+    # non-standard code with multiple mappings to standard code
+    result_multi_match = map_dict.lookup('SOURCE_3', first_only=True)
+    result_multi_match_concept_only = map_dict.lookup('SOURCE_3', first_only=True,
+                                                      target_concept_id_only=True)
+
+    expected_result_match_1 = CodeMapping()
+    expected_result_match_1.source_concept_code = 'SOURCE_3'
+    expected_result_match_1.source_concept_id = 3
+    expected_result_match_1.source_concept_name = 'Non-standard concept with multiple mappings ' \
+                                                  'to standard concept'
+    expected_result_match_1.source_vocabulary_id = 'SOURCE'
+    expected_result_match_1.target_concept_code = 'TARGET_1'
+    expected_result_match_1.target_concept_id = 4
+    expected_result_match_1.target_concept_name = 'Standard concept 1'
+    expected_result_match_1.target_vocabulary_id = 'TARGET'
+
+    for attr, value in expected_result_match_1.__dict__.items():
+        assert getattr(result_multi_match, attr) == value
+    assert result_multi_match_concept_only == 4
+
+
+@pytest.mark.usefixtures("container", "test_db")
 def test_code_mapping_to_invalid_standard_concepts(mapping_dictionary: MappingDict):
 
     map_dict = mapping_dictionary
