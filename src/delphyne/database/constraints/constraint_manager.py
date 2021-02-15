@@ -562,8 +562,8 @@ class ConstraintManager:
         constraint = self._get_constraint_from_model(name)
         self._add_constraint_in_db(constraint, errors)
 
-    def _get_table_objects(self,
-                           reflected_tables: List[Table],
+    @staticmethod
+    def _get_table_objects(tables: List[Table],
                            get_constraints: bool,
                            get_pks: bool,
                            get_indexes: bool
@@ -575,7 +575,7 @@ class ConstraintManager:
         # collect all of them. They can then safely be dropped in the
         # following order: non-pk constraints, indexes, pks.
         constraints, pks, indexes = [], [], []
-        for table in reflected_tables:
+        for table in tables:
             for constraint in table.constraints:
                 is_pk = isinstance(constraint, PrimaryKeyConstraint)
                 if is_pk and get_pks:
