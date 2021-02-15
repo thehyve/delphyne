@@ -211,6 +211,7 @@ class Database:
             finally:
                 SessionTracker.remove_session(session_id)
                 session.close()
+                logger.info(f'{name} completed with success status: {metadata.query_success}')
 
     @staticmethod
     def can_connect(uri: str) -> bool:
