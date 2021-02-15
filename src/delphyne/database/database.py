@@ -84,27 +84,30 @@ class Database:
         Database
         """
         db_config = config.database
-        hostname = db_config.host
-        port = db_config.port
-        database = db_config.database_name
-        username = db_config.username
         password = db_config.password.get_secret_value()
-        uri = f'postgresql://{username}:{password}@{hostname}:{port}/{database}'
-        if not password and Database._password_needed(uri):
-            password = getpass('Database password:')
-            uri = f'postgresql://{username}:{password}@{hostname}:{port}/{database}'
-        return cls(uri=uri, schema_translate_map=config.schema_translate_map, base=base)
+        url = URL(
+            drivername=db_config.drivername,
+            host=db_config.host,
+            port=db_config.port,
+            database=db_config.database_name,
+            username=db_config.username,
+            password=password,
+            query=db_config.query,
+        )
+        if not password and not Database._can_connect_without_password(url):
+            url.password = getpass('Database password:')
+        return cls(uri=url, schema_translate_map=config.schema_translate_map, base=base)
 
     @staticmethod
-    def _password_needed(uri: str) -> bool:
+    def _can_connect_without_password(uri: URL) -> bool:
+        logger.info('Attempting to connect without password')
         logger.disabled = True
         try:
             create_engine(uri).connect()
-        except OperationalError as e:
-            if 'no password supplied' in str(e):
-                return True
-        else:
+        except SQLAlchemyError:
             return False
+        else:
+            return True
         finally:
             logger.disabled = False
 
@@ -222,27 +225,29 @@ class Database:
                 logger.info(f'{name} completed with success status: {metadata.query_success}')
 
     @staticmethod
-    def can_connect(uri: str) -> bool:
+    def can_connect(uri: Union[str, URL]) -> bool:
         """
         Check whether a connection can be established for the given URI.
 
         Parameters
         ----------
-        uri : str
-            URI including database name.
+        uri : str or SQLAlchemy URL
+            Database URI including database name.
 
         Returns
         -------
         bool
             Returns True if connection to database could be established.
         """
+        if isinstance(uri, str):
+            uri = make_url(uri)
         try:
             db_exists = database_exists(uri)
         except OperationalError as e:
             logger.error(e)
             return False
         if not db_exists:
-            db_name = uri.rsplit('/', 1)[-1]
+            db_name = uri.database
             logger.error(f'Could not connect. Database "{db_name}" does not exist')
         return db_exists
 
