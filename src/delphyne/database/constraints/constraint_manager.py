@@ -14,14 +14,12 @@ from __future__ import annotations
 import logging
 from copy import copy
 from functools import lru_cache, wraps
-from typing import TYPE_CHECKING, Union, Dict, Callable, List, Tuple, Optional
-from sqlalchemy.engine.reflection import Inspector
-from sqlalchemy.exc import NoSuchTableError
-from collections import namedtuple
-from typing import NamedTuple
+from typing import TYPE_CHECKING, Union, Dict, Callable, List, Tuple, NamedTuple
+
 from itertools import chain
 from sqlalchemy import Index, Table, PrimaryKeyConstraint, Constraint, MetaData, CheckConstraint
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.engine.reflection import Inspector
+from sqlalchemy.exc import NoSuchTableError, SQLAlchemyError
 from sqlalchemy.schema import DropConstraint, AddConstraint, DropIndex, CreateIndex
 
 from .conventions import VOCAB_TABLES

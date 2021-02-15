@@ -6,10 +6,11 @@ import logging
 from contextlib import contextmanager
 from getpass import getpass
 from types import MappingProxyType
-from typing import Dict, Set, FrozenSet, ContextManager, Tuple
+from typing import Dict, Set, FrozenSet, ContextManager, Tuple, Union
 
 from sqlalchemy import create_engine, MetaData
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.engine.url import URL, make_url
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 from sqlalchemy_utils.functions import database_exists
@@ -20,6 +21,12 @@ from ..config.models import MainConfig
 from ..model.etl_stats import EtlTransformation, open_transformation
 
 logger = logging.getLogger(__name__)
+
+
+# Dialect specific engine settings
+_ENGINE_DIALECT_SETTINGS = {
+    'postgresql': {'executemany_mode': 'values'}
+}
 
 
 class Database:
@@ -47,9 +54,10 @@ class Database:
 
     schema_translate_map: MappingProxyType = None
 
-    def __init__(self, uri: str, schema_translate_map: Dict[str, str], base):
+    def __init__(self, uri: URL, schema_translate_map: Dict[str, str], base):
         Database.schema_translate_map = MappingProxyType(schema_translate_map)
-        self.engine = create_engine(uri, executemany_mode='values',
+        dialect_settings = _ENGINE_DIALECT_SETTINGS.get(uri.drivername, {})
+        self.engine = create_engine(uri, **dialect_settings,
                                     execution_options={
                                         "schema_translate_map": schema_translate_map
                                     })
