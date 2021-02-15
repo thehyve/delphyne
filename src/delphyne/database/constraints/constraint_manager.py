@@ -497,7 +497,7 @@ class ConstraintManager:
         None
         """
         logger.info(f'Adding constraints on table {table_name}')
-        table: Table = self._model.table_lookup.get(table_name)
+        table = self._model.table_lookup.get(table_name)
         if table is None:
             raise KeyError(f'No table found in model with name "{table_name}"')
 
@@ -586,7 +586,6 @@ class ConstraintManager:
             if get_indexes:
                 for index in table.indexes:
                     indexes.append(index)
-
         return constraints, pks, indexes
 
     def _get_constraint_from_model(self, constraint_name: str) -> ConstraintOrIndex:
