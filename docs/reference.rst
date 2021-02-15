@@ -60,8 +60,8 @@ StcmLoader
 CodeMapper
 ----------
 
-.. autoclass:: src.delphyne.model.mapping.code_mapper.CodeMapper
-   :members:
+.. automodule:: src.delphyne.model.mapping.code_mapper
+   :members: CodeMapper, MappingDict, CodeMapping
 
 
 SourceData
