@@ -29,7 +29,8 @@ class Record(NamedTuple):
 
 
 class CodeMapping:
-    """A single source to target mapping.
+    """
+    A single source to target mapping.
 
     All attributes are set to None upon instantiation.
 

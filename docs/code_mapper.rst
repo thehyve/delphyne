@@ -27,14 +27,17 @@ for one or multiple source vocabularies at once, identified by their OMOP `vocab
 When possible, it is recommended to use the `restrict_to_codes` argument to load mappings
 only for the source codes that will be actually used in the transformations, thus limiting memory usage.
 
+`delphyne`'s Wrapper provides a ready-to-use :mod:`~src.delphyne.model.mapping.code_mapper.CodeMapper` instance under
+the attribute `code_mapper`. You can use it to create a mapping dictionary inside a transformation script as follows:
+
 .. code-block:: python
 
-   mapping_dict = self.code_mapper.generate_code_mapping_dictionary(
+   mapping_dict = wrapper.code_mapper.generate_code_mapping_dictionary(
             'ICD10CM', restrict_to_codes=['R51', 'T68', 'B36.0'])
 
-If the same mapping dictionary is going to be used in several transformations, it is more efficient to instantiate it
-as a wrapper attribute since repeated dictionary creation can take up considerable time. This is especially true
-for long `restrict_to_codes` lists, or when no `restrict_to_codes` argument is provided.
+If the same mapping dictionary is needed in several transformations, it might be more efficient to instantiate
+it as a wrapper attribute and reuse it, since the dictionary creation can take up considerable time.
+This is especially true for long `restrict_to_codes` lists, or when no `restrict_to_codes` argument is provided.
 
 Using a mapping dictionary
 ----------------------------
