@@ -33,19 +33,25 @@ only for the source codes that will be actually used in the transformations, thu
             'ICD10CM', restrict_to_codes=['R51', 'T68', 'B36.0'])
 
 If the same mapping dictionary is going to be used in several transformations, it is more efficient to instantiate it
-as a wrapper attribute since repeated dictionary creation can take up considerable time.
+as a wrapper attribute since repeated dictionary creation can take up considerable time. This is especially true
+for long `restrict_to_codes` lists, or when no `restrict_to_codes` argument is provided.
 
 Using a mapping dictionary
 ----------------------------
 
-The dictionary `lookup()` method provides a way to retrieve mapping information for a single source term at a time:
+The mapping dictionary :mod:`~src.delphyne.model.mapping.code_mapper.MappingDict.lookup()` method
+provides a way to retrieve mapping information for a single source term at a time:
 
 .. code-block:: python
 
    mapping = mapping_dict.lookup('R51')
 
-The method retrieves by default a list of :class:`~src.delphyne.model.mapping.code_mapper.CodeMapping` objects,
+The method retrieves by default a list of :mod:`~src.delphyne.model.mapping.code_mapper.CodeMapping` objects,
 capturing information about both the source and target terms.
+If a code is not found in the mapping dictionary, :mod:`~src.delphyne.model.mapping.code_mapper.MappingDict.lookup()`
+generates a :mod:`~src.delphyne.model.mapping.code_mapper.CodeMapping` object
+with both `source_concept_id` and `target_concept_id` set to `0`.
+
 If you are only interested in the target `concept_id`, use the option `target_concept_id_only=True`.
 Also note that sometimes a single source term can have multiple mappings to standard `concept_id`;
 to return a single match in all cases, use `first_only=True`.
