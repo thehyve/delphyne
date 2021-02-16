@@ -1,5 +1,5 @@
 Code mapper
-===================
+===========
 
 .. contents::
     :local:
