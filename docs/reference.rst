@@ -61,7 +61,8 @@ CodeMapper
 ----------
 
 .. automodule:: src.delphyne.model.mapping.code_mapper
-   :members: CodeMapper, MappingDict, CodeMapping
+   :members:
+   :exclude-members: Record
 
 
 SourceData
