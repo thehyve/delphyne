@@ -29,7 +29,34 @@ class Record(NamedTuple):
 
 
 class CodeMapping:
-    """A single source to target mapping."""
+    """A single source to target mapping.
+
+    All attributes are set to None upon instantiation.
+
+    Attributes
+    ----------
+    source_concept_code : str
+        Original source code used in the lookup.
+    source_concept_id : int
+        Source code OMOP concept_id.
+    source_concept_name : str
+        Source code description.
+    source_vocabulary_id : str
+        OMOP identifier for the source code ontology.
+    source_standard_concept : str
+        One of None, 'S', or 'C' (typically None)
+    source_invalid_reason : str
+        One of None, 'D', or 'U' (typically None)
+    target_concept_code : str
+        Mapped ontology code.
+    target_concept_id : int
+        Mapped OMOP concept_id;
+        if available, it's always valid and standard.
+    target_concept_name : str
+        Mapped code description.
+    target_vocabulary_id : str
+        OMOP identifier for the mapped code ontology.
+    """
 
     def __init__(self):
         self.source_concept_code = None
