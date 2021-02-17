@@ -186,6 +186,8 @@ class ConstraintManager:
             return meta
         for chk_constraint in self._chk_constraints.all_chk_constraints:
             table_name = f'{chk_constraint.schema_name}.{chk_constraint.table_name}'
+            if table_name not in meta.tables:
+                continue
             table: Table = meta.tables.get(table_name)
             dummy_constraint = CheckConstraint('', name=chk_constraint.chk_name, table=table)
             table.constraints.add(dummy_constraint)

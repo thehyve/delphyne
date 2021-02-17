@@ -8,7 +8,7 @@ from getpass import getpass
 from types import MappingProxyType
 from typing import Dict, Set, FrozenSet, ContextManager, Tuple, Union
 
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import create_engine, MetaData, inspect
 from sqlalchemy.engine.url import URL, make_url
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
@@ -65,6 +65,8 @@ class Database:
         self.constraint_manager = ConstraintManager(self)
         self._schemas = self._set_schemas()
         self._sessionmaker = sessionmaker(bind=self.engine, autoflush=False)
+        # Dict {'schema1': {'table1', 'table2'}}
+        self._model_tables = self._set_model_tables()
 
     @classmethod
     def from_config(cls, config: MainConfig, base) -> Database:
@@ -254,9 +256,16 @@ class Database:
     @property
     def reflected_metadata(self) -> MetaData:
         """Metadata of the current state of tables in the database."""
+        inspector = inspect(self.engine)
         metadata = MetaData(bind=self.engine)
+        existing_schemas = inspector.get_schema_names()
         for schema in self.schemas:
-            metadata.reflect(schema=schema)
+            if schema not in existing_schemas:
+                continue
+            existing_tables = inspector.get_table_names(schema=schema)
+            model_tables = self._model_tables[schema]
+            reflect_tables = [t for t in model_tables if t in existing_tables]
+            metadata.reflect(schema=schema, only=reflect_tables, resolve_fks=False)
         return metadata
 
     def _set_schemas(self) -> FrozenSet[str]:
@@ -270,3 +279,11 @@ class Database:
             else:
                 schemas.add(raw_schema_value)
         return frozenset(schemas)
+
+    def _set_model_tables(self) -> Dict[str, Set[str]]:
+        # Create dictionary of schemas and their tables present in Base
+        model = {schema: set() for schema in self.schemas}
+        for table in self.base.metadata.tables.values():
+            schema = self.schema_translate_map[table.schema]
+            model[schema].add(table.name)
+        return model
