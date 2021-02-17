@@ -154,9 +154,6 @@ class _TargetModel:
         """
         return table_name in self.table_lookup
 
-    def get_table_chk_constraints(self, table: str) -> List[CheckConstraint]:
-        return [c for c in self.chk_constraints if c.table.name == table]
-
 
 class ConstraintManager:
     """
