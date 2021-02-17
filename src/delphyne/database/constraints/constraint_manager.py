@@ -132,8 +132,6 @@ class _TargetModel:
                         if isinstance(c, Index)]
         self.pks = [c for c in self.constraint_lookup.values()
                     if isinstance(c, PrimaryKeyConstraint)]
-        self.chk_constraints = [c for c in self.constraint_lookup.values()
-                                if isinstance(c, CheckConstraint)]
         # All non-pk model constraints
         self.constraints = [c for c in self.constraint_lookup.values()
                             if _is_non_pk_constraint(c)]
