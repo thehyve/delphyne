@@ -67,6 +67,9 @@ class _ChkConstraint(NamedTuple):
 
 
 class _DbCheckConstraints:
+    # Helper class for getting active check constraint via raw SQL
+    # queries. Only used when SQLAlchemy does not support reflection of
+    # these for the dialect in use.
     def __init__(self, database: Database):
         self._db = database
         self.chk_support = self._check_reflection_support()
