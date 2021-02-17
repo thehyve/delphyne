@@ -1,4 +1,5 @@
 import logging
+import re
 from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import patch
@@ -27,9 +28,9 @@ def mock_custom_vocab_path(vocab_dir: Path, custom_vocab_dir_name: str):
 
 
 @pytest.mark.usefixtures("container", "test_db")
-def test_custom_vocab_exceptions(cdm600_wrapper_with_tables_created: Wrapper,
-                                 base_custom_vocab_dir: Path,
-                                 caplog):
+def test_custom_vocab_files_availability(cdm600_wrapper_with_tables_created: Wrapper,
+                                         base_custom_vocab_dir: Path,
+                                         caplog):
 
     wrapper = cdm600_wrapper_with_tables_created
 
@@ -49,12 +50,24 @@ def test_custom_vocab_exceptions(cdm600_wrapper_with_tables_created: Wrapper,
             wrapper.vocab_manager.custom_vocabularies.load()
         assert "No concept_class.tsv file found" in caplog.text
 
-    # with mock_custom_vocab_path(base_custom_vocab_dir, 'bad_version_file'):
-    #     message = 'stcm_versions.tsv may not contain empty values'
-    #     with pytest.raises(ValueError, match=message):
-    #         wrapper.vocab_manager.custom_vocabularies.load()
-    #
-    # with mock_custom_vocab_path(base_custom_vocab_dir, 'stcm1'):
-    #     message = 'MY_VOCAB1 is not present in the vocabulary table'
-    #     with pytest.raises(ValueError, match=message):
-    #         wrapper.vocab_manager.custom_vocabularies.load()
+
+@pytest.mark.usefixtures("container", "test_db")
+def test_custom_vocabulary_quality(cdm600_wrapper_with_tables_created: Wrapper,
+                                   base_custom_vocab_dir: Path,
+                                   caplog):
+
+    wrapper = cdm600_wrapper_with_tables_created
+
+    with mock_custom_vocab_path(base_custom_vocab_dir, 'bad_file_content'):
+        message = re.escape("Vocabulary files ['bad_vocabulary.tsv', 'duplicate_vocabulary.tsv']"
+                            " contain invalid values")
+        with pytest.raises(ValueError, match=message):
+            wrapper.vocab_manager.custom_vocabularies.load()
+        assert "bad_vocabulary.tsv may not contain an empty vocabulary_id" in caplog.text
+        assert "bad_vocabulary.tsv may not contain an empty vocabulary_version" in caplog.text
+        assert "bad_vocabulary.tsv may not contain an empty vocabulary_reference" in caplog.text
+        assert "bad_vocabulary.tsv must have vocabulary_concept_id set to 0" in caplog.text
+        # vocabulary duplicated within file
+        assert "vocabulary VOCAB1 is duplicated across one or multiple files" in caplog.text
+        # vocabulary duplicated between files
+        assert "vocabulary VOCAB2 is duplicated across one or multiple files" in caplog.text

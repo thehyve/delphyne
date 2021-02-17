@@ -54,8 +54,8 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         # Get custom vocab files for a specific vocabulary target table
         # based on the file name conventions (e.g. "concept.tsv").
         custom_table_files = get_all_files_in_dir(CUSTOM_VOCAB_DIR)
-        return sorted([f for f in custom_table_files if f.stem.lower().endswith(omop_table)
-                       and f.suffix.lower() == '.tsv'])
+        return sorted(f for f in custom_table_files if f.stem.lower().endswith(omop_table)
+                      and f.suffix.lower() == '.tsv')
 
     def _update_custom_file_list(self, file_list: List[Path], omop_table: str) -> List[Path]:
         # Check if file has either a valid prefix (matching a

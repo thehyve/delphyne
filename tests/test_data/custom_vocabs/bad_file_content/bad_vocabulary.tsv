@@ -1,3 +1,7 @@
 vocabulary_id	vocabulary_name	vocabulary_reference	vocabulary_version	vocabulary_concept_id
+	some_name	some_ref	some_version	0
+VOCAB1		some_ref	some_version	0
+VOCAB1	some_name		some_version	0
+VOCAB1	some_name	some_ref		0
 VOCAB1	some_name	some_ref	some_version	12345
-VOCAB2
+VOCAB2	some_name	some_ref	some_version	0
