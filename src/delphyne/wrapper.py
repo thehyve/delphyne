@@ -10,7 +10,7 @@ from sqlalchemy.schema import CreateSchema
 
 from ._paths import SOURCE_DATA_CONFIG_PATH
 from .cdm import vocabularies as cdm
-from .cdm._schema_placeholders import VOCAB_SCHEMA
+from .cdm.schema_placeholders import VOCAB_SCHEMA
 from .config.models import MainConfig
 from .database import Database
 from .model.etl_stats import EtlStatsReporter, etl_stats

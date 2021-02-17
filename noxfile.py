@@ -9,6 +9,7 @@ python = ["3.7", "3.8", "3.9"]
 lint_dependencies = [
     "flake8",
     "flake8-comprehensions",
+    "flake8-docstrings",
     "flake8-bugbear",
     "check-manifest",
 ]
@@ -34,11 +35,10 @@ def lint(session):
     """Lint using flake8."""
     session.install(*lint_dependencies)
     files = ["tests", "src"] + [str(p) for p in Path(".").glob("*.py")]
-    session.run("flake8", *files, '--statistics', '--count')
+    session.run("flake8", *files, '--statistics', '--count', '--extend-ignore=D')
 
     # Lint docstrings only in the actual package (i.e. src/)
-    session.install("flake8-docstrings")
-    session.run("flake8", "src", '--statistics', '--count')
+    session.run("flake8", "src", '--statistics', '--count', '--select=D')
 
     session.run("python", "setup.py", "check", "--metadata", "--strict")
     if "--skip_manifest_check" in session.posargs:
