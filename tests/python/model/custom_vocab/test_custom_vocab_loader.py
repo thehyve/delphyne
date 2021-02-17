@@ -58,11 +58,12 @@ def test_custom_vocabulary_quality(cdm600_wrapper_with_tables_created: Wrapper,
 
     wrapper = cdm600_wrapper_with_tables_created
 
-    with mock_custom_vocab_path(base_custom_vocab_dir, 'bad_file_content'):
+    with mock_custom_vocab_path(base_custom_vocab_dir, 'bad_vocab_content'):
         message = re.escape("Vocabulary files ['bad_vocabulary.tsv', 'duplicate_vocabulary.tsv']"
                             " contain invalid values")
         with pytest.raises(ValueError, match=message):
             wrapper.vocab_manager.custom_vocabularies.load()
+
         assert "bad_vocabulary.tsv may not contain an empty vocabulary_id" in caplog.text
         assert "bad_vocabulary.tsv may not contain an empty vocabulary_version" in caplog.text
         assert "bad_vocabulary.tsv may not contain an empty vocabulary_reference" in caplog.text
@@ -71,3 +72,25 @@ def test_custom_vocabulary_quality(cdm600_wrapper_with_tables_created: Wrapper,
         assert "vocabulary VOCAB1 is duplicated across one or multiple files" in caplog.text
         # vocabulary duplicated between files
         assert "vocabulary VOCAB2 is duplicated across one or multiple files" in caplog.text
+
+
+@pytest.mark.usefixtures("container", "test_db")
+def test_custom_concept_class_quality(cdm600_wrapper_with_tables_created: Wrapper,
+                                      base_custom_vocab_dir: Path,
+                                      caplog):
+
+    wrapper = cdm600_wrapper_with_tables_created
+
+    with mock_custom_vocab_path(base_custom_vocab_dir, 'bad_class_content'):
+        message = re.escape("Concept class files ['bad_concept_class.tsv', "
+                            "'duplicate_concept_class.tsv'] contain invalid values")
+        with pytest.raises(ValueError, match=message):
+            wrapper.vocab_manager.custom_vocabularies.load()
+
+        assert "bad_concept_class.tsv may not contain an empty concept_class_id" in caplog.text
+        assert "bad_concept_class.tsv may not contain an empty concept_class_name" in caplog.text
+        assert "bad_concept_class.tsv must have concept_class_concept_id set to 0" in caplog.text
+        # class duplicated within file
+        assert "concept class CLASS1 is duplicated across one or multiple files" in caplog.text
+        # class duplicated between files
+        assert "concept class CLASS2 is duplicated across one or multiple files" in caplog.text

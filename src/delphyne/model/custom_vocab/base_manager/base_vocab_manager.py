@@ -93,8 +93,7 @@ class BaseVocabManager:
                 files_with_errors.add(vocab_file.name)
 
         if files_with_errors:
-            errors = sorted(errors)
-            for error in errors:
+            for error in sorted(errors):
                 logger.error(error)
             files_with_errors = sorted(files_with_errors)
             raise ValueError(f'Vocabulary files {files_with_errors} contain invalid values')

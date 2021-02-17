@@ -1,0 +1,6 @@
+concept_class_id	concept_class_name	concept_class_concept_id
+	some_name	0
+CLASS1		0
+CLASS1	some_name	12345
+CLASS1	some_name	12345
+CLASS2	some_name	12345

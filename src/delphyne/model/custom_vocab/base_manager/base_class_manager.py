@@ -109,8 +109,12 @@ class BaseClassManager:
         # and return a dictionary {id : name}.
 
         class_dict = {}
+        errors = set()
+        files_with_errors = set()
 
         for class_file in self._custom_class_files:
+
+            file_errors = False
 
             with open(class_file) as f:
                 reader = csv.DictReader(f, delimiter='\t')
@@ -121,19 +125,32 @@ class BaseClassManager:
 
                     # quality checks
                     if not class_id:
-                        raise ValueError(f'{class_file.name} may not contain an empty '
-                                         f'concept_class_id')
+                        errors.add(f'{class_file.name} may not contain an empty '
+                                   f'concept_class_id')
+                        file_errors = True
                     if not class_name:
-                        raise ValueError(f'{class_file.name} may not contain an empty '
-                                         f'concept_class_name')
+                        errors.add(f'{class_file.name} may not contain an empty '
+                                   f'concept_class_name')
+                        file_errors = True
                     if concept_id != '0':
-                        raise ValueError(f'{class_file.name} must have concept_class_concept_id '
-                                         f'set to 0')
+                        errors.add(f'{class_file.name} must have concept_class_concept_id '
+                                   f'set to 0')
+                        file_errors = True
                     if class_id in class_dict:
-                        raise ValueError(
-                            f'{class_id} has duplicates across one or multiple files')
+                        errors.add(f'concept class {class_id} is duplicated across one or '
+                                   f'multiple files')
+                        file_errors = True
 
                     class_dict[class_id] = class_name
+
+            if file_errors:
+                files_with_errors.add(class_file.name)
+
+        if files_with_errors:
+            for error in sorted(errors):
+                logger.error(error)
+            files_with_errors = sorted(files_with_errors)
+            raise ValueError(f'Concept class files {files_with_errors} contain invalid values')
 
         return class_dict
 
