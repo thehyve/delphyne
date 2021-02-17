@@ -34,7 +34,7 @@ class BaseVocabManager:
         self._custom_vocabs_to_update = set()
         self._custom_vocabs_unused = set()
 
-        if not self._custom_class_files:
+        if not self._custom_vocab_files:
             logger.error('No vocabulary.tsv file found')
 
     @property
@@ -52,8 +52,12 @@ class BaseVocabManager:
     def vocabs_from_disk(self) -> Dict[str, str]:
         """User-provided custom vocabulary IDs and versions."""
         vocab_dict = {}
+        errors = set()
+        files_with_errors = set()
 
         for vocab_file in self._custom_vocab_files:
+
+            file_errors = False
 
             with open(vocab_file) as f:
                 reader = csv.DictReader(f, delimiter='\t')
@@ -65,22 +69,35 @@ class BaseVocabManager:
 
                     # quality checks
                     if not vocab_id:
-                        raise ValueError(f'{vocab_file.name} may not contain an empty '
-                                         f'vocabulary_id')
+                        errors.add(f'{vocab_file.name} may not contain an empty vocabulary_id')
+                        file_errors = True
                     if not version:
-                        raise ValueError(f'{vocab_file.name} may not contain an empty '
-                                         f'vocabulary_version')
+                        errors.add(f'{vocab_file.name} may not contain an empty'
+                                   f' vocabulary_version')
+                        file_errors = True
                     if not reference:
-                        raise ValueError(f'{vocab_file.name} may not contain an empty '
-                                         f'vocabulary_reference')
+                        errors.add(f'{vocab_file.name} may not contain an empty'
+                                   f' vocabulary_reference')
+                        file_errors = True
                     if concept_id != '0':
-                        raise ValueError(f'{vocab_file.name} must have vocabulary_concept_id '
-                                         f'set to 0')
+                        errors.add(f'{vocab_file.name} must have vocabulary_concept_id set to 0')
+                        file_errors = True
                     if vocab_id in vocab_dict:
-                        raise ValueError(f'vocabulary {vocab_id} has duplicates across one or '
-                                         f'multiple files')
+                        errors.add(f'vocabulary {vocab_id} is duplicated across one or multiple'
+                                   f' files')
+                        file_errors = True
 
                     vocab_dict[vocab_id] = version
+
+            if file_errors:
+                files_with_errors.add(vocab_file.name)
+
+        if files_with_errors:
+            errors = sorted(errors)
+            for error in errors:
+                logger.error(error)
+            files_with_errors = sorted(files_with_errors)
+            raise ValueError(f'Vocabulary files {files_with_errors} contain invalid values')
 
         return vocab_dict
 
