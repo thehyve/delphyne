@@ -86,16 +86,16 @@ class _DbCheckConstraints:
 
     def _get_chk_constraints_mssql(self) -> List[_ChkConstraint]:
         q = """
-        select
+        SELECT
             chk.name chk_name,
             SCHEMA_NAME(chk.schema_id) schema_name,
             st.name table_name
-        from sys.check_constraints chk
-        inner join sys.columns col
-            on chk.parent_object_id = col.object_id
-        inner join sys.tables st
-            on chk.parent_object_id = st.object_id
-        where
+        FROM sys.check_constraints chk
+        INNER JOIN sys.columns col
+            ON chk.parent_object_id = col.object_id
+        INNER JOIN sys.tables st
+            ON chk.parent_object_id = st.object_id
+        WHERE
             col.column_id = chk.parent_column_id
         """
         with self._db.engine.connect() as conn:
