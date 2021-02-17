@@ -55,20 +55,36 @@ def test_multiple_source_vocabularies(cdm600_wrapper_with_loaded_relationships: 
 
 
 @pytest.mark.usefixtures("container", "test_db")
-def test_dictionary_warnings(cdm600_wrapper_with_loaded_relationships: Wrapper, caplog):
+def test_empty_dictionary_warnings(cdm600_wrapper_with_loaded_relationships: Wrapper, caplog):
 
     wrapper = cdm600_wrapper_with_loaded_relationships
 
+    # source code not in vocabularies
     map_dict = wrapper.code_mapper.generate_code_mapping_dictionary(
         vocabulary_id='SOURCE', restrict_to_codes=['INVALID_CODE'])
 
     assert len(map_dict.mapping_dict.keys()) == 0
     assert "mapping dictionary empty" in caplog.text
-    assert "No mapping to standard concept_id could be generated for 1/1 codes: {'INVALID_CODE'}" \
-           in caplog.text
 
     map_dict.lookup('SOME_CODE')
     assert "Trying to retrieve mappings from an empty dictionary!" in caplog.text
+
+
+@pytest.mark.usefixtures("container", "test_db")
+def test_other_dictionary_warnings(cdm600_wrapper_with_loaded_relationships: Wrapper, caplog):
+
+    wrapper = cdm600_wrapper_with_loaded_relationships
+
+    map_dict = wrapper.code_mapper.generate_code_mapping_dictionary(
+        vocabulary_id='SOURCE', restrict_to_codes=['INVALID_CODE', 'SOURCE_1'])
+
+    assert len(map_dict.mapping_dict.keys()) == 1
+    # source code not in vocabularies
+    assert "1/2 codes were not found in vocabularies (excluded from mapping dict):" \
+           " {'INVALID_CODE'}" in caplog.text
+    # source code in vocabularies, but has no mapping to standard code
+    assert "1/2 codes have no mapping to valid standard concept_id (mapped to 0):" \
+           " {'SOURCE_1'}" in caplog.text
 
 
 @pytest.mark.usefixtures("container", "test_db")

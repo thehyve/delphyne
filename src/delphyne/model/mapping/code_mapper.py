@@ -308,9 +308,15 @@ class CodeMapper:
         if not mapping_dict.mapping_dict:
             logger.warning('No mapping found, mapping dictionary empty!')
         if restrict_to_codes:
-            not_found = set(restrict_to_codes) - set(mapping_dict.mapping_dict.keys())
+            not_found = set(restrict_to_codes) - mapping_dict.mapping_dict.keys()
+            found_without_mapping = {code for code in mapping_dict.mapping_dict.keys() if
+                                     mapping_dict.mapping_dict[code][0].target_concept_id == 0}
             if not_found:
-                logger.warning(f'No mapping to standard concept_id could be generated for '
-                               f'{len(not_found)}/{len(restrict_to_codes)} codes:'
-                               f' {not_found}')
+                logger.warning(f'{len(not_found)}/{len(restrict_to_codes)} codes were not found '
+                               f'in vocabularies (excluded from mapping dict): '
+                               f'{not_found}')
+            if found_without_mapping:
+                logger.warning(f'{len(found_without_mapping)}/{len(restrict_to_codes)} codes '
+                               f'have no mapping to valid standard concept_id (mapped to 0): '
+                               f'{found_without_mapping}')
         return mapping_dict
