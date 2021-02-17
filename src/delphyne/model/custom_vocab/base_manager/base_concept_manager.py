@@ -30,6 +30,9 @@ class BaseConceptManager:
         self._cdm = cdm
         self._custom_concept_files = custom_concept_files
 
+        if not self._custom_class_files:
+            logger.error('No concept.tsv file found')
+
     def _drop_custom_concepts(self, vocab_ids: Set[str]) -> None:
         # Drop concepts associated with a set of custom vocabulary ids
         # from the database

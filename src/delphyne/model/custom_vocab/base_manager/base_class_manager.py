@@ -33,6 +33,9 @@ class BaseClassManager:
         self._custom_classes_to_create = set()
         self._custom_classes_unused = set()
 
+        if not self._custom_class_files:
+            logger.info('No concept_class.tsv file found')
+
     def _get_custom_class_sets(self) -> None:
         # Compare custom concept_class ids and names
         # to the ones already present in the database.

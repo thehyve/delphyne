@@ -34,6 +34,9 @@ class BaseVocabManager:
         self._custom_vocabs_to_update = set()
         self._custom_vocabs_unused = set()
 
+        if not self._custom_class_files:
+            logger.error('No vocabulary.tsv file found')
+
     @property
     def vocabs_updated(self):
         """Set of vocabulary IDs to update."""
