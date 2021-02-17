@@ -33,7 +33,8 @@ the attribute `code_mapper`. You can use it to create a mapping dictionary insid
 .. code-block:: python
 
    mapping_dict = wrapper.code_mapper.generate_code_mapping_dictionary(
-            'ICD10CM', restrict_to_codes=['R51', 'T68', 'B36.0'])
+               vocabulary_id='ICD10CM',
+               restrict_to_codes=['R51', 'T68', 'B36.0'])
 
 If the same mapping dictionary is needed in several transformations, it might be more efficient to instantiate
 it as a wrapper attribute and reuse it, since the dictionary creation can take up considerable time.
@@ -42,19 +43,32 @@ This is especially true for long `restrict_to_codes` lists, or when no `restrict
 Using a mapping dictionary
 ----------------------------
 
-The mapping dictionary :meth:`~.MappingDict.lookup()` method
-provides a way to retrieve mapping information for a single source term at a time:
+The :meth:`.MappingDict.lookup()` method allows to retrieve mapping information for a single source term at a time:
 
 .. code-block:: python
 
-   mapping = mapping_dict.lookup('R51')
+   mapping = mapping_dict.lookup(source_code='R51')
 
 The method retrieves by default a list of :class:`.CodeMapping` objects,
 capturing information about both the source and target terms.
-If a code is not found in the mapping dictionary, :meth:`~.MappingDict.lookup()`
-generates a :class:`.CodeMapping` object
-with both `source_concept_id` and `target_concept_id` set to `0`.
+The previous lookup for example will return a list composed of a single :class:`.CodeMapping` object,
+with the following attributes:
 
-If you are only interested in the target `concept_id`, use the option `target_concept_id_only=True`.
-Also note that sometimes a single source term can have multiple mappings to standard `concept_id`;
-to return a single match in all cases, use `first_only=True`.
+.. code-block:: python
+
+   mapping.source_concept_code      # 'R51'
+   mapping.source_concept_id        # 35211388
+   mapping.source_concept_name      # 'Headache'
+   mapping.source_vocabulary_id     # 'ICD10CM'
+   mapping.source_standard_concept  # None
+   mapping.source_invalid_reason    # None
+   mapping.target_concept_code      # '25064002'
+   mapping.target_concept_id        # 378253
+   mapping.target_concept_name      # 'Headache'
+   mapping.target_vocabulary_id     # 'SNOMED'
+
+If a code is not found in the mapping dictionary, :meth:`~.MappingDict.lookup()` returns a list containing
+a single :class:`.CodeMapping` object with both `source_concept_id` and `target_concept_id` set to `0`.
+
+Use the option `target_concept_id_only=True` to retrieve any matching `target_concept_id` (as integer) instead
+of full mapping objects. Use `first_only=True` to retrieve the first available match instead of a list of matches.
