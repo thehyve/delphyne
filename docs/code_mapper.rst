@@ -8,7 +8,7 @@ Code mapper
 Mapping source codes to standard concept_ids
 --------------------------------------------
 
-`delphyne`'s :mod:`~src.delphyne.model.mapping.code_mapper.CodeMapper` class enables the creation
+`delphyne`'s :class:`.CodeMapper` class enables the creation
 of mapping dictionaries from non-standard vocabulary term to valid standard `concept_id`.
 Mappings are built on information extracted from the CONCEPT and CONCEPT_RELATIONSHIP tables.
 For example, it is possible to automatically map ICD10CM ontology terms to their SNOMED standard `concept_id` equivalent.
@@ -22,12 +22,12 @@ other mapping methods should be considered (e.g. loading the mappings directly f
 Creating a mapping dictionary
 -----------------------------
 
-Mapping dictionaries (in fact, :mod:`~src.delphyne.model.mapping.code_mapper.MappingDict` objects) can be created
+Mapping dictionaries (in fact, :class:`.MappingDict` objects) can be created
 for one or multiple source vocabularies at once, identified by their OMOP `vocabulary_id`.
 When possible, it is recommended to use the `restrict_to_codes` argument to load mappings
 only for the source codes that will be actually used in the transformations, thus limiting memory usage.
 
-`delphyne`'s Wrapper provides a ready-to-use :mod:`~src.delphyne.model.mapping.code_mapper.CodeMapper` instance under
+`delphyne`'s Wrapper provides a ready-to-use :class:`.CodeMapper` instance under
 the attribute `code_mapper`. You can use it to create a mapping dictionary inside a transformation script as follows:
 
 .. code-block:: python
@@ -42,17 +42,17 @@ This is especially true for long `restrict_to_codes` lists, or when no `restrict
 Using a mapping dictionary
 ----------------------------
 
-The mapping dictionary :mod:`~src.delphyne.model.mapping.code_mapper.MappingDict.lookup()` method
+The mapping dictionary :meth:`~.MappingDict.lookup()` method
 provides a way to retrieve mapping information for a single source term at a time:
 
 .. code-block:: python
 
    mapping = mapping_dict.lookup('R51')
 
-The method retrieves by default a list of :mod:`~src.delphyne.model.mapping.code_mapper.CodeMapping` objects,
+The method retrieves by default a list of :class:`.CodeMapping` objects,
 capturing information about both the source and target terms.
-If a code is not found in the mapping dictionary, :mod:`~src.delphyne.model.mapping.code_mapper.MappingDict.lookup()`
-generates a :mod:`~src.delphyne.model.mapping.code_mapper.CodeMapping` object
+If a code is not found in the mapping dictionary, :meth:`~.MappingDict.lookup()`
+generates a :class:`.CodeMapping` object
 with both `source_concept_id` and `target_concept_id` set to `0`.
 
 If you are only interested in the target `concept_id`, use the option `target_concept_id_only=True`.
