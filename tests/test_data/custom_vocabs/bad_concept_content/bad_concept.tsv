@@ -1,0 +1,5 @@
+concept_id	concept_name	domain_id	vocabulary_id	concept_class_id	standard_concept	concept_code	valid_start_date	valid_end_date	invalid_reason
+12345	Concept with invalid concept_id	ARTIFICIAL_DOMAIN	VOCAB1	ARTIFICIAL_CLASS	S	BAD1	2020-01-01	2099-12-31
+2000000001	Concept duplicated within file	ARTIFICIAL_DOMAIN	VOCAB1	ARTIFICIAL_CLASS	S	BAD2	2020-01-01	2099-12-31
+2000000001	Concept duplicated within file	ARTIFICIAL_DOMAIN	VOCAB1	ARTIFICIAL_CLASS	S	BAD2	2020-01-01	2099-12-31
+2000000002	Concept duplicated between files	ARTIFICIAL_DOMAIN	VOCAB1	ARTIFICIAL_CLASS	S	BAD3	2020-01-01	2099-12-31

@@ -8,6 +8,7 @@ import pytest
 from src.delphyne import Wrapper
 
 from tests.python.conftest import docker_not_available
+from tests.python.model.custom_vocab.load_vocab_data import load_minimal_vocabulary
 
 pytestmark = pytest.mark.skipif(condition=docker_not_available(),
                                 reason='Docker daemon is not running')
@@ -25,6 +26,19 @@ def mock_custom_vocab_path(vocab_dir: Path, custom_vocab_dir_name: str):
     with patch('src.delphyne.model.custom_vocab.custom_vocab_loader.CUSTOM_VOCAB_DIR',
                custom_vocab_dir):
         yield
+
+
+@pytest.mark.usefixtures("test_db")
+@pytest.fixture(scope='function')
+def cdm600_wrapper_with_minimum_contents(cdm600_wrapper_with_tables_created: Wrapper) \
+        -> Wrapper:
+    """cdm600 wrapper with tables created and populated with minimum
+    contents."""
+    wrapper = cdm600_wrapper_with_tables_created
+    wrapper.db.constraint_manager.drop_all_constraints()
+    load_minimal_vocabulary(wrapper=wrapper)
+    wrapper.db.constraint_manager.add_all_constraints()
+    return wrapper
 
 
 @pytest.mark.usefixtures("container", "test_db")
@@ -67,7 +81,8 @@ def test_custom_vocabulary_quality(cdm600_wrapper_with_tables_created: Wrapper,
         assert "bad_vocabulary.tsv may not contain an empty vocabulary_id" in caplog.text
         assert "bad_vocabulary.tsv may not contain an empty vocabulary_version" in caplog.text
         assert "bad_vocabulary.tsv may not contain an empty vocabulary_reference" in caplog.text
-        assert "bad_vocabulary.tsv must have vocabulary_concept_id set to 0" in caplog.text
+        assert "bad_vocabulary.tsv may not contain vocabulary_concept_id other than 0" \
+               in caplog.text
         # vocabulary duplicated within file
         assert "vocabulary VOCAB1 is duplicated across one or multiple files" in caplog.text
         # vocabulary duplicated between files
@@ -89,8 +104,30 @@ def test_custom_concept_class_quality(cdm600_wrapper_with_tables_created: Wrappe
 
         assert "bad_concept_class.tsv may not contain an empty concept_class_id" in caplog.text
         assert "bad_concept_class.tsv may not contain an empty concept_class_name" in caplog.text
-        assert "bad_concept_class.tsv must have concept_class_concept_id set to 0" in caplog.text
+        assert "bad_concept_class.tsv may not containt concept_class_concept_id other than 0" \
+               in caplog.text
         # class duplicated within file
         assert "concept class CLASS1 is duplicated across one or multiple files" in caplog.text
         # class duplicated between files
         assert "concept class CLASS2 is duplicated across one or multiple files" in caplog.text
+
+
+@pytest.mark.usefixtures("container", "test_db")
+def test_custom_concept_quality(cdm600_wrapper_with_minimum_contents: Wrapper,
+                                base_custom_vocab_dir: Path,
+                                caplog):
+
+    wrapper = cdm600_wrapper_with_minimum_contents
+
+    with mock_custom_vocab_path(base_custom_vocab_dir, 'bad_concept_content'):
+        message = re.escape("Concept files ['bad_concept.tsv', 'duplicate_concept.tsv']"
+                            " contain invalid values")
+        with pytest.raises(ValueError, match=message):
+            wrapper.vocab_manager.custom_vocabularies.load()
+
+        assert "bad_concept.tsv must contain concept_ids starting at " \
+               "2\'000\'000\'000 (2B+ convention)" in caplog.text
+        # concept duplicated within file
+        assert "concept 2000000001 is duplicated across one or multiple files" in caplog.text
+        # vocabulary duplicated between files
+        assert "concept 2000000002 is duplicated across one or multiple files" in caplog.text
