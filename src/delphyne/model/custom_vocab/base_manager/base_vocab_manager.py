@@ -80,7 +80,8 @@ class BaseVocabManager:
                                    f' vocabulary_reference')
                         file_errors = True
                     if concept_id != '0':
-                        errors.add(f'{vocab_file.name} must have vocabulary_concept_id set to 0')
+                        errors.add(f'{vocab_file.name} may not contain vocabulary_concept_id'
+                                   f' other than 0')
                         file_errors = True
                     if vocab_id in vocab_dict:
                         errors.add(f'vocabulary {vocab_id} is duplicated across one or multiple'

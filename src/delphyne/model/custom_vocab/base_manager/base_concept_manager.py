@@ -61,9 +61,15 @@ class BaseConceptManager:
         unique_concepts_check = set()
         vocabs_lowercase = {vocab.lower() for vocab in valid_prefixes}
 
+        errors = set()
+        files_with_errors = set()
+
         for concept_file in self._custom_concept_files:
 
+            file_errors = False
+
             file_prefix = get_file_prefix(concept_file, 'concept')
+            check_prefix = file_prefix in vocabs_lowercase
             invalid_vocabs = set()
 
             with self._db.tracked_session_scope(name=f'load_{concept_file.stem}') \
@@ -74,16 +80,27 @@ class BaseConceptManager:
                 for row in rows:
                     concept_id = row['concept_id']
                     vocabulary_id = row['vocabulary_id']
+                    unique_concepts_check.add(concept_id)
+
+                    # if file prefix is valid vocab_id,
+                    # vocabulary_ids in file should match it.
+                    # comparison is case-insensitive.
+                    if check_prefix and vocabulary_id.lower() != file_prefix:
+                        invalid_vocabs.add(vocabulary_id)
 
                     # quality checks
+                    # NOTE: only performing checks not already enforced
+                    # by CONCEPT table constraints; those will raise an
+                    # exception as soon as they occur
                     if int(concept_id) < 2000000000:
-                        raise ValueError(
-                            f'{concept_file.name} must have concept_ids starting at '
-                            f'2\'000\'000\'000 (2B+ convention)')
+                        errors.add(f'{concept_file.name} must contain concept_ids starting at '
+                                   f'2\'000\'000\'000 (2B+ convention)')
+                        file_errors = True
                     if concept_id in unique_concepts_check:
-                        raise ValueError(
-                            f'concept {concept_id} has duplicates across one or multiple '
-                            f'files')
+                        errors.add(f'concept {concept_id} is duplicated across one or multiple '
+                                   f'files')
+                        file_errors = True
+                        continue
 
                     if vocabulary_id in vocab_ids:
                         session.add(self._cdm.Concept(
@@ -99,12 +116,15 @@ class BaseConceptManager:
                             invalid_reason=row['invalid_reason']
                         ))
 
-                    # if file prefix is valid vocab_id,
-                    # vocabulary_ids in file should match it.
-                    # comparison is case-insensitive.
-                    if file_prefix in vocabs_lowercase and vocabulary_id.lower() != file_prefix:
-                        invalid_vocabs.add(vocabulary_id)
+            if file_errors:
+                files_with_errors.add(concept_file.name)
 
             if invalid_vocabs:
                 logging.warning(f'{concept_file.name} contains vocabulary_ids '
                                 f'that do not match file prefix')
+
+        if files_with_errors:
+            for error in sorted(errors):
+                logger.error(error)
+            files_with_errors = sorted(files_with_errors)
+            raise ValueError(f'Concept files {files_with_errors} contain invalid values')

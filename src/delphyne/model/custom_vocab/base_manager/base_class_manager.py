@@ -133,8 +133,8 @@ class BaseClassManager:
                                    f'concept_class_name')
                         file_errors = True
                     if concept_id != '0':
-                        errors.add(f'{class_file.name} must have concept_class_concept_id '
-                                   f'set to 0')
+                        errors.add(f'{class_file.name} may not containt concept_class_concept_id'
+                                   f' other than 0')
                         file_errors = True
                     if class_id in class_dict:
                         errors.add(f'concept class {class_id} is duplicated across one or '
