@@ -33,6 +33,35 @@ def mapping_dictionary(cdm600_wrapper_with_loaded_relationships: Wrapper):
     return map_dict
 
 
+def test_codemapping_instantiation():
+
+    empty_instance = CodeMapping()
+
+    assert empty_instance.source_concept_code is None
+    assert empty_instance.source_concept_id is None
+    assert empty_instance.source_concept_name is None
+    assert empty_instance.source_vocabulary_id is None
+    assert empty_instance.source_standard_concept is None
+    assert empty_instance.source_invalid_reason is None
+    assert empty_instance.target_concept_code is None
+    assert empty_instance.target_concept_id is None
+    assert empty_instance.target_concept_name is None
+    assert empty_instance.target_vocabulary_id is None
+
+    not_found_instance = CodeMapping.create_mapping_for_no_match(source_code='ABC')
+
+    assert not_found_instance.source_concept_code == 'ABC'
+    assert not_found_instance.source_concept_id == 0
+    assert not_found_instance.source_concept_name is None
+    assert not_found_instance.source_vocabulary_id is None
+    assert not_found_instance.source_standard_concept is None
+    assert not_found_instance.source_invalid_reason is None
+    assert not_found_instance.target_concept_code is None
+    assert not_found_instance.target_concept_id == 0
+    assert not_found_instance.target_concept_name is None
+    assert not_found_instance.target_vocabulary_id is None
+
+
 @pytest.mark.usefixtures("container", "test_db")
 def test_restrict_to_codes_option(cdm600_wrapper_with_loaded_relationships: Wrapper):
 
