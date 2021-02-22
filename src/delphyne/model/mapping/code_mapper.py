@@ -127,7 +127,7 @@ class MappingDict:
 
         Parameters
         ----------
-        records : list of Record
+        records : list of Record objects
             A list of named tuples compliant with the Record format,
             e.g. as the result of a SQLAlchemy query.
 
@@ -163,7 +163,7 @@ class MappingDict:
                source_code: str,
                first_only: bool = False,
                target_concept_id_only: bool = False,
-               ) -> Union[List[str], List[CodeMapping], str, CodeMapping]:
+               ) -> Union[List[int], List[CodeMapping], int, CodeMapping]:
         """
         Retrieve mapping list for a given source code.
 
@@ -193,7 +193,7 @@ class MappingDict:
         -------
         mapping
             A single match or list of matches, either standard
-            concept_ids (string) or CodeMapping objects.
+            concept_ids (integer) or CodeMapping objects.
         """
         # full CodeMapping object
         mappings = self.mapping_dict.get(source_code, [])
@@ -202,8 +202,10 @@ class MappingDict:
             logger.warning('Trying to retrieve mappings from an empty dictionary!')
 
         if not mappings:
-            logger.debug(f'No mapping available for {source_code}')
+            logger.debug(f'No mapping available for {source_code}, mapping to concept_id == 0')
             mappings = [CodeMapping.create_mapping_for_no_match(source_code)]
+        elif len(mappings) == 1 and mappings[0].target_concept_id == 0:
+            logger.debug(f'Only mapping available for {source_code} is to concept_id == 0')
 
         if target_concept_id_only:
             mappings = [mapping.target_concept_id for mapping in mappings]
@@ -232,12 +234,14 @@ class CodeMapper:
             standard_concept: Optional[Union[str, List[str]]] = None
     ) -> MappingDict:
         """
-        Create a dictionary of mapping codes.
+        Create a dictionary of code mappings.
 
-        The mappings will be from non-standard concept_codes to standard
-        concept_ids for the specified OMOP vocabularies.
+        Mappings from non-standard concept_codes to standard
+        concept_ids will be generated from the vocabulary table
+        concept_relationship by extracting valid "Maps_to" type
+        relationships.
 
-        Accepts one or more non-standard OMOP vocabulary names (e.g.
+        Accepts one or more source OMOP vocabulary names (e.g.
         Read, ICD10); the lookup can be restricted to a specific list of
         source concept_codes within the specified vocabularies to save
         memory.
@@ -317,12 +321,14 @@ class CodeMapper:
                 target.vocabulary_id.label('target_vocabulary_id')) \
                 .outerjoin(self.cdm.ConceptRelationship,
                            and_(source.concept_id == self.cdm.ConceptRelationship.concept_id_1,
-                                self.cdm.ConceptRelationship.relationship_id == 'Maps to')) \
+                                self.cdm.ConceptRelationship.relationship_id == 'Maps to',
+                                self.cdm.ConceptRelationship.invalid_reason.is_(None))) \
                 .outerjoin(target,
                            and_(self.cdm.ConceptRelationship.concept_id_2 == target.concept_id,
                                 target.standard_concept == 'S',
                                 target.invalid_reason.is_(None))) \
                 .filter(and_(*source_filters)) \
+                .distinct() \
                 .all()
 
         mapping_dict = MappingDict.from_records(records)
@@ -330,9 +336,15 @@ class CodeMapper:
         if not mapping_dict.mapping_dict:
             logger.warning('No mapping found, mapping dictionary empty!')
         if restrict_to_codes:
-            not_found = set(restrict_to_codes) - set(mapping_dict.mapping_dict.keys())
+            not_found = set(restrict_to_codes) - mapping_dict.mapping_dict.keys()
+            found_without_mapping = {code for code in mapping_dict.mapping_dict.keys() if
+                                     mapping_dict.mapping_dict[code][0].target_concept_id == 0}
             if not_found:
-                logger.warning(f'No mapping to standard concept_id could be generated for '
-                               f'{len(not_found)}/{len(restrict_to_codes)} codes:'
-                               f' {not_found}')
+                logger.warning(f'{len(not_found)}/{len(restrict_to_codes)} codes were not found '
+                               f'in vocabularies (excluded from mapping dict): '
+                               f'{not_found}')
+            if found_without_mapping:
+                logger.warning(f'{len(found_without_mapping)}/{len(restrict_to_codes)} codes '
+                               f'have no mapping to valid standard concept_id (mapped to 0): '
+                               f'{found_without_mapping}')
         return mapping_dict
