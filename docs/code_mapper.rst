@@ -49,7 +49,7 @@ The :meth:`.MappingDict.lookup()` method allows to retrieve mapping information 
 
 .. code-block:: python
 
-   mapping = mapping_dict.lookup(source_code='R51')
+   mappings = mapping_dict.lookup(source_code='R51')
 
 The method retrieves by default a list of :class:`.CodeMapping` objects,
 capturing information about both the source and target terms.
@@ -57,6 +57,8 @@ The previous lookup for example will return a list composed of a single :class:`
 with the following attributes:
 
 .. code-block:: python
+
+   mapping = mappings[0]
 
    mapping.source_concept_code      # 'R51'
    mapping.source_concept_id        # 35211388
