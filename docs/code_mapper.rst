@@ -32,9 +32,10 @@ the attribute `code_mapper`. You can use it to create a mapping dictionary insid
 
 .. code-block:: python
 
-   mapping_dict = wrapper.code_mapper.generate_code_mapping_dictionary(
-               vocabulary_id='ICD10CM',
-               restrict_to_codes=['R51', 'T68', 'B36.0'])
+    mapping_dict = wrapper.code_mapper.generate_code_mapping_dictionary(
+        vocabulary_id='ICD10CM',
+        restrict_to_codes=['R51', 'T68', 'B36.0']
+    )
 
 If the same mapping dictionary is needed in several transformations, it might be more efficient to instantiate
 it as a wrapper attribute and reuse it, since the dictionary creation can take up considerable time.
