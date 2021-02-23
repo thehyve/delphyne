@@ -1,29 +1,32 @@
 import logging
-import pytest
-from src.delphyne import Wrapper
-from src.delphyne.model.mapping import CodeMapping, MappingDict
 
+import pytest
+
+from src.delphyne import Wrapper
+from src.delphyne.config.models import MainConfig
+from src.delphyne.model.mapping import CodeMapping, MappingDict
+from tests.python.cdm import cdm600
 from tests.python.conftest import docker_not_available
 from tests.python.model.mapping.load_concept_relationship import load_concept_relationship
-
 
 pytestmark = pytest.mark.skipif(condition=docker_not_available(),
                                 reason='Docker daemon is not running')
 
 
-@pytest.fixture(scope='function')
-def cdm600_wrapper_with_loaded_relationships(cdm600_wrapper_with_tables_created: Wrapper) \
-        -> Wrapper:
-    """cdm600 wrapper with tables created and populated with test
-    concept relationships."""
-    wrapper = cdm600_wrapper_with_tables_created
+@pytest.fixture(scope='module')
+def cdm600_wrapper_with_loaded_relationships(test_db_module,
+                                             module_scope_db_main_config: MainConfig
+                                             ) -> Wrapper:
+    wrapper = Wrapper(module_scope_db_main_config, cdm600)
+    wrapper.create_schemas()
+    wrapper.create_cdm()
     wrapper.db.constraint_manager.drop_all_constraints()
     load_concept_relationship(wrapper=wrapper)
     wrapper.db.constraint_manager.add_all_constraints()
     return wrapper
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='module')
 def mapping_dictionary(cdm600_wrapper_with_loaded_relationships: Wrapper):
 
     wrapper = cdm600_wrapper_with_loaded_relationships

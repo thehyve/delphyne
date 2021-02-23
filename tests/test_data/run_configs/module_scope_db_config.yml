@@ -1,0 +1,19 @@
+database:
+  host: 'localhost'
+  port: 7722
+  database_name: 'test_db_module'
+  username: 'postgres'
+  password: 'secret'
+
+schema_translate_map:
+  cdm_schema: 'cdm'
+  vocabulary_schema: 'vocab'
+
+run_options:
+  skip_vocabulary_loading: False
+  skip_custom_vocabulary_loading: True
+  skip_source_to_concept_map_loading: False
+  write_reports: False
+
+sql_parameters:
+#placeholder: 'value'
