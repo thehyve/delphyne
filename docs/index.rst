@@ -9,6 +9,7 @@ delphyne
    transformations
    standard_vocab
    custom_vocab
+   code_mapper
    reference
    changelog_link
 

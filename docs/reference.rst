@@ -63,6 +63,12 @@ CodeMapper
 .. autoclass:: src.delphyne.model.mapping.code_mapper.CodeMapper
    :members:
 
+.. autoclass:: src.delphyne.model.mapping.code_mapper.MappingDict
+   :members:
+
+.. autoclass:: src.delphyne.model.mapping.code_mapper.CodeMapping
+   :members:
+
 
 SourceData
 ----------
