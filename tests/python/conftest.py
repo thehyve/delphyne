@@ -113,40 +113,35 @@ def test_db_uri(default_main_config: MainConfig) -> str:
     return f'postgresql://{username}:{password}@{hostname}:{port}/{database}'
 
 
-@pytest.mark.usefixtures("container")
 @pytest.fixture(scope='function')
-def test_db(test_db_uri: str) -> None:
+def test_db(container, test_db_uri: str) -> None:
     engine = create_engine(test_db_uri)
     create_database(engine.url)
     yield
     drop_database(engine.url)
 
 
-@pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
-def wrapper_cdm531(default_main_config: MainConfig) -> Wrapper:
+def wrapper_cdm531(test_db, default_main_config: MainConfig) -> Wrapper:
     wrapper = Wrapper(default_main_config, cdm531)
     return wrapper
 
 
-@pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
-def wrapper_cdm600(default_main_config: MainConfig) -> Wrapper:
+def wrapper_cdm600(test_db, default_main_config: MainConfig) -> Wrapper:
     wrapper = Wrapper(default_main_config, cdm600)
     return wrapper
 
 
-@pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
-def cdm531_wrapper_with_tables_created(wrapper_cdm531: Wrapper) -> Wrapper:
+def cdm531_wrapper_with_tables_created(test_db, wrapper_cdm531: Wrapper) -> Wrapper:
     wrapper_cdm531.create_schemas()
     wrapper_cdm531.create_cdm()
     return wrapper_cdm531
 
 
-@pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
-def cdm600_wrapper_with_tables_created(wrapper_cdm600: Wrapper) -> Wrapper:
+def cdm600_wrapper_with_tables_created(test_db, wrapper_cdm600: Wrapper) -> Wrapper:
     wrapper_cdm600.create_schemas()
     wrapper_cdm600.create_cdm()
     return wrapper_cdm600
