@@ -1,33 +1,35 @@
-Code mapper
-===========
+Semantic mapping
+================
 
 .. contents::
     :local:
     :backlinks: none
 
-Mapping source codes to standard concept_ids
---------------------------------------------
+The section describes available Delphyne's methods to map source data to standard OMOP concept_ids.
 
-`delphyne`'s :class:`.CodeMapper` class enables the creation
-of mapping dictionaries from non-standard vocabulary term to valid standard `concept_id`.
+CodeMapper
+----------
+
+Delphyne's :class:`.CodeMapper` class enables the creation
+of mapping dictionaries from non-standard OMOP vocabulary terms to valid standard concept_ids.
 Mappings are built on information extracted from the CONCEPT and CONCEPT_RELATIONSHIP tables.
-For example, it is possible to automatically map ICD10CM ontology terms to their SNOMED standard `concept_id` equivalent.
-Once created, a mapping dictionary can be used in any transformation to quickly lookup target `concept_id` information
+For example, it is possible to automatically map ICD10CM ontology terms to their SNOMED standard concept_id equivalent.
+Once created, a mapping dictionary can be used in any transformation to quickly lookup target concept_id information
 for any source term.
 
-Note that creating a mapping dictionary is only possible for official OMOP vocabularies;
+Note that creating a mapping dictionary with this method is only possible for official OMOP vocabularies;
 if a source vocabulary is not available from `Athena <https://athena.ohdsi.org/vocabulary/list>`_,
 other mapping methods should be considered (e.g. loading the mappings directly from file).
 
 Creating a mapping dictionary
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Mapping dictionaries (in fact, :class:`.MappingDict` objects) can be created
-for one or multiple source vocabularies at once, identified by their OMOP `vocabulary_id`.
+for one or multiple source vocabularies at once, identified by their OMOP vocabulary_id.
 When possible, it is recommended to use the ``restrict_to_codes`` argument to load mappings
 only for the source codes that will be actually used in the transformations, thus limiting memory usage.
 
-`delphyne`'s Wrapper provides a ready-to-use :class:`.CodeMapper` instance under
+Delphyne's :class:`.Wrapper` class provides a ready-to-use :class:`.CodeMapper` instance under
 the attribute ``code_mapper``. You can use it to create a mapping dictionary inside a transformation script as follows:
 
 .. code-block:: python
@@ -43,7 +45,7 @@ the attribute ``code_mapper``. You can use it to create a mapping dictionary ins
    This is especially true for long ``restrict_to_codes`` lists, or when no ``restrict_to_codes`` argument is provided.
 
 Using a mapping dictionary
-----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :meth:`.MappingDict.lookup()` method allows to retrieve mapping information for a single source term at a time:
 
@@ -72,7 +74,7 @@ with the following attributes:
    mapping.target_vocabulary_id     # 'SNOMED'
 
 If a code is not found in the mapping dictionary, :meth:`~.MappingDict.lookup()` returns a list containing
-a single :class:`.CodeMapping` object with both `source_concept_id` and `target_concept_id` set to ``0``.
+a single :class:`.CodeMapping` object with both ``source_concept_id`` and ``target_concept_id`` set to 0.
 
-Use the option ``target_concept_id_only=True`` to return `target_concept_id` instead of full mapping objects.
+Use the option ``target_concept_id_only=True`` to retrieve a list of ``target_concept_id`` instead of full mapping objects.
 Use ``first_only=True`` to retrieve the first available match instead of a list of all matches.
