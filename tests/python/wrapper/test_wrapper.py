@@ -29,7 +29,6 @@ def test_db_exists():
     assert Database.can_connect(uri)
 
 
-@pytest.mark.usefixtures("test_db")
 def test_create_schemas(wrapper_cdm531: Wrapper):
     schemas = inspect(wrapper_cdm531.db.engine).get_schema_names()
     assert set(schemas) == {'information_schema', 'public'}
@@ -38,7 +37,6 @@ def test_create_schemas(wrapper_cdm531: Wrapper):
     assert set(schemas) == {'information_schema', 'public', 'cdm', 'vocab'}
 
 
-@pytest.mark.usefixtures("test_db")
 def test_create_tables_cdm531(wrapper_cdm531: Wrapper):
     wrapper_cdm531.create_schemas()
     wrapper_cdm531.create_cdm()
@@ -57,7 +55,6 @@ def test_create_tables_cdm531(wrapper_cdm531: Wrapper):
         'dose_era'}
 
 
-@pytest.mark.usefixtures("test_db")
 def test_create_tables_cdm600(wrapper_cdm600: Wrapper):
     wrapper_cdm600.create_schemas()
     wrapper_cdm600.create_cdm()
