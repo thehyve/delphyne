@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 _SUPPORTED_DIALECTS = {
     'postgresql',
+    'mssql',
 }
 
 _STANDARD_VOCAB_TABLE_NAMES: List[str] = [
@@ -104,7 +105,12 @@ class StandardVocabLoader:
                                         f'"{table_name}" in folder {STANDARD_VOCAB_DIR}')
 
     def _insert_vocab_file(self, table: str, vocab_file: Path) -> None:
-        # postgresql-specific implementation
+        if self._dialect == 'postgresql':
+            self._insert_vocab_file_postgresql(table, vocab_file)
+        elif self._dialect == 'mssql':
+            self._insert_vocab_file_mssql(table, vocab_file)
+
+    def _insert_vocab_file_postgresql(self, table: str, vocab_file: Path) -> None:
         with open_transformation(name=f'load_{vocab_file.stem}') as transformation_metadata:
             connection = self._db.engine.raw_connection()
             try:
@@ -112,6 +118,35 @@ class StandardVocabLoader:
                 statement = f"COPY {table} FROM STDIN WITH DELIMITER E'\t' CSV HEADER QUOTE E'\b';"
                 with vocab_file.open('rb') as f:
                     cursor.copy_expert(sql=statement, file=f)
+                transformation_metadata.insertion_counts += Counter({table: cursor.rowcount})
+                cursor.close()
+                connection.commit()
+            finally:
+                connection.close()
+
+    def _insert_vocab_file_mssql(self, table: str, vocab_file: Path):
+        transformation_name = f'load_{vocab_file.stem}'
+        vocab_file = str(vocab_file.resolve())
+        error_file = vocab_file + '.bad'
+
+        statement = f"""
+        BULK INSERT {table}
+        FROM '{vocab_file}'
+        WITH (
+        KEEPIDENTITY,
+        FIRSTROW = 2,
+        FIELDTERMINATOR = '\t',
+        ROWTERMINATOR = '0x0a',
+        ERRORFILE = '{error_file}',
+        TABLOCK
+        );
+        """
+
+        with open_transformation(name=transformation_name) as transformation_metadata:
+            connection = self._db.engine.raw_connection()
+            try:
+                cursor = connection.cursor()
+                cursor.execute(statement)
                 transformation_metadata.insertion_counts += Counter({table: cursor.rowcount})
                 cursor.close()
                 connection.commit()

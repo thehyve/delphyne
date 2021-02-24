@@ -85,9 +85,6 @@ class OrmWrapper(ABC):
             else:
                 session.add_all(records_to_insert)
 
-            logger.info(f'{statement.__name__} completed with success status: '
-                        f'{transformation_metadata.query_success}')
-
     def execute_batch_transformation(self, batch_statement: Callable, bulk: bool = False, batch_size: int = 10000) -> None:
         """
         Execute an ETL transformation statement in batches.

@@ -4,7 +4,7 @@ import logging
 import re
 from collections import Counter
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict, Union, Optional
 
 from sqlalchemy import text
 from sqlalchemy.engine.result import ResultProxy
@@ -123,38 +123,51 @@ class RawSqlWrapper:
                                            query: str,
                                            transformation_metadata: EtlTransformation
                                            ) -> None:
-        status_message: str = result.context.cursor.statusmessage
-        target_table: str = self.parse_target_table_sqlquery(query)
+        query_type = self._parse_query_type(query)
+        target_table: str = self._parse_target_table_from_query(query)
         row_count: int = result.rowcount
 
-        if status_message.startswith('INSERT'):
+        if query_type == 'INSERT':
             transformation_metadata.insertion_counts = Counter({target_table: row_count})
-        elif status_message.startswith('UPDATE'):
+        elif query_type == 'UPDATE':
             transformation_metadata.update_counts = Counter({target_table: row_count})
-        elif status_message.startswith('DELETE'):
+        elif query_type == 'DELETE':
             transformation_metadata.deletion_counts = Counter({target_table: row_count})
 
     @staticmethod
-    def parse_target_table_sqlquery(query: str) -> str:
-        """
-        Find the target table of the provided query.
+    def _parse_query_type(query: str) -> Optional[str]:
+        # Find the query type of the provided query, indicating whether
+        # it was an insert, update or delete statement.
+        match = RawSqlWrapper._parse_raw_sql_query(query)
+        if match is None:
+            return None
 
-        Parameters
-        ----------
-        query : str
-            The SQL query to be parsed for a target table.
+        statement = match.group(1).upper()
+        if 'INTO' in statement or 'CREATE TABLE' in statement:
+            return 'INSERT'
+        elif 'DELETE' in statement:
+            return 'DELETE'
+        elif 'UPDATE' in statement:
+            return 'UPDATE'
+        else:
+            return None
 
-        Returns
-        -------
-        str
-            The target table as present in the query. If not found
-            return '?'.
-        """
-        match = re.search(r'^\s*((?:INSERT )?INTO|CREATE TABLE|DELETE\s+FROM|UPDATE)\s+(.+?)\s',
-                          query,
-                          re.IGNORECASE | re.MULTILINE
-                          )
+    @staticmethod
+    def _parse_target_table_from_query(query: str) -> str:
+        # Find the target table of the provided query.
+        # If not found return '?'.
+        match = RawSqlWrapper._parse_raw_sql_query(query)
         if match:
             return match.group(2).lower()
         else:
             return '?'
+
+    @staticmethod
+    def _parse_raw_sql_query(query: str) -> Optional[re.Match]:
+        # Regex search a raw sql query to find query_type and target
+        match = re.search(
+            r'^\s*((?:INSERT )?INTO|CREATE TABLE|DELETE\s+FROM|UPDATE)\s+(.+?)\s',
+            query,
+            re.IGNORECASE | re.MULTILINE
+        )
+        return match
