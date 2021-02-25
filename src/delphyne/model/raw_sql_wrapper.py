@@ -99,8 +99,9 @@ class RawSqlWrapper:
 
     def execute_sql_transformation(self, statement: Callable) -> None:
         """
-        Execute an ETL transformation via a python statement that
-        returns a SQLAlchemy query object.
+        Execute an ETL transformation via a python statement.
+
+        The statement must return a SQLAlchemy query object.
 
         Parameters
         ----------
@@ -113,7 +114,6 @@ class RawSqlWrapper:
         -------
         None
         """
-
         logger.info(f'Executing transformation: {statement.__name__}')
         with self.db.tracked_session_scope(name=statement.__name__, raise_on_error=False) \
                 as (session, transformation_metadata):

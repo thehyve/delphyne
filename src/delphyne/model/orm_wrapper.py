@@ -55,6 +55,8 @@ class OrmWrapper(ABC):
         """
         Execute an ETL transformation via a python statement.
 
+        The statement must return a list of ORM records.
+
         Parameters
         ----------
         statement : Callable
