@@ -8,11 +8,9 @@ from functools import lru_cache
 from inspect import signature
 from typing import Callable, List
 
-from sqlalchemy.engine.result import ResultProxy
 from sqlalchemy.orm.session import Session
 
 from .etl_stats import EtlTransformation
-from ..cdm.schema_placeholders import CDM_SCHEMA
 from ..database import Database, events
 
 logger = logging.getLogger(__name__)
@@ -87,7 +85,8 @@ class OrmWrapper(ABC):
             else:
                 session.add_all(records_to_insert)
 
-    def execute_batch_transformation(self, batch_statement: Callable, bulk: bool = False, batch_size: int = 10000) -> None:
+    def execute_batch_transformation(self, batch_statement: Callable, bulk: bool = False,
+                                     batch_size: int = 10000) -> None:
         """
         Execute an ETL transformation statement in batches.
 
@@ -146,34 +145,6 @@ class OrmWrapper(ABC):
         logger.info(f'{batch_statement.__name__} completed with status: '
                     f'{n_batches_success} success and {batch_count-n_batches_success} fails')
 
-    def execute_query_transformation(self, statement: Callable) -> None:
-        """
-        Execute an ETL transformation via a python statement that
-        returns a SQLAlchemy query object.
-
-        Parameters
-        ----------
-        statement : Callable
-            Python function which takes this wrapper as input and
-            returns a list of SQLAlchemy query object to be executed.
-            It will be called as a transformation.
-
-        Returns
-        -------
-        None
-        """
-
-        logger.info(f'Executing transformation: {statement.__name__}')
-        target_schema = self.db.schema_translate_map[CDM_SCHEMA]
-        with self.db.tracked_session_scope(name=statement.__name__, raise_on_error=False) \
-                as (session, transformation_metadata):
-            query = statement(self)
-            target_table = query.__dict__['table'].name
-            result = session.execute(query)
-            self._collect_transformation_statistics_sqlquery(result=result,
-                                                             target_table=f'{target_schema}.{target_table}',
-                                                             transformation_metadata=transformation_metadata)
-
     def _insert_records(self, records_to_insert: List, name: str, bulk: bool) -> bool:
         with self.db.tracked_session_scope(name=name, raise_on_error=False) \
                 as (session, transformation_metadata):
@@ -198,24 +169,6 @@ class OrmWrapper(ABC):
         transformation_metadata.deletion_counts = dc
         ic = Counter(events.get_record_targets(records_to_insert))
         transformation_metadata.insertion_counts = ic
-
-    @staticmethod
-    def _collect_transformation_statistics_sqlquery(result: ResultProxy,
-                                                    target_table: str,
-                                                    transformation_metadata: EtlTransformation
-                                                    ) -> None:
-
-        status_message: str = result.context.cursor.statusmessage
-        row_count: int = result.rowcount
-
-        logger.info(f'Saving {row_count} objects')
-
-        if status_message.startswith('INSERT'):
-            transformation_metadata.insertion_counts = Counter({target_table: row_count})
-        elif status_message.startswith('UPDATE'):
-            transformation_metadata.update_counts = Counter({target_table: row_count})
-        elif status_message.startswith('DELETE'):
-            transformation_metadata.deletion_counts = Counter({target_table: row_count})
 
     @lru_cache(maxsize=50000)
     def lookup_stcm(self, source_vocabulary_id: str, source_code: str) -> int:

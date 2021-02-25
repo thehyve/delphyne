@@ -4,7 +4,7 @@ import logging
 import re
 from collections import Counter
 from pathlib import Path
-from typing import Dict, Union, Optional
+from typing import Callable, Dict, Union, Optional
 
 from sqlalchemy import text
 from sqlalchemy.engine.result import ResultProxy
@@ -97,6 +97,31 @@ class RawSqlWrapper:
                     logger.error(msg)
                     transformation_metadata.query_success = False
 
+    def execute_sql_transformation(self, statement: Callable) -> None:
+        """
+        Execute an ETL transformation via a python statement that
+        returns a SQLAlchemy query object.
+
+        Parameters
+        ----------
+        statement : Callable
+            Python function which takes this wrapper as input and
+            returns a SQLAlchemy query object to be executed.
+            It will be called as a transformation.
+
+        Returns
+        -------
+        None
+        """
+
+        logger.info(f'Executing transformation: {statement.__name__}')
+        with self.db.tracked_session_scope(name=statement.__name__, raise_on_error=False) \
+                as (session, transformation_metadata):
+            query = statement(self)
+            result = session.execute(query)
+            status_message = result.context.cursor.statusmessage
+            self._collect_query_statistics(result, status_message, transformation_metadata)
+
     @staticmethod
     def apply_sql_parameters(parameterized_query: str, sql_parameters: Dict[str, str]) -> str:
         """
@@ -126,6 +151,8 @@ class RawSqlWrapper:
         query_type = self._parse_query_type(query)
         target_table: str = self._parse_target_table_from_query(query)
         row_count: int = result.rowcount
+
+        logger.info(f'Saving {row_count} objects')
 
         if query_type == 'INSERT':
             transformation_metadata.insertion_counts = Counter({target_table: row_count})
