@@ -30,13 +30,13 @@ class VocabManager:
         self._db = db
         self._cdm = cdm
 
-        skip_standard_vocabs = config.run_options.skip_vocabulary_loading
-        skip_custom_vocabs = config.run_options.skip_custom_vocabulary_loading
-        skip_stcm = config.run_options.skip_source_to_concept_map_loading
+        self._skip_standard_vocabs = config.run_options.skip_vocabulary_loading
+        self._skip_custom_vocabs = config.run_options.skip_custom_vocabulary_loading
+        self._skip_stcm = config.run_options.skip_source_to_concept_map_loading
 
-        self.standard_vocabularies = StandardVocabLoader(db, cdm, skip_standard_vocabs)
-        self.custom_vocabularies = CustomVocabLoader(db, cdm, skip_custom_vocabs)
-        self.stcm = StcmLoader(db, cdm, skip_stcm)
+        self.standard_vocabularies = StandardVocabLoader(db, cdm, self._skip_standard_vocabs)
+        self.custom_vocabularies = CustomVocabLoader(db, cdm, self._skip_custom_vocabs)
+        self.stcm = StcmLoader(db, cdm, self._skip_stcm)
 
     def load_custom_vocab_and_stcm_tables(self) -> None:
         """
@@ -52,10 +52,15 @@ class VocabManager:
         """
         stcm_table_name = self._cdm.SourceToConceptMap.__tablename__
         stcm_version_table_name = self._cdm.SourceToConceptMapVersion.__tablename__
-        self._drop_stcm_fks(stcm_table_name, stcm_version_table_name)
+
+        # Temporarily drop STCM tables FKs only when the custom
+        # vocabulary loading is not skipped (to avoid FK violations)
+        if not self._skip_custom_vocabs:
+            self._drop_stcm_fks(stcm_table_name, stcm_version_table_name)
         self.custom_vocabularies.load()
         self.stcm.load()
-        self._add_stcm_fks(stcm_table_name, stcm_version_table_name)
+        if not self._skip_custom_vocabs:
+            self._add_stcm_fks(stcm_table_name, stcm_version_table_name)
 
     def _drop_stcm_fks(self, stcm_table: str, stcm_version_table: str):
         self._db.constraint_manager.drop_table_constraints(table_name=stcm_table,
