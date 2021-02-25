@@ -82,8 +82,8 @@ class OrmWrapper(ABC):
             logger.info(f'Saving {len(records_to_insert)} objects')
             if bulk:
                 session.bulk_save_objects(records_to_insert)
-                self._collect_query_statistics_bulk_mode(session, records_to_insert,
-                                                         transformation_metadata)
+                self._collect_transformation_statistics_bulk_mode(session, records_to_insert,
+                                                                  transformation_metadata)
             else:
                 session.add_all(records_to_insert)
 
@@ -170,9 +170,9 @@ class OrmWrapper(ABC):
             query = statement(self)
             target_table = query.__dict__['table'].name
             result = session.execute(query)
-            self._collect_query_statistics(result=result,
-                                           target_table=f'{target_schema}.{target_table}',
-                                           transformation_metadata=transformation_metadata)
+            self._collect_transformation_statistics_sqlquery(result=result,
+                                                             target_table=f'{target_schema}.{target_table}',
+                                                             transformation_metadata=transformation_metadata)
 
     def _insert_records(self, records_to_insert: List, name: str, bulk: bool) -> bool:
         with self.db.tracked_session_scope(name=name, raise_on_error=False) \
@@ -180,17 +180,17 @@ class OrmWrapper(ABC):
             logger.info(f'{name} Saving {len(records_to_insert)} objects')
             if bulk:
                 session.bulk_save_objects(records_to_insert)
-                self._collect_query_statistics_bulk_mode(session, records_to_insert,
-                                                         transformation_metadata)
+                self._collect_transformation_statistics_bulk_mode(session, records_to_insert,
+                                                                  transformation_metadata)
             else:
                 session.add_all(records_to_insert)
         return transformation_metadata.query_success
 
     @staticmethod
-    def _collect_query_statistics_bulk_mode(session: Session,
-                                            records_to_insert: List,
-                                            transformation_metadata: EtlTransformation
-                                            ) -> None:
+    def _collect_transformation_statistics_bulk_mode(session: Session,
+                                                     records_to_insert: List,
+                                                     transformation_metadata: EtlTransformation
+                                                     ) -> None:
         # As SQLAlchemy's before_flush listener doesn't work in bulk
         # mode, only deleted and new objects in the record list are
         # counted
@@ -200,10 +200,10 @@ class OrmWrapper(ABC):
         transformation_metadata.insertion_counts = ic
 
     @staticmethod
-    def _collect_query_statistics(result: ResultProxy,
-                                  target_table: str,
-                                  transformation_metadata: EtlTransformation
-                                  ) -> None:
+    def _collect_transformation_statistics_sqlquery(result: ResultProxy,
+                                                    target_table: str,
+                                                    transformation_metadata: EtlTransformation
+                                                    ) -> None:
 
         status_message: str = result.context.cursor.statusmessage
         row_count: int = result.rowcount

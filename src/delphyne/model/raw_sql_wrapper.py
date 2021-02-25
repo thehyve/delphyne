@@ -90,7 +90,7 @@ class RawSqlWrapper:
                 try:
                     statement = text(query).execution_options(autocommit=True)
                     result = con.execute(statement)
-                    self._collect_transformation_statistics(result, query, transformation_metadata)
+                    self._collect_query_statistics(result, query, transformation_metadata)
                 except Exception as msg:
                     logger.error(f'Query failed: {query_name}')
                     logger.error(query)
@@ -118,11 +118,11 @@ class RawSqlWrapper:
         replacement_dict = {'@' + key: value for key, value in sql_parameters.items()}
         return replace_substrings(parameterized_query, replacement_dict)
 
-    def _collect_transformation_statistics(self,
-                                           result: ResultProxy,
-                                           query: str,
-                                           transformation_metadata: EtlTransformation
-                                           ) -> None:
+    def _collect_query_statistics(self,
+                                  result: ResultProxy,
+                                  query: str,
+                                  transformation_metadata: EtlTransformation
+                                  ) -> None:
         query_type = self._parse_query_type(query)
         target_table: str = self._parse_target_table_from_query(query)
         row_count: int = result.rowcount
