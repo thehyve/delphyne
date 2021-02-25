@@ -44,7 +44,6 @@ def get_all_db_table_object_names(metadata: MetaData) -> Set[str]:
     return all_db_objects
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_drop_and_add_single_index(cdm531_wrapper_with_tables_created: Wrapper):
     person_id_index = 'ix_measurement_person_id'
     full_table_name = 'cdm.measurement'
@@ -67,7 +66,6 @@ def test_drop_and_add_single_index(cdm531_wrapper_with_tables_created: Wrapper):
     assert get_index_names(meas_table.indexes) == expected_full
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_drop_and_add_pk(cdm600_wrapper_with_tables_created: Wrapper):
     survey_conduct_pk = 'pk_survey_conduct'
     full_table_name = 'cdm.survey_conduct'
@@ -86,7 +84,6 @@ def test_drop_and_add_pk(cdm600_wrapper_with_tables_created: Wrapper):
     assert sc_table.primary_key.name == 'pk_survey_conduct'
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_exceptions(cdm600_wrapper_with_tables_created: Wrapper):
     wrapper = cdm600_wrapper_with_tables_created
 
@@ -125,7 +122,6 @@ def test_exceptions(cdm600_wrapper_with_tables_created: Wrapper):
     wrapper.db.constraint_manager.add_table_constraints('observation', errors='ignore')
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_diff_index_name_is_recognized(cdm600_wrapper_with_tables_created: Wrapper, caplog):
     wrapper = cdm600_wrapper_with_tables_created
     full_table_name = 'cdm.specimen'
@@ -149,7 +145,6 @@ def test_diff_index_name_is_recognized(cdm600_wrapper_with_tables_created: Wrapp
     assert 'equivalent already exists with name "indexus_anderus"' in caplog.text
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_drop_and_add_table_constraints(cdm600_wrapper_with_tables_created: Wrapper):
     full_table_name = 'cdm.specimen'
     wrapper = cdm600_wrapper_with_tables_created
@@ -172,7 +167,6 @@ def test_drop_and_add_table_constraints(cdm600_wrapper_with_tables_created: Wrap
     assert all_names == expected_sets.all_specimen_objects
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_drop_and_add_cdm_constraints(cdm600_wrapper_with_tables_created: Wrapper):
     wrapper = cdm600_wrapper_with_tables_created
 
@@ -192,7 +186,6 @@ def test_drop_and_add_cdm_constraints(cdm600_wrapper_with_tables_created: Wrappe
     assert all_db_objects == expected_sets.db_table_objects_full
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_drop_and_add_all_constraints(cdm600_wrapper_with_tables_created: Wrapper):
     wrapper = cdm600_wrapper_with_tables_created
 

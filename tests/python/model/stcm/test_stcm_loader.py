@@ -32,7 +32,6 @@ def base_stcm_dir(test_data_dir: Path) -> Path:
     return test_data_dir / 'stcm'
 
 
-@pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
 def cdm600_wrapper_no_constraints(cdm600_wrapper_with_tables_created: Wrapper) -> Wrapper:
     """cdm600 wrapper with tables created, but without constraints."""
@@ -51,7 +50,6 @@ def mock_stcm_paths(base_dir: Path, stcm_dir_name: str):
         yield
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_stcm_exceptions(cdm600_wrapper_no_constraints: Wrapper, base_stcm_dir: Path, caplog):
     wrapper = cdm600_wrapper_no_constraints
 
@@ -82,7 +80,6 @@ def test_stcm_exceptions(cdm600_wrapper_no_constraints: Wrapper, base_stcm_dir: 
         assert 'Table vocab.source_to_concept_map_version does not exist' in caplog.text
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_load_stcm(cdm600_wrapper_no_constraints: Wrapper, base_stcm_dir: Path, caplog):
     wrapper = cdm600_wrapper_no_constraints
     load_minimal_vocabulary(wrapper=wrapper)
@@ -109,7 +106,6 @@ def test_load_stcm(cdm600_wrapper_no_constraints: Wrapper, base_stcm_dir: Path, 
     assert "No new STCM versions provided" in caplog.text
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_stcm_delete(cdm600_wrapper_no_constraints: Wrapper, base_stcm_dir: Path):
     wrapper = cdm600_wrapper_no_constraints
 

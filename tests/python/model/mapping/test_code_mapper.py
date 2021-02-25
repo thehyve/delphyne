@@ -1,30 +1,32 @@
 import logging
-import pytest
-from src.delphyne import Wrapper
-from src.delphyne.model.mapping import CodeMapping, MappingDict
 
+import pytest
+
+from src.delphyne import Wrapper
+from src.delphyne.config.models import MainConfig
+from src.delphyne.model.mapping import CodeMapping, MappingDict
+from tests.python.cdm import cdm600
 from tests.python.conftest import docker_not_available
 from tests.python.model.mapping.load_concept_relationship import load_concept_relationship
-
 
 pytestmark = pytest.mark.skipif(condition=docker_not_available(),
                                 reason='Docker daemon is not running')
 
 
-@pytest.mark.usefixtures("test_db")
-@pytest.fixture(scope='function')
-def cdm600_wrapper_with_loaded_relationships(cdm600_wrapper_with_tables_created: Wrapper) \
-        -> Wrapper:
-    """cdm600 wrapper with tables created and populated with test
-    concept relationships."""
-    wrapper = cdm600_wrapper_with_tables_created
+@pytest.fixture(scope='module')
+def cdm600_wrapper_with_loaded_relationships(test_db_module,
+                                             module_scope_db_main_config: MainConfig
+                                             ) -> Wrapper:
+    wrapper = Wrapper(module_scope_db_main_config, cdm600)
+    wrapper.create_schemas()
+    wrapper.create_cdm()
     wrapper.db.constraint_manager.drop_all_constraints()
     load_concept_relationship(wrapper=wrapper)
     wrapper.db.constraint_manager.add_all_constraints()
     return wrapper
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='module')
 def mapping_dictionary(cdm600_wrapper_with_loaded_relationships: Wrapper):
 
     wrapper = cdm600_wrapper_with_loaded_relationships
@@ -62,7 +64,6 @@ def test_codemapping_instantiation():
     assert not_found_instance.target_vocabulary_id is None
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_restrict_to_codes_option(cdm600_wrapper_with_loaded_relationships: Wrapper):
 
     wrapper = cdm600_wrapper_with_loaded_relationships
@@ -73,7 +74,6 @@ def test_restrict_to_codes_option(cdm600_wrapper_with_loaded_relationships: Wrap
     assert all(code in map_dict.mapping_dict.keys() for code in ['SOURCE_1', 'SOURCE_2'])
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_multiple_source_vocabularies(cdm600_wrapper_with_loaded_relationships: Wrapper):
 
     wrapper = cdm600_wrapper_with_loaded_relationships
@@ -83,7 +83,6 @@ def test_multiple_source_vocabularies(cdm600_wrapper_with_loaded_relationships: 
     assert all(code in map_dict.mapping_dict.keys() for code in ['SOURCE_1', 'TARGET_1'])
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_empty_dictionary_warnings(cdm600_wrapper_with_loaded_relationships: Wrapper, caplog):
 
     wrapper = cdm600_wrapper_with_loaded_relationships
@@ -99,7 +98,6 @@ def test_empty_dictionary_warnings(cdm600_wrapper_with_loaded_relationships: Wra
     assert "Trying to retrieve mappings from an empty dictionary!" in caplog.text
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_other_dictionary_warnings(cdm600_wrapper_with_loaded_relationships: Wrapper, caplog):
 
     wrapper = cdm600_wrapper_with_loaded_relationships
@@ -116,7 +114,6 @@ def test_other_dictionary_warnings(cdm600_wrapper_with_loaded_relationships: Wra
            " {'SOURCE_1'}" in caplog.text
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_unknown_source_code(mapping_dictionary: MappingDict, caplog):
 
     map_dict = mapping_dictionary
@@ -137,7 +134,6 @@ def test_unknown_source_code(mapping_dictionary: MappingDict, caplog):
     assert result_no_code_concept_only == [0]
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_code_with_no_match(mapping_dictionary: MappingDict, caplog):
 
     map_dict = mapping_dictionary
@@ -165,7 +161,6 @@ def test_code_with_no_match(mapping_dictionary: MappingDict, caplog):
     assert result_no_match_concept_only == [0]
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_code_with_one_match(mapping_dictionary: MappingDict):
 
     map_dict = mapping_dictionary
@@ -191,7 +186,6 @@ def test_code_with_one_match(mapping_dictionary: MappingDict):
     assert result_1_match_concept_only == [4]
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_code_with_multiple_matches(mapping_dictionary: MappingDict):
 
     map_dict = mapping_dictionary
@@ -230,7 +224,6 @@ def test_code_with_multiple_matches(mapping_dictionary: MappingDict):
     assert result_multi_match_concept_only == [4, 5]
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_code_with_multiple_matches_only_first(mapping_dictionary: MappingDict, caplog):
 
     map_dict = mapping_dictionary
@@ -258,7 +251,6 @@ def test_code_with_multiple_matches_only_first(mapping_dictionary: MappingDict, 
     assert result_multi_match_concept_only == 4
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_code_mapping_to_invalid_standard_concepts(mapping_dictionary: MappingDict):
 
     map_dict = mapping_dictionary
@@ -282,7 +274,6 @@ def test_code_mapping_to_invalid_standard_concepts(mapping_dictionary: MappingDi
         assert getattr(result_no_match[0], attr) == value
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_code_mapping_to_non_standard_concept(mapping_dictionary: MappingDict):
 
     map_dict = mapping_dictionary
@@ -306,7 +297,6 @@ def test_code_mapping_to_non_standard_concept(mapping_dictionary: MappingDict):
         assert getattr(result_no_match[0], attr) == value
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_source_code_filters(cdm600_wrapper_with_loaded_relationships: Wrapper):
 
     wrapper = cdm600_wrapper_with_loaded_relationships
@@ -326,7 +316,6 @@ def test_source_code_filters(cdm600_wrapper_with_loaded_relationships: Wrapper):
     assert map_dict_invalid_only.mapping_dict.keys() == {'SOURCE_7'}
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_valid_code_with_invalid_relationships(mapping_dictionary: MappingDict):
 
     map_dict = mapping_dictionary
