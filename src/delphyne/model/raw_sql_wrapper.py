@@ -11,6 +11,7 @@ from sqlalchemy.engine.result import ResultProxy
 
 from .etl_stats import EtlTransformation, open_transformation
 from .._paths import SQL_TRANSFORMATIONS_DIR
+from ..cdm.schema_placeholders import CDM_SCHEMA
 from ..config.models import MainConfig
 from ..database.database import Database
 from ..util.helper import replace_substrings
@@ -119,8 +120,9 @@ class RawSqlWrapper:
                 as (session, transformation_metadata):
             query = statement(self)
             result = session.execute(query)
-            status_message = result.context.cursor.statusmessage
-            self._collect_query_statistics(result, status_message, transformation_metadata)
+            query_string = str(query).replace(CDM_SCHEMA,
+                                              self.db.schema_translate_map[CDM_SCHEMA])
+            self._collect_query_statistics(result, query_string, transformation_metadata)
 
     @staticmethod
     def apply_sql_parameters(parameterized_query: str, sql_parameters: Dict[str, str]) -> str:
