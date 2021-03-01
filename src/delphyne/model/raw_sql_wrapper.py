@@ -6,7 +6,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Callable, Dict, Union, Optional
 
-from sqlalchemy import text
+from sqlalchemy import text, Table
 from sqlalchemy.engine.result import ResultProxy
 
 from .etl_stats import EtlTransformation, open_transformation
@@ -123,6 +123,27 @@ class RawSqlWrapper:
             query_string = str(query).replace(CDM_SCHEMA,
                                               self.db.schema_translate_map[CDM_SCHEMA])
             self._collect_query_statistics(result, query_string, transformation_metadata)
+
+    def get_cdm_table(self, table_name: str) -> Table:
+        """
+        Get a SQLAlchemy Table object from the cdm schema.
+
+        Parameters
+        ----------
+        table_name : str
+            Name of the table to retrieve. An error message will be
+            displayed if the table can't be found.
+
+        Returns
+        -------
+        Table
+        """
+        cdm_schema = self.db.schema_translate_map[CDM_SCHEMA]
+        full_table_name = f'{CDM_SCHEMA}.{table_name}'
+        target_table = self.db.base.metadata.tables.get(full_table_name, None)
+        if target_table is None:
+            logger.error(f'Table with name {table_name} not found in {cdm_schema} schema')
+        return target_table
 
     @staticmethod
     def apply_sql_parameters(parameterized_query: str, sql_parameters: Dict[str, str]) -> str:
