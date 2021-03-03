@@ -174,7 +174,7 @@ class RawSqlWrapper:
         target_table: str = self._parse_target_table_from_query(query)
         row_count: int = result.rowcount
 
-        logger.info(f'Saving {row_count} objects')
+        logger.info(f'Saved {row_count} objects')
 
         if query_type == 'INSERT':
             transformation_metadata.insertion_counts = Counter({target_table: row_count})
