@@ -138,7 +138,9 @@ class RawSqlWrapper:
         Parameters
         ----------
         schema: str
-            Name of the schema to retrieve the table from.
+            Name of the schema to retrieve the table from. This may
+            also be a schema placeholder, in which case it will be
+            translated to the runtime schema name.
         table_name : str
             Name of the table to retrieve. An error message will be
             displayed if the table cannot be found.
