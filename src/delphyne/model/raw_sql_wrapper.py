@@ -120,8 +120,7 @@ class RawSqlWrapper:
                 as (session, transformation_metadata):
             query = statement(self)
             result = session.execute(query)
-            query_string = str(query).replace(CDM_SCHEMA,
-                                              self.db.schema_translate_map[CDM_SCHEMA])
+            query_string = result.context.statement
             self._collect_query_statistics(result, query_string, transformation_metadata)
 
     def get_cdm_table(self, table_name: str) -> Table:
