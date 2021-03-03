@@ -147,7 +147,6 @@ class RawSqlWrapper:
         -------
         Table
         """
-
         m = MetaData(bind=self.db.engine)
         schema = self.db.schema_translate_map.get(schema, schema)
         try:
