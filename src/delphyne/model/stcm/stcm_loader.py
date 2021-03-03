@@ -173,9 +173,11 @@ class StcmLoader:
     def _delete_outdated_stcm_records(self) -> None:
         # Delete STCM records whose source_vocabulary_ids have been
         # removed from stcm version or updated to a new version
-        stcm_vocabs_to_delete = \
-            self._stcm_vocabs_to_update | \
-            (self._loaded_stcm_versions.keys() - self._provided_stcm_versions.keys())
+        # (excluding completely new vocabulary_ids)
+        obsolete_vocabs = self._loaded_stcm_versions.keys() - self._provided_stcm_versions.keys()
+        updated_vocabs = self._stcm_vocabs_to_update & self._loaded_stcm_versions.keys()
+
+        stcm_vocabs_to_delete = obsolete_vocabs | updated_vocabs
 
         if not stcm_vocabs_to_delete:
             return
