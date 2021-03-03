@@ -101,7 +101,9 @@ class RawSqlWrapper:
         """
         Execute an ETL transformation via a python statement.
 
-        The statement must return a SQLAlchemy query object.
+        Recommended for table to table transformations, i.e. when the
+        source data is read from an existing database table instead of
+        file. The statement must return a SQLAlchemy query object.
 
         Parameters
         ----------
@@ -126,11 +128,11 @@ class RawSqlWrapper:
         """
         Get a SQLAlchemy Table object from an existing database schema.
 
-        The table object is obtained through metadata reflection; this
-        is useful to retrieve tables that are not defined in the ORM
-        model (e.g. table is in a custom source schema). For tables
-        that already have an ORM definition, this method is equivalent
-        to using <TableName>.__table__.
+        The table object is obtained through metadata reflection; useful
+        when retrieving tables that are not defined in the ORM model
+        (e.g. table is in a custom source schema). For tables that
+        already have an ORM definition, this method is equivalent to
+        using <TableName>.__table__.
 
         Parameters
         ----------
