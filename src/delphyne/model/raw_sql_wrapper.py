@@ -8,6 +8,7 @@ from typing import Callable, Dict, Union, Optional
 
 from sqlalchemy import text, Table, MetaData
 from sqlalchemy.engine.result import ResultProxy
+from sqlalchemy.exc import InvalidRequestError
 
 from .etl_stats import EtlTransformation, open_transformation
 from .._paths import SQL_TRANSFORMATIONS_DIR
@@ -124,7 +125,7 @@ class RawSqlWrapper:
             query_string = result.context.statement
             self._collect_query_statistics(result, query_string, transformation_metadata)
 
-    def get_table(self, schema: str, table_name: str) -> Table:
+    def get_table(self, schema: str, table_name: str) -> Optional[Table]:
         """
         Get a SQLAlchemy Table object from an existing database schema.
 
@@ -151,8 +152,9 @@ class RawSqlWrapper:
         schema = self.db.schema_translate_map.get(schema, schema)
         try:
             m.reflect(schema=schema, only=[table_name], resolve_fks=False)
-        except:
-            logger.error(f'Table with name {table_name} not found in {schema} schema')
+        except InvalidRequestError as e:
+            logger.error(f'Table with name "{table_name}" not found in "{schema}" schema')
+            raise e
         return m.tables[f'{schema}.{table_name}']
 
     @staticmethod
