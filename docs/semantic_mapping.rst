@@ -14,13 +14,13 @@ Delphyne's :class:`.CodeMapper` class enables the creation of mapping dictionari
 terms to valid standard concept_ids. Once created, a mapping dictionary can be used in any transformation to quickly
 lookup mappings for any source term.
 
-Mappings are built on information extracted from the CONCEPT and CONCEPT_RELATIONSHIP tables.
-For example, it is possible to automatically map ICD10CM ontology terms to their SNOMED standard concept_id equivalent;
-the only prerequisite is to have both vocabularies loaded to your database (including CONCEPT_RELATIONSHIP information).
+Mappings are built on information extracted from the CONCEPT and CONCEPT_RELATIONSHIP tables. For example, it is
+possible to automatically extract mappings from ICD10CM ontology terms to their equivalent standard concept_id
+(typically SNOMED).
 
 Note that creating a mapping dictionary with this method is only possible for **official OMOP vocabularies**;
 if a source vocabulary is not available from `Athena <https://athena.ohdsi.org/vocabulary/list>`_,
-other mapping methods should be considered.
+alternative methods should be considered.
 
 Creating a mapping dictionary
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
