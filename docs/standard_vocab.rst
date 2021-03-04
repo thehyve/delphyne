@@ -36,8 +36,8 @@ the standard vocabularies folder:
 Add to pipeline
 ---------------
 
-Make sure the `skip_vocabulary_loading` option in your config.yml is set to False.
-As part of your Wrapper's run method, the following line must be included.
+Make sure the ``skip_vocabulary_loading`` option in your config.yml is set to ``False``.
+As part of your Wrapper's run method, the following line must be included:
 
 .. code-block:: python
 
@@ -53,6 +53,6 @@ Limitations
 -----------
 
 As SQL Server's bulk insert method requires a local file path, it can only be used if you're running
-delphyne in the same environment as the database.
+Delphyne in the same environment as the database.
 To insert the vocabularies manually, you can find instructions in
 the `CommonDataModel repository <https://github.com/OHDSI/CommonDataModel>`_.
