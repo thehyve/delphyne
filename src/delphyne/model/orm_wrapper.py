@@ -55,6 +55,8 @@ class OrmWrapper(ABC):
         """
         Execute an ETL transformation via a python statement.
 
+        The statement must return a list of ORM records.
+
         Parameters
         ----------
         statement : Callable
@@ -80,15 +82,13 @@ class OrmWrapper(ABC):
             logger.info(f'Saving {len(records_to_insert)} objects')
             if bulk:
                 session.bulk_save_objects(records_to_insert)
-                self._collect_query_statistics_bulk_mode(session, records_to_insert,
-                                                         transformation_metadata)
+                self._collect_transformation_statistics_bulk_mode(session, records_to_insert,
+                                                                  transformation_metadata)
             else:
                 session.add_all(records_to_insert)
 
-            logger.info(f'{statement.__name__} completed with success status: '
-                        f'{transformation_metadata.query_success}')
-
-    def execute_batch_transformation(self, batch_statement: Callable, bulk: bool = False, batch_size: int = 10000) -> None:
+    def execute_batch_transformation(self, batch_statement: Callable, bulk: bool = False,
+                                     batch_size: int = 10000) -> None:
         """
         Execute an ETL transformation statement in batches.
 
@@ -153,17 +153,17 @@ class OrmWrapper(ABC):
             logger.info(f'{name} Saving {len(records_to_insert)} objects')
             if bulk:
                 session.bulk_save_objects(records_to_insert)
-                self._collect_query_statistics_bulk_mode(session, records_to_insert,
-                                                         transformation_metadata)
+                self._collect_transformation_statistics_bulk_mode(session, records_to_insert,
+                                                                  transformation_metadata)
             else:
                 session.add_all(records_to_insert)
         return transformation_metadata.query_success
 
     @staticmethod
-    def _collect_query_statistics_bulk_mode(session: Session,
-                                            records_to_insert: List,
-                                            transformation_metadata: EtlTransformation
-                                            ) -> None:
+    def _collect_transformation_statistics_bulk_mode(session: Session,
+                                                     records_to_insert: List,
+                                                     transformation_metadata: EtlTransformation
+                                                     ) -> None:
         # As SQLAlchemy's before_flush listener doesn't work in bulk
         # mode, only deleted and new objects in the record list are
         # counted

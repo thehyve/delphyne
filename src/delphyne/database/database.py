@@ -6,10 +6,11 @@ import logging
 from contextlib import contextmanager
 from getpass import getpass
 from types import MappingProxyType
-from typing import Dict, Set, FrozenSet, ContextManager, Tuple
+from typing import Dict, Set, FrozenSet, ContextManager, Tuple, Union
 
-from sqlalchemy import create_engine, MetaData
-from sqlalchemy.exc import OperationalError
+from sqlalchemy import create_engine, MetaData, inspect
+from sqlalchemy.engine.url import URL, make_url
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 from sqlalchemy_utils.functions import database_exists
@@ -20,6 +21,12 @@ from ..config.models import MainConfig
 from ..model.etl_stats import EtlTransformation, open_transformation
 
 logger = logging.getLogger(__name__)
+
+
+# Dialect specific engine settings
+_ENGINE_DIALECT_SETTINGS = {
+    'postgresql': {'executemany_mode': 'values'}
+}
 
 
 class Database:
@@ -47,9 +54,10 @@ class Database:
 
     schema_translate_map: MappingProxyType = None
 
-    def __init__(self, uri: str, schema_translate_map: Dict[str, str], base):
+    def __init__(self, uri: URL, schema_translate_map: Dict[str, str], base):
         Database.schema_translate_map = MappingProxyType(schema_translate_map)
-        self.engine = create_engine(uri, executemany_mode='values',
+        dialect_settings = _ENGINE_DIALECT_SETTINGS.get(uri.drivername, {})
+        self.engine = create_engine(uri, **dialect_settings,
                                     execution_options={
                                         "schema_translate_map": schema_translate_map
                                     })
@@ -57,6 +65,8 @@ class Database:
         self.constraint_manager = ConstraintManager(self)
         self._schemas = self._set_schemas()
         self._sessionmaker = sessionmaker(bind=self.engine, autoflush=False)
+        # Dict {'schema1': {'table1', 'table2'}}
+        self._model_tables = self._set_model_tables()
 
     @classmethod
     def from_config(cls, config: MainConfig, base) -> Database:
@@ -76,27 +86,30 @@ class Database:
         Database
         """
         db_config = config.database
-        hostname = db_config.host
-        port = db_config.port
-        database = db_config.database_name
-        username = db_config.username
         password = db_config.password.get_secret_value()
-        uri = f'postgresql://{username}:{password}@{hostname}:{port}/{database}'
-        if not password and Database._password_needed(uri):
-            password = getpass('Database password:')
-            uri = f'postgresql://{username}:{password}@{hostname}:{port}/{database}'
-        return cls(uri=uri, schema_translate_map=config.schema_translate_map, base=base)
+        url = URL(
+            drivername=db_config.drivername,
+            host=db_config.host,
+            port=db_config.port,
+            database=db_config.database_name,
+            username=db_config.username,
+            password=password,
+            query=db_config.query,
+        )
+        if not password and not Database._can_connect_without_password(url):
+            url.password = getpass('Database password:')
+        return cls(uri=url, schema_translate_map=config.schema_translate_map, base=base)
 
     @staticmethod
-    def _password_needed(uri: str) -> bool:
+    def _can_connect_without_password(uri: URL) -> bool:
+        logger.info('Attempting to connect without password')
         logger.disabled = True
         try:
             create_engine(uri).connect()
-        except OperationalError as e:
-            if 'no password supplied' in str(e):
-                return True
-        else:
+        except SQLAlchemyError:
             return False
+        else:
+            return True
         finally:
             logger.disabled = False
 
@@ -211,38 +224,48 @@ class Database:
             finally:
                 SessionTracker.remove_session(session_id)
                 session.close()
+                logger.info(f'{name} completed with success status: {metadata.query_success}')
 
     @staticmethod
-    def can_connect(uri: str) -> bool:
+    def can_connect(uri: Union[str, URL]) -> bool:
         """
         Check whether a connection can be established for the given URI.
 
         Parameters
         ----------
-        uri : str
-            URI including database name.
+        uri : str or SQLAlchemy URL
+            Database URI including database name.
 
         Returns
         -------
         bool
             Returns True if connection to database could be established.
         """
+        if isinstance(uri, str):
+            uri = make_url(uri)
         try:
             db_exists = database_exists(uri)
         except OperationalError as e:
             logger.error(e)
             return False
         if not db_exists:
-            db_name = uri.rsplit('/', 1)[-1]
+            db_name = uri.database
             logger.error(f'Could not connect. Database "{db_name}" does not exist')
         return db_exists
 
     @property
     def reflected_metadata(self) -> MetaData:
         """Metadata of the current state of tables in the database."""
+        inspector = inspect(self.engine)
         metadata = MetaData(bind=self.engine)
+        existing_schemas = inspector.get_schema_names()
         for schema in self.schemas:
-            metadata.reflect(schema=schema)
+            if schema not in existing_schemas:
+                continue
+            existing_tables = inspector.get_table_names(schema=schema)
+            model_tables = self._model_tables[schema]
+            reflect_tables = [t for t in model_tables if t in existing_tables]
+            metadata.reflect(schema=schema, only=reflect_tables, resolve_fks=False)
         return metadata
 
     def _set_schemas(self) -> FrozenSet[str]:
@@ -256,3 +279,11 @@ class Database:
             else:
                 schemas.add(raw_schema_value)
         return frozenset(schemas)
+
+    def _set_model_tables(self) -> Dict[str, Set[str]]:
+        # Create dictionary of schemas and their tables present in Base
+        model = {schema: set() for schema in self.schemas}
+        for table in self.base.metadata.tables.values():
+            schema = self.schema_translate_map[table.schema]
+            model[schema].add(table.name)
+        return model

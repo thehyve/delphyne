@@ -14,11 +14,12 @@ from __future__ import annotations
 import logging
 from copy import copy
 from functools import lru_cache, wraps
-from typing import TYPE_CHECKING, Union, Dict, Callable, List, Tuple
+from typing import TYPE_CHECKING, Union, Dict, Callable, List, Tuple, NamedTuple
 
 from itertools import chain
-from sqlalchemy import Index, Table, PrimaryKeyConstraint, Constraint, MetaData
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import Index, Table, PrimaryKeyConstraint, Constraint, MetaData, CheckConstraint
+from sqlalchemy.engine.reflection import Inspector
+from sqlalchemy.exc import NoSuchTableError, SQLAlchemyError
 from sqlalchemy.schema import DropConstraint, AddConstraint, DropIndex, CreateIndex
 
 from .conventions import VOCAB_TABLES
@@ -57,6 +58,64 @@ def _create_constraint_lookup(metadata: MetaData) -> Dict[str, ConstraintOrIndex
         for constraint in chain(table.constraints, table.indexes):
             lookup[constraint.name] = constraint
     return lookup
+
+
+class _ChkConstraint(NamedTuple):
+    chk_name: str
+    schema_name: str
+    table_name: str
+
+
+class _DbCheckConstraints:
+    # Helper class for getting active check constraint via raw SQL
+    # queries. Only used when SQLAlchemy does not support reflection of
+    # these for the dialect in use.
+    def __init__(self, database: Database):
+        self._db = database
+        self.chk_support = self._check_reflection_support()
+
+        self._dialect_method_lookup = {
+            'mssql': self._get_chk_constraints_mssql
+        }
+
+    @property
+    @lru_cache()
+    def all_chk_constraints(self) -> List[_ChkConstraint]:
+        dialect = self._db.engine.name
+        try:
+            return self._dialect_method_lookup[dialect]()
+        except KeyError:
+            raise NotImplementedError(f'Check constraint lookup not supported for {dialect}')
+
+    def _get_chk_constraints_mssql(self) -> List[_ChkConstraint]:
+        q = """
+        SELECT
+            chk.name chk_name,
+            SCHEMA_NAME(chk.schema_id) schema_name,
+            st.name table_name
+        FROM sys.check_constraints chk
+        INNER JOIN sys.columns col
+            ON chk.parent_object_id = col.object_id
+        INNER JOIN sys.tables st
+            ON chk.parent_object_id = st.object_id
+        WHERE
+            col.column_id = chk.parent_column_id
+        """
+        with self._db.engine.connect() as conn:
+            result = conn.execute(q).fetchall()
+            return [row for row in result if row.schema_name in self._db.schemas]
+
+    def _check_reflection_support(self) -> bool:
+        # Check if SQLAlchemy supports check constraint reflection for
+        # the given DBMS
+        inspector = Inspector.from_engine(self._db.engine)
+        try:
+            inspector.get_check_constraints('foo')
+        except NotImplementedError:
+            return False
+        except NoSuchTableError:
+            return True
+        return True
 
 
 class _TargetModel:
@@ -116,16 +175,34 @@ class ConstraintManager:
     def __init__(self, database: Database):
         self._db = database
         self._model = _TargetModel(metadata=database.base.metadata)
+        self._chk_constraints = _DbCheckConstraints(database=database)
+
+    @property
+    def _reflected_metadata(self) -> MetaData:
+        # return the regular reflected metadata from Database, but
+        # inject dummy check constraints if SQLAlchemy doesn't support
+        # check constraint reflection for the DBMS
+        meta = self._db.reflected_metadata
+        if self._chk_constraints.chk_support:
+            return meta
+        for chk_constraint in self._chk_constraints.all_chk_constraints:
+            table_name = f'{chk_constraint.schema_name}.{chk_constraint.table_name}'
+            if table_name not in meta.tables:
+                continue
+            table: Table = meta.tables.get(table_name)
+            dummy_constraint = CheckConstraint('', name=chk_constraint.chk_name, table=table)
+            table.constraints.add(dummy_constraint)
+        return meta
 
     @property
     @lru_cache()
     def _reflected_constraint_lookup(self) -> Dict[str, ConstraintOrIndex]:
-        return _create_constraint_lookup(self._db.reflected_metadata)
+        return _create_constraint_lookup(self._reflected_metadata)
 
     @property
     @lru_cache()
     def _reflected_table_lookup(self) -> Dict[str, Table]:
-        return {t.name: t for t in self._db.reflected_metadata.tables.values()}
+        return {t.name: t for t in self._reflected_metadata.tables.values()}
 
     @staticmethod
     def invalidate_current_db_cache() -> None:
@@ -139,6 +216,7 @@ class ConstraintManager:
         logger.debug('Invalidating database tables cache')
         ConstraintManager._reflected_table_lookup.fget.cache_clear()
         ConstraintManager._reflected_constraint_lookup.fget.cache_clear()
+        _DbCheckConstraints.all_chk_constraints.fget.cache_clear()
 
     def drop_all_constraints(self,
                              drop_constraint: bool = True,
@@ -175,7 +253,7 @@ class ConstraintManager:
         """
         logger.info('Dropping all constraints')
 
-        tables = [table for table in self._db.reflected_metadata.tables.values()
+        tables = [table for table in self._reflected_metadata.tables.values()
                   if self._model.is_model_table(table.name)]
 
         constraints, pks, indexes = self._get_table_objects(tables, drop_constraint,
@@ -270,7 +348,7 @@ class ConstraintManager:
         """
         logger.info('Dropping CDM constraints')
 
-        tables = [table for table in self._db.reflected_metadata.tables.values()
+        tables = [table for table in self._reflected_metadata.tables.values()
                   if self._model.is_model_table(table.name)
                   and table.name not in VOCAB_TABLES]
 
@@ -520,6 +598,10 @@ class ConstraintManager:
                               ) -> None:
         assert errors in _VALID_ERRORS_OPTIONS
         if self._constraint_already_active(constraint):
+            return
+        if constraint.table.name not in self._reflected_table_lookup:
+            logger.warning(f'Cannot add {constraint.name}, '
+                           f'table {constraint.table.name} does not exist')
             return
         with self._db.engine.connect() as conn:
             logger.info(f'Adding {constraint.name}')

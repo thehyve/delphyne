@@ -34,7 +34,7 @@ setup(
         "pydantic >= 1.7, <2",
         "SQLAlchemy >= 1.3, <1.4",
         "SQLAlchemy-Utils >= 0.36, <1",
-        "pandas >= 1.0, <2",
+        "pandas >= 1.0.5, <2",
         "PyYAML >= 5.3, <6",
     ],
     license="GNU General Public License v3",
