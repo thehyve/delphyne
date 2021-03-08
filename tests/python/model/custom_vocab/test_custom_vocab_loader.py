@@ -10,7 +10,8 @@ from src.delphyne.config.models import MainConfig
 
 from tests.python.cdm import cdm600
 from tests.python.conftest import docker_not_available
-from tests.python.model.custom_vocab.load_vocab_data import load_minimal_vocabulary
+from tests.python.model.custom_vocab.load_vocab_data import load_minimal_vocabulary, \
+    load_custom_vocab_records, load_custom_class_records
 
 pytestmark = pytest.mark.skipif(condition=docker_not_available(),
                                 reason='Docker daemon is not running')
@@ -30,7 +31,7 @@ def mock_custom_vocab_path(vocab_dir: Path, custom_vocab_dir_name: str):
         yield
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
 def cdm600_wrapper_with_minimal_contents(test_db_module,
                                          module_scope_db_main_config: MainConfig
                                          ) -> Wrapper:
@@ -131,3 +132,30 @@ def test_custom_concept_quality(cdm600_wrapper_with_minimal_contents: Wrapper,
         assert "concept 2000000001 is duplicated across one or multiple files" in caplog.text
         # concept duplicated between files
         assert "concept 2000000002 is duplicated across one or multiple files" in caplog.text
+
+
+def test_vocab_version_detection(cdm600_wrapper_with_minimal_contents: Wrapper,
+                                 base_custom_vocab_dir: Path,
+                                 caplog):
+
+    wrapper = cdm600_wrapper_with_minimal_contents
+    load_custom_vocab_records(wrapper, ['VOCAB1', 'VOCAB2', 'VOCAB3'])
+    load_custom_class_records(wrapper, ['CLASS1', 'CLASS2', 'CLASS3'])
+
+    with mock_custom_vocab_path(base_custom_vocab_dir, 'custom_vocab_test1'), \
+            caplog.at_level(logging.INFO):
+        wrapper.vocab_manager.custom_vocabularies.load()
+
+    # VOCAB1 removed, VOCAB2 unchanged, VOCAB3 updated, VOCAB4 new
+    assert 'Found obsolete vocabulary version: VOCAB1' in caplog.text
+    assert "Skipped records with vocabulary_id values that were already loaded under the" \
+           " current version: {'VOCAB2'}"
+    assert 'Found new vocabulary version: VOCAB3 : VOCAB3_v1 -> VOCAB3_v2' in caplog.text
+    assert 'Found new vocabulary version: VOCAB4 : None -> VOCAB4_v1' in caplog.text
+
+    # CLASS1 removed, CLASS2 unchanged, CLASS3 updated, CLASS4 new
+    assert 'Found obsolete concept_class version: CLASS1' in caplog.text
+    assert "Skipped records with concept_class_id values that were already loaded under the" \
+           " current name: {'CLASS2'}"
+    assert 'Found new concept_class version: CLASS3 : CLASS3_v1 -> CLASS3_v2' in caplog.text
+    assert 'Found new concept_class version: CLASS4 : None -> CLASS4_v1' in caplog.text

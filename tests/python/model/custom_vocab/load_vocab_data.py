@@ -1,6 +1,31 @@
+from typing import List
+
 from src.delphyne import Wrapper
 
 from tests.python.cdm import cdm600
+
+def load_custom_vocab_records(wrapper: Wrapper, vocab_ids: List[str]) -> None:
+
+    with wrapper.db.session_scope() as session:
+        for vocab_id in vocab_ids:
+            vocab = cdm600.Vocabulary()
+            vocab.vocabulary_id = vocab_id
+            vocab.vocabulary_name = vocab_id
+            vocab.vocabulary_reference = vocab_id
+            vocab.vocabulary_version =  vocab_id + '_v1'
+            vocab.vocabulary_concept_id = 0
+            session.add(vocab)
+
+
+def load_custom_class_records(wrapper: Wrapper, class_ids: List[str]) -> None:
+
+    with wrapper.db.session_scope() as session:
+        for class_id in class_ids:
+            concept_class = cdm600.ConceptClass()
+            concept_class.concept_class_id = class_id
+            concept_class.concept_class_name = class_id + '_v1'
+            concept_class.concept_class_concept_id = 0
+            session.add(concept_class)
 
 
 def load_minimal_vocabulary(wrapper: Wrapper) -> None:
@@ -11,6 +36,7 @@ def load_minimal_vocabulary(wrapper: Wrapper) -> None:
         vocab.vocabulary_id = 'ARTIFICIAL_VOCAB'
         vocab.vocabulary_name = 'Artificial vocab'
         vocab.vocabulary_reference = 'vocab ref'
+        vocab.vocabulary_version = 'v1'
         vocab.vocabulary_concept_id = 1
 
         conc_class = cdm600.ConceptClass()
