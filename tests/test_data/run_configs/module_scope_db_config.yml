@@ -11,7 +11,7 @@ schema_translate_map:
 
 run_options:
   skip_vocabulary_loading: False
-  skip_custom_vocabulary_loading: True
+  skip_custom_vocabulary_loading: False
   skip_source_to_concept_map_loading: False
   write_reports: False
 

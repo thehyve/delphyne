@@ -1,12 +1,14 @@
 import logging
+import pytest
 import re
 from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
 from src.delphyne import Wrapper
+from src.delphyne.config.models import MainConfig
 
+from tests.python.cdm import cdm600
 from tests.python.conftest import docker_not_available
 from tests.python.model.custom_vocab.load_vocab_data import load_minimal_vocabulary
 
@@ -14,7 +16,7 @@ pytestmark = pytest.mark.skipif(condition=docker_not_available(),
                                 reason='Docker daemon is not running')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def base_custom_vocab_dir(test_data_dir: Path) -> Path:
     return test_data_dir / 'custom_vocabs'
 
@@ -28,20 +30,21 @@ def mock_custom_vocab_path(vocab_dir: Path, custom_vocab_dir_name: str):
         yield
 
 
-@pytest.mark.usefixtures("test_db")
-@pytest.fixture(scope='function')
-def cdm600_wrapper_with_minimum_contents(cdm600_wrapper_with_tables_created: Wrapper) \
-        -> Wrapper:
-    """cdm600 wrapper with tables created and populated with minimum
+@pytest.fixture(scope='module')
+def cdm600_wrapper_with_minimal_contents(test_db_module,
+                                         module_scope_db_main_config: MainConfig
+                                         ) -> Wrapper:
+    """cdm600 wrapper with tables created and populated with minimal
     contents."""
-    wrapper = cdm600_wrapper_with_tables_created
+    wrapper = Wrapper(module_scope_db_main_config, cdm600)
+    wrapper.create_schemas()
+    wrapper.create_cdm()
     wrapper.db.constraint_manager.drop_all_constraints()
     load_minimal_vocabulary(wrapper=wrapper)
     wrapper.db.constraint_manager.add_all_constraints()
     return wrapper
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_custom_vocab_files_availability(cdm600_wrapper_with_tables_created: Wrapper,
                                          base_custom_vocab_dir: Path,
                                          caplog):
@@ -65,7 +68,6 @@ def test_custom_vocab_files_availability(cdm600_wrapper_with_tables_created: Wra
         assert "No concept_class.tsv file found" in caplog.text
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_custom_vocabulary_quality(cdm600_wrapper_with_tables_created: Wrapper,
                                    base_custom_vocab_dir: Path,
                                    caplog):
@@ -89,7 +91,6 @@ def test_custom_vocabulary_quality(cdm600_wrapper_with_tables_created: Wrapper,
         assert "vocabulary VOCAB2 is duplicated across one or multiple files" in caplog.text
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_custom_concept_class_quality(cdm600_wrapper_with_tables_created: Wrapper,
                                       base_custom_vocab_dir: Path,
                                       caplog):
@@ -112,12 +113,11 @@ def test_custom_concept_class_quality(cdm600_wrapper_with_tables_created: Wrappe
         assert "concept class CLASS2 is duplicated across one or multiple files" in caplog.text
 
 
-@pytest.mark.usefixtures("container", "test_db")
-def test_custom_concept_quality(cdm600_wrapper_with_minimum_contents: Wrapper,
+def test_custom_concept_quality(cdm600_wrapper_with_minimal_contents: Wrapper,
                                 base_custom_vocab_dir: Path,
                                 caplog):
 
-    wrapper = cdm600_wrapper_with_minimum_contents
+    wrapper = cdm600_wrapper_with_minimal_contents
 
     with mock_custom_vocab_path(base_custom_vocab_dir, 'bad_concept_content'):
         message = re.escape("Concept files ['bad_concept.tsv', 'duplicate_concept.tsv']"
@@ -129,5 +129,5 @@ def test_custom_concept_quality(cdm600_wrapper_with_minimum_contents: Wrapper,
                "2\'000\'000\'000 (2B+ convention)" in caplog.text
         # concept duplicated within file
         assert "concept 2000000001 is duplicated across one or multiple files" in caplog.text
-        # vocabulary duplicated between files
+        # concept duplicated between files
         assert "concept 2000000002 is duplicated across one or multiple files" in caplog.text
