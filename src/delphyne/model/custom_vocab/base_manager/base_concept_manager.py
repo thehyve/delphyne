@@ -80,7 +80,6 @@ class BaseConceptManager:
                 for row in rows:
                     concept_id = row['concept_id']
                     vocabulary_id = row['vocabulary_id']
-                    unique_concepts_check.add(concept_id)
 
                     # if file prefix is valid vocab_id,
                     # vocabulary_ids in file should match it.
@@ -101,6 +100,8 @@ class BaseConceptManager:
                                    f'files')
                         file_errors = True
                         continue
+
+                    unique_concepts_check.add(concept_id)
 
                     if vocabulary_id in vocab_ids:
                         session.add(self._cdm.Concept(
