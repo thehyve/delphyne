@@ -143,7 +143,7 @@ class BaseVocabManager:
             else:
                 # if vocabulary didn't exist before, old_version is None
                 logging.info(f'Found new vocabulary version: {new_id} : '
-                             f'{old_version} ->  {new_version}')
+                             f'{old_version} -> {new_version}')
 
         self._custom_vocabs_to_update = vocab_new.keys() - unchanged_vocabs
         if not self._custom_vocabs_to_update:
@@ -187,7 +187,7 @@ class BaseVocabManager:
         if not vocabs_to_create:
             return
 
-        ignored_vocabs = Counter()
+        ignored_vocabs = set()
         vocabs_lowercase = {vocab.lower() for vocab in self.vocabs_from_disk}
 
         for vocab_file in self._custom_vocab_files:
@@ -211,7 +211,7 @@ class BaseVocabManager:
                             vocabulary_concept_id=row['vocabulary_concept_id']
                         ))
                     else:
-                        ignored_vocabs.update([vocabulary_id])
+                        ignored_vocabs.add(vocabulary_id)
 
                     # if file prefix is valid vocab_id,
                     # vocabulary_ids in file should match it.
@@ -226,4 +226,4 @@ class BaseVocabManager:
         if ignored_vocabs:
             logger.info(f'Skipped records with vocabulary_id values that '
                         f'were already loaded under the current version: '
-                        f'{ignored_vocabs.most_common()}')
+                        f'{ignored_vocabs}')

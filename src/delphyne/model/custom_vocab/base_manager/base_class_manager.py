@@ -65,7 +65,7 @@ class BaseClassManager:
             else:
                 # if class didn't exist before, old_name is None
                 logging.info(f'Found new concept_class version: {new_id} : '
-                             f'{old_name} ->  {new_name}')
+                             f'{old_name} -> {new_name}')
                 if old_name is None:
                     classes_to_create.add(new_id)
                 else:
@@ -81,7 +81,7 @@ class BaseClassManager:
         self._custom_classes_unused = classes_old.keys() - classes_new.keys()
 
         for old_id in self._custom_classes_unused:
-            logging.info(f'Found obsolete class version: {old_id}')
+            logging.info(f'Found obsolete concept_class version: {old_id}')
 
         if not self._custom_classes_unused:
             logging.info('No obsolete version found in database')
@@ -181,7 +181,7 @@ class BaseClassManager:
         if not classes_to_create:
             return
 
-        ignored_classes = Counter()
+        ignored_classes = set()
 
         for class_file in self._custom_class_files:
             with self._db.tracked_session_scope(name=f'load_{class_file.stem}') as (session, _), \
@@ -198,12 +198,12 @@ class BaseClassManager:
                             concept_class_concept_id=row['concept_class_concept_id']
                         ))
                     elif class_id not in self._custom_classes_to_update:
-                        ignored_classes.update([class_id])
+                        ignored_classes.add(class_id)
 
         if ignored_classes:
             logger.info(f'Skipped records with concept_class_id values that '
                         f'were already loaded under the current name: '
-                        f'{ignored_classes.most_common()}')
+                        f'{ignored_classes}')
 
     def _update_custom_classes(self) -> None:
         # Update the name of existing custom concept_classes in the
