@@ -4,6 +4,7 @@ from src.delphyne import Wrapper
 
 from tests.python.cdm import cdm600
 
+
 def load_custom_vocab_records(wrapper: Wrapper, vocab_ids: List[str]) -> None:
 
     with wrapper.db.session_scope() as session:
@@ -12,7 +13,7 @@ def load_custom_vocab_records(wrapper: Wrapper, vocab_ids: List[str]) -> None:
             vocab.vocabulary_id = vocab_id
             vocab.vocabulary_name = vocab_id
             vocab.vocabulary_reference = vocab_id
-            vocab.vocabulary_version =  vocab_id + '_v1'
+            vocab.vocabulary_version = vocab_id + '_v1'
             vocab.vocabulary_concept_id = 0
             session.add(vocab)
 
