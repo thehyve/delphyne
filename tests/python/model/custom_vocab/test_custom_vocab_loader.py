@@ -32,25 +32,34 @@ def mock_custom_vocab_path(vocab_dir: Path, custom_vocab_dir_name: str):
 
 
 @pytest.fixture(scope='function')
-def cdm600_wrapper_with_minimal_contents(test_db_module,
-                                         module_scope_db_main_config: MainConfig
-                                         ) -> Wrapper:
-    """cdm600 wrapper with tables created and populated with minimal
-    contents."""
+def cdm600_wrapper_with_all_tables(test_db_module, module_scope_db_main_config: MainConfig
+                                   ) -> Wrapper:
+    """cdm600 wrapper with all tables created."""
     wrapper = Wrapper(module_scope_db_main_config, cdm600)
     wrapper.create_schemas()
     wrapper.create_cdm()
+    return wrapper
+
+
+@pytest.fixture(scope='function')
+def cdm600_with_minimal_vocabulary_tables(cdm600_wrapper_with_all_tables) -> Wrapper:
+    """cdm600 wrapper with minimal set of data in vocabulary tables."""
+    wrapper = cdm600_wrapper_with_all_tables
     wrapper.db.constraint_manager.drop_all_constraints()
+    with wrapper.db.session_scope() as session:
+        session.query(cdm600.Concept).delete()
+        session.query(cdm600.ConceptClass).delete()
+        session.query(cdm600.Vocabulary).delete()
+        session.query(cdm600.Domain).delete()
     load_minimal_vocabulary(wrapper=wrapper)
     wrapper.db.constraint_manager.add_all_constraints()
     return wrapper
 
 
-def test_custom_vocab_files_availability(cdm600_wrapper_with_tables_created: Wrapper,
-                                         base_custom_vocab_dir: Path,
-                                         caplog):
+def test_custom_vocab_files_availability(cdm600_wrapper_with_all_tables,
+                                         base_custom_vocab_dir: Path, caplog):
 
-    wrapper = cdm600_wrapper_with_tables_created
+    wrapper = cdm600_wrapper_with_all_tables
 
     with mock_custom_vocab_path(base_custom_vocab_dir, 'dir_not_found'):
         message = 'dir_not_found folder not found'
@@ -69,21 +78,24 @@ def test_custom_vocab_files_availability(cdm600_wrapper_with_tables_created: Wra
         assert "No concept_class.tsv file found" in caplog.text
 
 
-def test_custom_vocabulary_quality(cdm600_wrapper_with_tables_created: Wrapper,
-                                   base_custom_vocab_dir: Path,
-                                   caplog):
+def test_custom_vocabulary_quality(cdm600_wrapper_with_all_tables,
+                                   base_custom_vocab_dir: Path, caplog):
 
-    wrapper = cdm600_wrapper_with_tables_created
+    wrapper = cdm600_wrapper_with_all_tables
 
     with mock_custom_vocab_path(base_custom_vocab_dir, 'bad_vocab_content'):
-        message = re.escape("Vocabulary files ['bad_vocabulary.tsv', 'duplicate_vocabulary.tsv']"
+        message = re.escape("Vocabulary files"
+                            " ['bad_vocabulary.tsv', 'duplicate_vocabulary.tsv']"
                             " contain invalid values")
         with pytest.raises(ValueError, match=message):
             wrapper.vocab_manager.custom_vocabularies.load()
 
-        assert "bad_vocabulary.tsv may not contain an empty vocabulary_id" in caplog.text
-        assert "bad_vocabulary.tsv may not contain an empty vocabulary_version" in caplog.text
-        assert "bad_vocabulary.tsv may not contain an empty vocabulary_reference" in caplog.text
+        assert "bad_vocabulary.tsv may not contain an empty vocabulary_id" \
+               in caplog.text
+        assert "bad_vocabulary.tsv may not contain an empty vocabulary_version" \
+               in caplog.text
+        assert "bad_vocabulary.tsv may not contain an empty vocabulary_reference" \
+               in caplog.text
         assert "bad_vocabulary.tsv may not contain vocabulary_concept_id other than 0" \
                in caplog.text
         # vocabulary duplicated within file
@@ -92,11 +104,10 @@ def test_custom_vocabulary_quality(cdm600_wrapper_with_tables_created: Wrapper,
         assert "vocabulary VOCAB2 is duplicated across one or multiple files" in caplog.text
 
 
-def test_custom_concept_class_quality(cdm600_wrapper_with_tables_created: Wrapper,
-                                      base_custom_vocab_dir: Path,
-                                      caplog):
+def test_custom_concept_class_quality(cdm600_wrapper_with_all_tables,
+                                      base_custom_vocab_dir: Path, caplog):
 
-    wrapper = cdm600_wrapper_with_tables_created
+    wrapper = cdm600_wrapper_with_all_tables
 
     with mock_custom_vocab_path(base_custom_vocab_dir, 'bad_class_content'):
         message = re.escape("Concept class files ['bad_concept_class.tsv', "
@@ -104,21 +115,25 @@ def test_custom_concept_class_quality(cdm600_wrapper_with_tables_created: Wrappe
         with pytest.raises(ValueError, match=message):
             wrapper.vocab_manager.custom_vocabularies.load()
 
-        assert "bad_concept_class.tsv may not contain an empty concept_class_id" in caplog.text
-        assert "bad_concept_class.tsv may not contain an empty concept_class_name" in caplog.text
-        assert "bad_concept_class.tsv may not containt concept_class_concept_id other than 0" \
+        assert "bad_concept_class.tsv may not contain an empty concept_class_id" \
+               in caplog.text
+        assert "bad_concept_class.tsv may not contain an empty concept_class_name" \
+               in caplog.text
+        assert "bad_concept_class.tsv may not containt concept_class_concept_id other than " \
+               "0" \
                in caplog.text
         # class duplicated within file
-        assert "concept class CLASS1 is duplicated across one or multiple files" in caplog.text
+        assert "concept class CLASS1 is duplicated across one or multiple files" \
+               in caplog.text
         # class duplicated between files
-        assert "concept class CLASS2 is duplicated across one or multiple files" in caplog.text
+        assert "concept class CLASS2 is duplicated across one or multiple files" \
+               in caplog.text
 
 
-def test_custom_concept_quality(cdm600_wrapper_with_minimal_contents: Wrapper,
-                                base_custom_vocab_dir: Path,
-                                caplog):
+def test_custom_concept_quality(cdm600_with_minimal_vocabulary_tables,
+                                base_custom_vocab_dir: Path, caplog):
 
-    wrapper = cdm600_wrapper_with_minimal_contents
+    wrapper = cdm600_with_minimal_vocabulary_tables
 
     with mock_custom_vocab_path(base_custom_vocab_dir, 'bad_concept_content'):
         message = re.escape("Concept files ['bad_concept.tsv', 'duplicate_concept.tsv']"
@@ -134,11 +149,11 @@ def test_custom_concept_quality(cdm600_wrapper_with_minimal_contents: Wrapper,
         assert "concept 2000000002 is duplicated across one or multiple files" in caplog.text
 
 
-def test_vocab_version_detection(cdm600_wrapper_with_minimal_contents: Wrapper,
-                                 base_custom_vocab_dir: Path,
-                                 caplog):
+def test_vocab_version_detection(cdm600_with_minimal_vocabulary_tables,
+                                 base_custom_vocab_dir: Path, caplog):
 
-    wrapper = cdm600_wrapper_with_minimal_contents
+    wrapper = cdm600_with_minimal_vocabulary_tables
+
     load_custom_vocab_records(wrapper, ['VOCAB1', 'VOCAB2', 'VOCAB3'])
     load_custom_class_records(wrapper, ['CLASS1', 'CLASS2', 'CLASS3'])
 
