@@ -2,7 +2,6 @@
 
 import csv
 import logging
-from collections import Counter
 from pathlib import Path
 from typing import List, Dict
 
@@ -217,7 +216,7 @@ class BaseClassManager:
         if not classes_to_update:
             return
 
-        ignored_classes = Counter()
+        ignored_classes = set()
 
         for class_file in self._custom_class_files:
             with self._db.tracked_session_scope(name=f'load_{class_file.stem}') as (session, _), \
@@ -238,9 +237,9 @@ class BaseClassManager:
                     # _load_custom_classes transformation, unless
                     # there were no classes new class_ids to add
                     elif not self._custom_classes_to_create:
-                        ignored_classes.update([class_id])
+                        ignored_classes.add(class_id)
 
         if ignored_classes:
             logger.info(f'Skipped records with concept_class_id values that '
                         f'were already loaded under the current name: '
-                        f'{ignored_classes.most_common()}')
+                        f'{ignored_classes}')

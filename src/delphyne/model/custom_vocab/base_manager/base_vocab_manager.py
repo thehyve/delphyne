@@ -2,7 +2,6 @@
 
 import csv
 import logging
-from collections import Counter
 from functools import lru_cache
 from pathlib import Path
 from typing import List, Dict
