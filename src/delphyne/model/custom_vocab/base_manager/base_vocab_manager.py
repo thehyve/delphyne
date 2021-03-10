@@ -29,22 +29,22 @@ class BaseVocabManager:
     def __init__(self, db: Database, cdm, custom_vocab_files: List[Path]):
         self._db = db
         self._cdm = cdm
-        self._custom_vocab_files = custom_vocab_files
-        self._custom_vocabs_to_update = set()
-        self._custom_vocabs_unused = set()
+        self.custom_vocab_files = custom_vocab_files
+        self.custom_vocabs_to_update = set()
+        self.custom_vocabs_unused = set()
 
-        if not self._custom_vocab_files:
+        if not self.custom_vocab_files:
             logger.error('No vocabulary.tsv file found')
 
     @property
     def vocabs_updated(self):
         """Set of vocabulary IDs to update."""
-        return self._custom_vocabs_to_update
+        return self.custom_vocabs_to_update
 
     @property
     def vocabs_unused(self):
         """Vocabulary IDs of no longer used vocabularies."""
-        return self._custom_vocabs_unused
+        return self.custom_vocabs_unused
 
     @property
     @lru_cache()
@@ -54,7 +54,7 @@ class BaseVocabManager:
         errors = set()
         files_with_errors = set()
 
-        for vocab_file in self._custom_vocab_files:
+        for vocab_file in self.custom_vocab_files:
 
             file_errors = False
 
@@ -116,7 +116,7 @@ class BaseVocabManager:
 
         return vocab_dict
 
-    def _get_custom_vocabulary_sets(self) -> None:
+    def get_custom_vocabulary_sets(self) -> None:
         # Compare custom vocabulary ids from disk
         # to the ones already present in the database.
         #
@@ -144,25 +144,25 @@ class BaseVocabManager:
                 logging.info(f'Found new vocabulary version: {new_id} : '
                              f'{old_version} -> {new_version}')
 
-        self._custom_vocabs_to_update = vocab_new.keys() - unchanged_vocabs
-        if not self._custom_vocabs_to_update:
+        self.custom_vocabs_to_update = vocab_new.keys() - unchanged_vocabs
+        if not self.custom_vocabs_to_update:
             logging.info('No new vocabulary version found on disk')
 
         logging.info('Looking for unused custom vocabulary versions')
 
-        self._custom_vocabs_unused = vocab_old.keys() - vocab_new.keys()
+        self.custom_vocabs_unused = vocab_old.keys() - vocab_new.keys()
 
-        for old_id in self._custom_vocabs_unused:
+        for old_id in self.custom_vocabs_unused:
             logging.info(f'Found obsolete vocabulary version: {old_id}')
 
-        if not self._custom_vocabs_unused:
+        if not self.custom_vocabs_unused:
             logging.info('No obsolete version found in database')
 
-    def _drop_custom_vocabs(self) -> None:
+    def drop_custom_vocabs(self) -> None:
         # Drop updated and obsolete custom vocabularies
         # from the database
 
-        vocabs_to_drop = self._custom_vocabs_to_update | self._custom_vocabs_unused
+        vocabs_to_drop = self.custom_vocabs_to_update | self.custom_vocabs_unused
 
         logging.info(f'Dropping old custom vocabulary versions: '
                      f'{True if vocabs_to_drop else False}')
@@ -175,10 +175,10 @@ class BaseVocabManager:
                 .filter(self._cdm.Vocabulary.vocabulary_id.in_(vocabs_to_drop)) \
                 .delete(synchronize_session=False)
 
-    def _load_custom_vocabs(self) -> None:
+    def load_custom_vocabs(self) -> None:
         # Load new and updated custom vocabularies to the database
 
-        vocabs_to_create = self._custom_vocabs_to_update
+        vocabs_to_create = self.custom_vocabs_to_update
 
         logging.info(f'Loading new custom vocabulary versions: '
                      f'{True if vocabs_to_create else False}')
@@ -189,7 +189,7 @@ class BaseVocabManager:
         ignored_vocabs = set()
         vocabs_lowercase = {vocab.lower() for vocab in self.vocabs_from_disk}
 
-        for vocab_file in self._custom_vocab_files:
+        for vocab_file in self.custom_vocab_files:
 
             file_prefix = get_file_prefix(vocab_file, 'vocabulary')
             invalid_vocabs = set()

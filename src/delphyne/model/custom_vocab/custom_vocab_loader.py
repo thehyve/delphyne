@@ -60,7 +60,7 @@ class CustomVocabLoader:
         return [f for f in file_list if file_has_valid_prefix(
             f, omop_table,
             all_prefixes=vocab_ids_all,
-            valid_prefixes=self.vocab_manager._custom_vocabs_to_update
+            valid_prefixes=self.vocab_manager.custom_vocabs_to_update
         )]
 
     def load(self) -> None:
@@ -85,8 +85,8 @@ class CustomVocabLoader:
 
         self._initialize_table_managers()
         # check vocabs and classes to drop and update
-        self.vocab_manager._get_custom_vocabulary_sets()
-        self.class_manager._get_custom_class_sets()
+        self.vocab_manager.get_custom_vocabulary_sets()
+        self.class_manager.get_custom_class_sets()
         # get vocab_ids for Concept table operations
         vocabs_to_load = self.vocab_manager.vocabs_updated
         vocabs_to_drop = vocabs_to_load | self.vocab_manager.vocabs_unused
@@ -94,15 +94,15 @@ class CustomVocabLoader:
         # update list of concept files to parse
         # (not done for vocabulary and concept class files
         # since not particularly large)
-        self.concept_manager._custom_concept_files = self._update_custom_file_list(
-            self.concept_manager._custom_concept_files, 'concept')
+        self.concept_manager.custom_concept_files = self._update_custom_file_list(
+            self.concept_manager.custom_concept_files, 'concept')
         # drop old versions (unused + updated)
-        self.concept_manager._drop_custom_concepts(vocabs_to_drop)
-        self.class_manager._drop_custom_classes()
-        self.vocab_manager._drop_custom_vocabs()
+        self.concept_manager.drop_custom_concepts(vocabs_to_drop)
+        self.class_manager.drop_custom_classes()
+        self.vocab_manager.drop_custom_vocabs()
         # load new versions (update in place)
-        self.class_manager._update_custom_classes()
+        self.class_manager.update_custom_classes()
         # load new versions (create new records)
-        self.vocab_manager._load_custom_vocabs()
-        self.class_manager._load_custom_classes()
-        self.concept_manager._load_custom_concepts(vocabs_to_load, valid_file_prefixes)
+        self.vocab_manager.load_custom_vocabs()
+        self.class_manager.load_custom_classes()
+        self.concept_manager.load_custom_concepts(vocabs_to_load, valid_file_prefixes)

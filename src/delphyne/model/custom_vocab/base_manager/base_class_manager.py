@@ -27,15 +27,15 @@ class BaseClassManager:
     def __init__(self, db: Database, cdm, custom_class_files: List[Path]):
         self._db = db
         self._cdm = cdm
-        self._custom_class_files = custom_class_files
-        self._custom_classes_to_update = set()
-        self._custom_classes_to_create = set()
-        self._custom_classes_unused = set()
+        self.custom_class_files = custom_class_files
+        self.custom_classes_to_update = set()
+        self.custom_classes_to_create = set()
+        self.custom_classes_unused = set()
 
-        if not self._custom_class_files:
+        if not self.custom_class_files:
             logger.info('No concept_class.tsv file found')
 
-    def _get_custom_class_sets(self) -> None:
+    def get_custom_class_sets(self) -> None:
         # Compare custom concept_class ids and names
         # to the ones already present in the database.
         #
@@ -70,19 +70,19 @@ class BaseClassManager:
                 else:
                     classes_to_update.add(new_id)
 
-        self._custom_classes_to_update = classes_to_update
-        self._custom_classes_to_create = classes_to_create
-        if not self._custom_classes_to_update and not self._custom_classes_to_create:
+        self.custom_classes_to_update = classes_to_update
+        self.custom_classes_to_create = classes_to_create
+        if not self.custom_classes_to_update and not self.custom_classes_to_create:
             logging.info('No new concept_class version found on disk')
 
         logging.info('Looking for unused custom concept_class versions')
 
-        self._custom_classes_unused = classes_old.keys() - classes_new.keys()
+        self.custom_classes_unused = classes_old.keys() - classes_new.keys()
 
-        for old_id in self._custom_classes_unused:
+        for old_id in self.custom_classes_unused:
             logging.info(f'Found obsolete concept_class version: {old_id}')
 
-        if not self._custom_classes_unused:
+        if not self.custom_classes_unused:
             logging.info('No obsolete version found in database')
 
     def _get_old_custom_classes_from_database(self) -> Dict[str, str]:
@@ -111,7 +111,7 @@ class BaseClassManager:
         errors = set()
         files_with_errors = set()
 
-        for class_file in self._custom_class_files:
+        for class_file in self.custom_class_files:
 
             file_errors = False
 
@@ -153,10 +153,10 @@ class BaseClassManager:
 
         return class_dict
 
-    def _drop_custom_classes(self) -> None:
+    def drop_custom_classes(self) -> None:
         # Drop obsolete custom concept_classes from the database
 
-        classes_to_drop = self._custom_classes_unused
+        classes_to_drop = self.custom_classes_unused
 
         logging.info(f'Dropping unused custom concept_class versions: '
                      f'{True if classes_to_drop else False}')
@@ -169,10 +169,10 @@ class BaseClassManager:
                 .filter(self._cdm.ConceptClass.concept_class_id.in_(classes_to_drop)) \
                 .delete(synchronize_session=False)
 
-    def _load_custom_classes(self) -> None:
+    def load_custom_classes(self) -> None:
         # Load new custom concept_classes to the database
 
-        classes_to_create = self._custom_classes_to_create
+        classes_to_create = self.custom_classes_to_create
 
         logging.info(f'Loading new custom classes: '
                      f'{True if classes_to_create else False}')
@@ -182,7 +182,7 @@ class BaseClassManager:
 
         ignored_classes = set()
 
-        for class_file in self._custom_class_files:
+        for class_file in self.custom_class_files:
             with self._db.tracked_session_scope(name=f'load_{class_file.stem}') as (session, _), \
                     class_file.open('r') as f_in:
                 rows = csv.DictReader(f_in, delimiter='\t')
@@ -196,7 +196,7 @@ class BaseClassManager:
                             concept_class_name=row['concept_class_name'],
                             concept_class_concept_id=row['concept_class_concept_id']
                         ))
-                    elif class_id not in self._custom_classes_to_update:
+                    elif class_id not in self.custom_classes_to_update:
                         ignored_classes.add(class_id)
 
         if ignored_classes:
@@ -204,11 +204,11 @@ class BaseClassManager:
                         f'were already loaded under the current name: '
                         f'{ignored_classes}')
 
-    def _update_custom_classes(self) -> None:
+    def update_custom_classes(self) -> None:
         # Update the name of existing custom concept_classes in the
         # database
 
-        classes_to_update = self._custom_classes_to_update
+        classes_to_update = self.custom_classes_to_update
 
         logging.info(f'Updating custom class names: '
                      f'{True if classes_to_update else False}')
@@ -218,7 +218,7 @@ class BaseClassManager:
 
         ignored_classes = set()
 
-        for class_file in self._custom_class_files:
+        for class_file in self.custom_class_files:
             with self._db.tracked_session_scope(name=f'load_{class_file.stem}') as (session, _), \
                     class_file.open('r') as f_in:
                 rows = csv.DictReader(f_in, delimiter='\t')
@@ -236,7 +236,7 @@ class BaseClassManager:
                     # this check has already been performed in the
                     # _load_custom_classes transformation, unless
                     # there were no classes new class_ids to add
-                    elif not self._custom_classes_to_create:
+                    elif not self.custom_classes_to_create:
                         ignored_classes.add(class_id)
 
         if ignored_classes:

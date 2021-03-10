@@ -28,12 +28,12 @@ class BaseConceptManager:
     def __init__(self, db: Database, cdm, custom_concept_files: List[Path]):
         self._db = db
         self._cdm = cdm
-        self._custom_concept_files = custom_concept_files
+        self.custom_concept_files = custom_concept_files
 
-        if not self._custom_concept_files:
+        if not self.custom_concept_files:
             logger.error('No concept.tsv file found')
 
-    def _drop_custom_concepts(self, vocab_ids: Set[str]) -> None:
+    def drop_custom_concepts(self, vocab_ids: Set[str]) -> None:
         # Drop concepts associated with a set of custom vocabulary ids
         # from the database
 
@@ -48,7 +48,7 @@ class BaseConceptManager:
                 .filter(self._cdm.Concept.vocabulary_id.in_(vocab_ids)) \
                 .delete(synchronize_session=False)
 
-    def _load_custom_concepts(self, vocab_ids: Set[str], valid_prefixes: Set[str]) -> None:
+    def load_custom_concepts(self, vocab_ids: Set[str], valid_prefixes: Set[str]) -> None:
         # Load concept_ids associated with a set of custom
         # vocabulary ids to the database
 
@@ -64,7 +64,7 @@ class BaseConceptManager:
         errors = set()
         files_with_errors = set()
 
-        for concept_file in self._custom_concept_files:
+        for concept_file in self.custom_concept_files:
 
             file_errors = False
 
