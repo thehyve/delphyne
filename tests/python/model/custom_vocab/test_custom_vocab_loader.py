@@ -3,7 +3,6 @@ import pytest
 import re
 from contextlib import contextmanager
 from pathlib import Path
-from sqlalchemy.exc import IntegrityError
 from typing import List, Tuple, Union
 from unittest.mock import patch
 
@@ -76,7 +75,7 @@ def mock_custom_vocab_path(vocab_dir: Path, custom_vocab_dir_name: str):
         yield
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='module')
 def cdm600_wrapper_with_empty_tables(test_db_module, module_scope_db_main_config: MainConfig
                                      ) -> Wrapper:
     """cdm600 wrapper with all tables created."""
@@ -89,16 +88,15 @@ def cdm600_wrapper_with_empty_tables(test_db_module, module_scope_db_main_config
 @pytest.fixture(scope='function')
 def cdm600_with_minimal_vocabulary_tables(cdm600_wrapper_with_empty_tables) -> Wrapper:
     """cdm600 wrapper with minimal set of data in vocabulary tables."""
-    wrapper = cdm600_wrapper_with_empty_tables
-    wrapper.db.constraint_manager.drop_all_constraints()
-    with wrapper.db.session_scope() as session:
+    cdm600_wrapper_with_empty_tables.db.constraint_manager.drop_all_constraints()
+    with cdm600_wrapper_with_empty_tables.db.session_scope() as session:
         session.query(cdm600.Concept).delete()
         session.query(cdm600.ConceptClass).delete()
         session.query(cdm600.Vocabulary).delete()
         session.query(cdm600.Domain).delete()
-    load_minimal_vocabulary(wrapper=wrapper)
-    wrapper.db.constraint_manager.add_all_constraints()
-    return wrapper
+    load_minimal_vocabulary(wrapper=cdm600_wrapper_with_empty_tables)
+    cdm600_wrapper_with_empty_tables.db.constraint_manager.add_all_constraints()
+    return cdm600_wrapper_with_empty_tables
 
 
 def test_custom_vocab_files_availability(cdm600_wrapper_with_empty_tables,
