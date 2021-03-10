@@ -287,3 +287,26 @@ def test_file_prefix_recognition_vocabs_and_classes(cdm600_with_minimal_vocabula
 
         # classes are updated irrespective of the file prefix
         assert loaded_classes == ['CLASS1_v2', 'CLASS2_v2']
+
+
+def test_file_prefix_recognition_vocabs_and_concepts(cdm600_with_minimal_vocabulary_tables,
+                                                     base_custom_vocab_dir: Path, caplog):
+
+    wrapper = cdm600_with_minimal_vocabulary_tables
+
+    load_custom_vocab_records(wrapper, ['VOCAB1', 'VOCAB2', 'VOCAB3', 'VOCAB4'])
+
+    with mock_custom_vocab_path(base_custom_vocab_dir, 'custom_vocab_test4'):
+        wrapper.vocab_manager.custom_vocabularies.load()
+
+        loaded_vocabs = get_custom_vocab_records(wrapper)
+        loaded_concepts = get_custom_concept_records(wrapper, concept_id_only=True)
+
+        # only concept files with prefix matching an updated vocabulary
+        # will be processed (VOCAB1 processed, VOCAB3 skipped)
+        assert "VOCAB1_concept.tsv contains vocabulary_ids that do not match file prefix:" \
+               " {'VOCAB2'}" in caplog.text
+        assert "VOCAB3_concept.tsv contains vocabulary_ids that do not match file prefix:" \
+               " {'VOCAB4'}" not in caplog.text
+        assert loaded_vocabs == ['VOCAB1_v2', 'VOCAB2_v2', 'VOCAB3_v1', 'VOCAB4_v2']
+        assert loaded_concepts == [2000000001, 2000000002]
