@@ -275,8 +275,10 @@ def test_file_prefix_recognition_vocabs_and_classes(cdm600_with_minimal_vocabula
         loaded_vocabs = get_custom_vocab_records(wrapper)
         loaded_classes = get_custom_class_records(wrapper)
 
-        # vocabularies are updated even if not matching file prefix,
-        # also when file prefix corresponds to an unchanged vocabulary
+        # vocabularies are updated irrespective of the file prefix:
+        # file is processed even if prefix does not match updated
+        # vocabulary, and vocab is loaded even if not matching file
+        # prefix - but you get warnings
         # (e.g. updated VOCAB4 in file with prefix of unchanged VOCAB3)
 
         assert "VOCAB1_vocabulary.tsv contains vocabulary_ids that do not match file prefix:" \
@@ -304,9 +306,11 @@ def test_file_prefix_recognition_vocabs_and_concepts(cdm600_with_minimal_vocabul
 
         # only concept files with meaningless prefix (no_prefix), or
         # prefix matching an updated vocabulary (VOCAB1) are processed
-        # (VOCAB3 is skipped)
+        # (VOCAB3 is skipped). if file is processed, concept is loaded
+        # even if vocab not matching file prefix - but you get warnings
         assert "VOCAB1_concept.tsv contains vocabulary_ids that do not match file prefix:" \
                " {'VOCAB2'}" in caplog.text
+        # this file is skipped, hence no warning
         assert "VOCAB3_concept.tsv contains vocabulary_ids that do not match file prefix:" \
                " {'VOCAB4'}" not in caplog.text
         assert loaded_vocabs == ['VOCAB1_v2', 'VOCAB2_v2', 'VOCAB3_v1', 'VOCAB4_v2']
