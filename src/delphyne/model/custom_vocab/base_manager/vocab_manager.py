@@ -12,7 +12,7 @@ from ....util.io import get_file_prefix
 logger = logging.getLogger(__name__)
 
 
-class BaseVocabManager:
+class VocabManager:
     """
     Collection of vocabulary table functions.
 

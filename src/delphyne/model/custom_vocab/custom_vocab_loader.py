@@ -4,7 +4,7 @@ import logging
 from pathlib import Path
 from typing import List
 
-from .base_manager import BaseVocabManager, BaseClassManager, BaseConceptManager
+from .base_manager import VocabManager, ClassManager, ConceptManager
 from ..._paths import CUSTOM_VOCAB_DIR
 from ...database import Database
 from ...util.io import get_all_files_in_dir, file_has_valid_prefix
@@ -39,9 +39,9 @@ class CustomVocabLoader:
         custom_class_files = self._get_custom_table_files('concept_class')
         custom_concept_files = self._get_custom_table_files('concept')
 
-        self.vocab_manager = BaseVocabManager(self._db, self._cdm, custom_vocab_files)
-        self.class_manager = BaseClassManager(self._db, self._cdm, custom_class_files)
-        self.concept_manager = BaseConceptManager(self._db, self._cdm, custom_concept_files)
+        self.vocab_manager = VocabManager(self._db, self._cdm, custom_vocab_files)
+        self.class_manager = ClassManager(self._db, self._cdm, custom_class_files)
+        self.concept_manager = ConceptManager(self._db, self._cdm, custom_concept_files)
 
     @staticmethod
     def _get_custom_table_files(omop_table: str) -> List[Path]:

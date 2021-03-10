@@ -10,7 +10,7 @@ from ....database import Database
 logger = logging.getLogger(__name__)
 
 
-class BaseClassManager:
+class ClassManager:
     """
     Collection of concept_class vocabulary table functions.
 

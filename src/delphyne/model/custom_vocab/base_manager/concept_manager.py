@@ -11,7 +11,7 @@ from ....util.io import get_file_prefix
 logger = logging.getLogger(__name__)
 
 
-class BaseConceptManager:
+class ConceptManager:
     """
     Collection of concept vocabulary table functions.
 
