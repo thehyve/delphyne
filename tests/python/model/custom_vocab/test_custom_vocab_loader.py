@@ -32,8 +32,8 @@ def mock_custom_vocab_path(vocab_dir: Path, custom_vocab_dir_name: str):
 
 
 @pytest.fixture(scope='function')
-def cdm600_wrapper_with_all_tables(test_db_module, module_scope_db_main_config: MainConfig
-                                   ) -> Wrapper:
+def cdm600_wrapper_with_empty_tables(test_db_module, module_scope_db_main_config: MainConfig
+                                     ) -> Wrapper:
     """cdm600 wrapper with all tables created."""
     wrapper = Wrapper(module_scope_db_main_config, cdm600)
     wrapper.create_schemas()
@@ -42,9 +42,9 @@ def cdm600_wrapper_with_all_tables(test_db_module, module_scope_db_main_config: 
 
 
 @pytest.fixture(scope='function')
-def cdm600_with_minimal_vocabulary_tables(cdm600_wrapper_with_all_tables) -> Wrapper:
+def cdm600_with_minimal_vocabulary_tables(cdm600_wrapper_with_empty_tables) -> Wrapper:
     """cdm600 wrapper with minimal set of data in vocabulary tables."""
-    wrapper = cdm600_wrapper_with_all_tables
+    wrapper = cdm600_wrapper_with_empty_tables
     wrapper.db.constraint_manager.drop_all_constraints()
     with wrapper.db.session_scope() as session:
         session.query(cdm600.Concept).delete()
@@ -56,10 +56,10 @@ def cdm600_with_minimal_vocabulary_tables(cdm600_wrapper_with_all_tables) -> Wra
     return wrapper
 
 
-def test_custom_vocab_files_availability(cdm600_wrapper_with_all_tables,
+def test_custom_vocab_files_availability(cdm600_wrapper_with_empty_tables,
                                          base_custom_vocab_dir: Path, caplog):
 
-    wrapper = cdm600_wrapper_with_all_tables
+    wrapper = cdm600_wrapper_with_empty_tables
 
     with mock_custom_vocab_path(base_custom_vocab_dir, 'dir_not_found'):
         message = 'dir_not_found folder not found'
@@ -78,10 +78,10 @@ def test_custom_vocab_files_availability(cdm600_wrapper_with_all_tables,
         assert "No concept_class.tsv file found" in caplog.text
 
 
-def test_custom_vocabulary_quality(cdm600_wrapper_with_all_tables,
+def test_custom_vocabulary_quality(cdm600_wrapper_with_empty_tables,
                                    base_custom_vocab_dir: Path, caplog):
 
-    wrapper = cdm600_wrapper_with_all_tables
+    wrapper = cdm600_wrapper_with_empty_tables
 
     with mock_custom_vocab_path(base_custom_vocab_dir, 'bad_vocab_content'):
         message = re.escape("Vocabulary files"
@@ -104,10 +104,10 @@ def test_custom_vocabulary_quality(cdm600_wrapper_with_all_tables,
         assert "vocabulary VOCAB2 is duplicated across one or multiple files" in caplog.text
 
 
-def test_custom_concept_class_quality(cdm600_wrapper_with_all_tables,
+def test_custom_concept_class_quality(cdm600_wrapper_with_empty_tables,
                                       base_custom_vocab_dir: Path, caplog):
 
-    wrapper = cdm600_wrapper_with_all_tables
+    wrapper = cdm600_wrapper_with_empty_tables
 
     with mock_custom_vocab_path(base_custom_vocab_dir, 'bad_class_content'):
         message = re.escape("Concept class files ['bad_concept_class.tsv', "
@@ -155,7 +155,6 @@ def test_vocab_version_detection(cdm600_with_minimal_vocabulary_tables,
     wrapper = cdm600_with_minimal_vocabulary_tables
 
     load_custom_vocab_records(wrapper, ['VOCAB1', 'VOCAB2', 'VOCAB3'])
-    load_custom_class_records(wrapper, ['CLASS1', 'CLASS2', 'CLASS3'])
 
     with mock_custom_vocab_path(base_custom_vocab_dir, 'custom_vocab_test1'), \
             caplog.at_level(logging.INFO):
@@ -167,6 +166,18 @@ def test_vocab_version_detection(cdm600_with_minimal_vocabulary_tables,
            " current version: {'VOCAB2'}"
     assert 'Found new vocabulary version: VOCAB3 : VOCAB3_v1 -> VOCAB3_v2' in caplog.text
     assert 'Found new vocabulary version: VOCAB4 : None -> VOCAB4_v1' in caplog.text
+
+
+def test_class_version_detection(cdm600_with_minimal_vocabulary_tables,
+                                 base_custom_vocab_dir: Path, caplog):
+
+    wrapper = cdm600_with_minimal_vocabulary_tables
+
+    load_custom_class_records(wrapper, ['CLASS1', 'CLASS2', 'CLASS3'])
+
+    with mock_custom_vocab_path(base_custom_vocab_dir, 'custom_vocab_test1'), \
+            caplog.at_level(logging.INFO):
+        wrapper.vocab_manager.custom_vocabularies.load()
 
     # CLASS1 removed, CLASS2 unchanged, CLASS3 updated, CLASS4 new
     assert 'Found obsolete concept_class version: CLASS1' in caplog.text
