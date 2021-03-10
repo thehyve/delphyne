@@ -249,9 +249,11 @@ def test_custom_class_and_concept_update(cdm600_with_minimal_vocabulary_tables,
 
     loaded_classes = get_custom_class_records(wrapper)
     assert loaded_classes == ['CLASS2_v1', 'CLASS3_v2', 'CLASS4_v1']
-    # concept1&2 have updated vocabulary (VOCAB1) and have been mapped to new class (CLASS4)
-    # (concept1 original CLASS1 has been deleted, concept2 CLASS2 still exists in the database);
-    # concept3 has same vocab version (VOCAB2), but class has been updated to v2 (CLASS3)
+    # concept1&2 have updated vocabulary (VOCAB1) and have been mapped
+    # to new class (CLASS4) (concept1 original CLASS1 has been deleted,
+    # concept2 CLASS2 still exists in the database);
+    # concept3 has same vocab version (VOCAB2),
+    # but class has been updated to v2 (CLASS3)
     loaded_concepts = get_custom_concept_records(wrapper, concept_id_only=False)
     assert loaded_concepts == [(2000000001, 'CLASS4'),
                                (2000000002, 'CLASS4'),
