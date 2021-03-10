@@ -12,7 +12,7 @@ from ...util.io import get_all_files_in_dir, file_has_valid_prefix
 logger = logging.getLogger(__name__)
 
 
-class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
+class CustomVocabLoader:
     """
     Loader of custom vocabularies into the respective tables.
 
@@ -31,23 +31,17 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         self._db = db
         self._cdm = cdm
         self._block_loading = block_loading
-        self._custom_vocab_files: List[str] = []
-        self._custom_class_files: List[str] = []
-        self._custom_concept_files: List[str] = []
 
     def _initialize_table_managers(self) -> None:
         if not CUSTOM_VOCAB_DIR.exists():
             raise FileNotFoundError(f'{CUSTOM_VOCAB_DIR.resolve()} folder not found')
-        self._custom_vocab_files = self._get_custom_table_files('vocabulary')
-        self._custom_class_files = self._get_custom_table_files('concept_class')
-        self._custom_concept_files = self._get_custom_table_files('concept')
+        custom_vocab_files = self._get_custom_table_files('vocabulary')
+        custom_class_files = self._get_custom_table_files('concept_class')
+        custom_concept_files = self._get_custom_table_files('concept')
 
-        BaseVocabManager.__init__(self, db=self._db, cdm=self._cdm,
-                                  custom_vocab_files=self._custom_vocab_files)
-        BaseClassManager.__init__(self, db=self._db, cdm=self._cdm,
-                                  custom_class_files=self._custom_class_files)
-        BaseConceptManager.__init__(self, db=self._db, cdm=self._cdm,
-                                    custom_concept_files=self._custom_concept_files)
+        self.vocab_manager = BaseVocabManager(self._db, self._cdm, custom_vocab_files)
+        self.class_manager = BaseClassManager(self._db, self._cdm, custom_class_files)
+        self.concept_manager = BaseConceptManager(self._db, self._cdm, custom_concept_files)
 
     @staticmethod
     def _get_custom_table_files(omop_table: str) -> List[Path]:
@@ -62,11 +56,12 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         # vocabulary_id to be updated), no prefix, or a prefix
         # unrelated to vocabulary_ids; a valid but mismatching prefix
         # will cause the file to be ignored.
-        vocab_ids_all = set(self.vocabs_from_disk.keys())
-        return [f for f in file_list
-                if file_has_valid_prefix(f, omop_table,
-                                         all_prefixes=vocab_ids_all,
-                                         valid_prefixes=self._custom_vocabs_to_update)]
+        vocab_ids_all = set(self.vocab_manager.vocabs_from_disk.keys())
+        return [f for f in file_list if file_has_valid_prefix(
+            f, omop_table,
+            all_prefixes=vocab_ids_all,
+            valid_prefixes=self.vocab_manager._custom_vocabs_to_update
+        )]
 
     def load(self) -> None:
         """
@@ -90,24 +85,24 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
 
         self._initialize_table_managers()
         # check vocabs and classes to drop and update
-        self._get_custom_vocabulary_sets()
-        self._get_custom_class_sets()
+        self.vocab_manager._get_custom_vocabulary_sets()
+        self.class_manager._get_custom_class_sets()
         # get vocab_ids for Concept table operations
-        vocabs_to_load = self.vocabs_updated
-        vocabs_to_drop = self.vocabs_updated | self.vocabs_unused
-        valid_file_prefixes = self.vocabs_from_disk.keys()
+        vocabs_to_load = self.vocab_manager.vocabs_updated
+        vocabs_to_drop = vocabs_to_load | self.vocab_manager.vocabs_unused
+        valid_file_prefixes = set(self.vocab_manager.vocabs_from_disk.keys())
         # update list of concept files to parse
         # (not done for vocabulary and concept class files
         # since not particularly large)
-        self._custom_concept_files = self._update_custom_file_list(
-            self._custom_concept_files, 'concept')
+        self.concept_manager._custom_concept_files = self._update_custom_file_list(
+            self.concept_manager._custom_concept_files, 'concept')
         # drop old versions (unused + updated)
-        self._drop_custom_concepts(vocabs_to_drop)
-        self._drop_custom_classes()
-        self._drop_custom_vocabs()
+        self.concept_manager._drop_custom_concepts(vocabs_to_drop)
+        self.class_manager._drop_custom_classes()
+        self.vocab_manager._drop_custom_vocabs()
         # load new versions (update in place)
-        self._update_custom_classes()
+        self.class_manager._update_custom_classes()
         # load new versions (create new records)
-        self._load_custom_vocabs()
-        self._load_custom_classes()
-        self._load_custom_concepts(vocabs_to_load, valid_file_prefixes)
+        self.vocab_manager._load_custom_vocabs()
+        self.class_manager._load_custom_classes()
+        self.concept_manager._load_custom_concepts(vocabs_to_load, valid_file_prefixes)
