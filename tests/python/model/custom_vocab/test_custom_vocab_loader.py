@@ -3,6 +3,7 @@ import pytest
 import re
 from contextlib import contextmanager
 from pathlib import Path
+from typing import List
 from unittest.mock import patch
 
 from src.delphyne import Wrapper
@@ -15,6 +16,32 @@ from tests.python.model.custom_vocab.load_vocab_data import load_minimal_vocabul
 
 pytestmark = pytest.mark.skipif(condition=docker_not_available(),
                                 reason='Docker daemon is not running')
+
+
+def get_custom_vocab_records(wrapper: Wrapper) -> List[str]:
+    """
+    Return list of vocabulary_versions for custom vocabularies only.
+    """
+    with wrapper.db.session_scope() as session:
+        records = session.query(cdm600.Vocabulary) \
+            .filter(cdm600.Vocabulary.vocabulary_concept_id == 0) \
+            .all()
+        records = [r.vocabulary_version for r in records]
+        records.sort()
+        return records
+
+
+def get_custom_class_records(wrapper: Wrapper) -> List[str]:
+    """
+    Return list of concept_class_names for custom classes only.
+    """
+    with wrapper.db.session_scope() as session:
+        records = session.query(cdm600.ConceptClass) \
+            .filter(cdm600.ConceptClass.concept_class_concept_id == 0) \
+            .all()
+        records = [r.concept_class_name for r in records]
+        records.sort()
+        return records
 
 
 @pytest.fixture(scope='module')
@@ -167,6 +194,9 @@ def test_vocab_version_detection(cdm600_with_minimal_vocabulary_tables,
     assert 'Found new vocabulary version: VOCAB3 : VOCAB3_v1 -> VOCAB3_v2' in caplog.text
     assert 'Found new vocabulary version: VOCAB4 : None -> VOCAB4_v1' in caplog.text
 
+    loaded_records = get_custom_vocab_records(wrapper)
+    assert loaded_records == ['VOCAB2_v1', 'VOCAB3_v2', 'VOCAB4_v1']
+
 
 def test_class_version_detection(cdm600_with_minimal_vocabulary_tables,
                                  base_custom_vocab_dir: Path, caplog):
@@ -185,3 +215,8 @@ def test_class_version_detection(cdm600_with_minimal_vocabulary_tables,
            " current name: {'CLASS2'}"
     assert 'Found new concept_class version: CLASS3 : CLASS3_v1 -> CLASS3_v2' in caplog.text
     assert 'Found new concept_class version: CLASS4 : None -> CLASS4_v1' in caplog.text
+
+    loaded_records = get_custom_class_records(wrapper)
+    assert loaded_records == ['CLASS2_v1', 'CLASS3_v2', 'CLASS4_v1']
+
+
