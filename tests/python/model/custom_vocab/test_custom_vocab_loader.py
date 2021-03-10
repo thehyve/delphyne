@@ -302,11 +302,12 @@ def test_file_prefix_recognition_vocabs_and_concepts(cdm600_with_minimal_vocabul
         loaded_vocabs = get_custom_vocab_records(wrapper)
         loaded_concepts = get_custom_concept_records(wrapper, concept_id_only=True)
 
-        # only concept files with prefix matching an updated vocabulary
-        # will be processed (VOCAB1 processed, VOCAB3 skipped)
+        # only concept files with meaningless prefix (no_prefix), or
+        # prefix matching an updated vocabulary (VOCAB1) are processed
+        # (VOCAB3 is skipped)
         assert "VOCAB1_concept.tsv contains vocabulary_ids that do not match file prefix:" \
                " {'VOCAB2'}" in caplog.text
         assert "VOCAB3_concept.tsv contains vocabulary_ids that do not match file prefix:" \
                " {'VOCAB4'}" not in caplog.text
         assert loaded_vocabs == ['VOCAB1_v2', 'VOCAB2_v2', 'VOCAB3_v1', 'VOCAB4_v2']
-        assert loaded_concepts == [2000000001, 2000000002]
+        assert loaded_concepts == [2000000001, 2000000002, 2000000005]
