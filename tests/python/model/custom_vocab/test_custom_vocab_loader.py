@@ -3,6 +3,7 @@ import pytest
 import re
 from contextlib import contextmanager
 from pathlib import Path
+from sqlalchemy.exc import IntegrityError
 from typing import List, Tuple, Union
 from unittest.mock import patch
 
@@ -258,3 +259,22 @@ def test_custom_class_and_concept_update(cdm600_with_minimal_vocabulary_tables,
     assert loaded_concepts == [(2000000001, 'CLASS4'),
                                (2000000002, 'CLASS4'),
                                (2000000003, 'CLASS3')]
+
+
+def test_error_if_new_class_with_same_vocabulary(cdm600_with_minimal_vocabulary_tables,
+                                                 base_custom_vocab_dir: Path, caplog):
+
+    wrapper = cdm600_with_minimal_vocabulary_tables
+
+    load_custom_class_records(wrapper, ['CLASS1'])
+    load_custom_vocab_records(wrapper, ['VOCAB1'])
+    load_custom_concept_records(wrapper, {2000000001: ('VOCAB1', 'CLASS1')})
+
+    # Vocabulary updates triggers concept table updates,
+    # but class updates do not
+    with mock_custom_vocab_path(base_custom_vocab_dir, 'custom_vocab_test3'),\
+            caplog.at_level(logging.INFO):
+        message = re.escape('Key (concept_class_id)=(CLASS1) is still referenced from table '
+                            '"concept".')
+        with pytest.raises(IntegrityError, match=message):
+            wrapper.vocab_manager.custom_vocabularies.load()
