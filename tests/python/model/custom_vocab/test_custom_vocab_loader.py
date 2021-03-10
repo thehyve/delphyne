@@ -3,7 +3,7 @@ import pytest
 import re
 from contextlib import contextmanager
 from pathlib import Path
-from typing import List
+from typing import List, Tuple, Union
 from unittest.mock import patch
 
 from src.delphyne import Wrapper
@@ -44,7 +44,8 @@ def get_custom_class_records(wrapper: Wrapper) -> List[str]:
         return records
 
 
-def get_custom_concept_records(wrapper: Wrapper) -> List[str]:
+def get_custom_concept_records(wrapper: Wrapper, concept_id_only: bool = True
+                               ) -> Union[List[int], List[Tuple[int, str]]]:
     """
     Return list of concept_class_names for custom classes only.
     """
@@ -52,7 +53,10 @@ def get_custom_concept_records(wrapper: Wrapper) -> List[str]:
         records = session.query(cdm600.Concept) \
             .filter(cdm600.Concept.concept_id > 2000000000) \
             .all()
-        records = [r.concept_id for r in records]
+        if concept_id_only:
+            records = [r.concept_id for r in records]
+        else:
+            records = [(r.concept_id, r.concept_class_id) for r in records]
         records.sort()
         return records
 
@@ -220,14 +224,19 @@ def test_custom_vocab_and_concept_update(cdm600_with_minimal_vocabulary_tables,
     assert loaded_concepts == [2000000002, 2000000006, 2000000007]
 
 
-def test_custom_class_update(cdm600_with_minimal_vocabulary_tables,
-                             base_custom_vocab_dir: Path, caplog):
+def test_custom_class_and_concept_update(cdm600_with_minimal_vocabulary_tables,
+                                         base_custom_vocab_dir: Path, caplog):
 
     wrapper = cdm600_with_minimal_vocabulary_tables
 
     load_custom_class_records(wrapper, ['CLASS1', 'CLASS2', 'CLASS3'])
+    load_custom_vocab_records(wrapper, ['VOCAB1', 'VOCAB2'])
+    load_custom_concept_records(wrapper, {2000000001: ('VOCAB1', 'CLASS1'),
+                                          2000000002: ('VOCAB1', 'CLASS2'),
+                                          2000000003: ('VOCAB2', 'CLASS3')
+                                          })
 
-    with mock_custom_vocab_path(base_custom_vocab_dir, 'custom_vocab_test1'), \
+    with mock_custom_vocab_path(base_custom_vocab_dir, 'custom_vocab_test2'), \
             caplog.at_level(logging.INFO):
         wrapper.vocab_manager.custom_vocabularies.load()
 
@@ -238,6 +247,12 @@ def test_custom_class_update(cdm600_with_minimal_vocabulary_tables,
     assert 'Found new concept_class version: CLASS3 : CLASS3_v1 -> CLASS3_v2' in caplog.text
     assert 'Found new concept_class version: CLASS4 : None -> CLASS4_v1' in caplog.text
 
-    loaded_records = get_custom_class_records(wrapper)
-    assert loaded_records == ['CLASS2_v1', 'CLASS3_v2', 'CLASS4_v1']
-
+    loaded_classes = get_custom_class_records(wrapper)
+    assert loaded_classes == ['CLASS2_v1', 'CLASS3_v2', 'CLASS4_v1']
+    # concept1&2 have updated vocabulary (VOCAB1) and have been mapped to new class (CLASS4)
+    # (concept1 original CLASS1 has been deleted, concept2 CLASS2 still exists in the database);
+    # concept3 has same vocab version (VOCAB2), but class has been updated to v2 (CLASS3)
+    loaded_concepts = get_custom_concept_records(wrapper, concept_id_only=False)
+    assert loaded_concepts == [(2000000001, 'CLASS4'),
+                               (2000000002, 'CLASS4'),
+                               (2000000003, 'CLASS3')]
