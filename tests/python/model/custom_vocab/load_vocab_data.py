@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 from src.delphyne import Wrapper
 
@@ -6,7 +6,7 @@ from tests.python.cdm import cdm600
 
 
 def load_custom_vocab_records(wrapper: Wrapper, vocab_ids: List[str]) -> None:
-
+    """Add custom vocabulary records."""
     with wrapper.db.session_scope() as session:
         for vocab_id in vocab_ids:
             vocab = cdm600.Vocabulary()
@@ -19,7 +19,7 @@ def load_custom_vocab_records(wrapper: Wrapper, vocab_ids: List[str]) -> None:
 
 
 def load_custom_class_records(wrapper: Wrapper, class_ids: List[str]) -> None:
-
+    """Add custom concept_class records."""
     with wrapper.db.session_scope() as session:
         for class_id in class_ids:
             concept_class = cdm600.ConceptClass()
@@ -27,6 +27,25 @@ def load_custom_class_records(wrapper: Wrapper, class_ids: List[str]) -> None:
             concept_class.concept_class_name = class_id + '_v1'
             concept_class.concept_class_concept_id = 0
             session.add(concept_class)
+
+
+def load_custom_concept_records(wrapper: Wrapper, concept_vocab_ids: Dict[int, str]) -> None:
+    """Add custom concept records. concept_vocab_ids is a dictionary of
+     concept_id : vocab_id pairs"""
+    with wrapper.db.session_scope() as session:
+        for concept_id, vocab in concept_vocab_ids.items():
+            concept = cdm600.Concept()
+            concept.concept_id = concept_id
+            concept.vocabulary_id = vocab
+            concept.concept_name = concept_id
+            concept.concept_code = concept_id
+            concept.concept_class_id = 'ARTIFICIAL_CLASS'
+            concept.domain_id = 'ARTIFICIAL_DOMAIN'
+            concept.valid_start_date = '1970-01-01'
+            concept.valid_end_date = '2099-12-31'
+            concept.standard_concept = None
+            concept.invalid_reason = None
+            session.add(concept)
 
 
 def load_minimal_vocabulary(wrapper: Wrapper) -> None:

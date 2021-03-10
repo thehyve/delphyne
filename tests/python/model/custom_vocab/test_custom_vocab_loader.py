@@ -12,7 +12,7 @@ from src.delphyne.config.models import MainConfig
 from tests.python.cdm import cdm600
 from tests.python.conftest import docker_not_available
 from tests.python.model.custom_vocab.load_vocab_data import load_minimal_vocabulary, \
-    load_custom_vocab_records, load_custom_class_records
+    load_custom_vocab_records, load_custom_class_records, load_custom_concept_records
 
 pytestmark = pytest.mark.skipif(condition=docker_not_available(),
                                 reason='Docker daemon is not running')
@@ -189,12 +189,15 @@ def test_custom_concept_quality(cdm600_with_minimal_vocabulary_tables,
         assert "concept 2000000002 is duplicated across one or multiple files" in caplog.text
 
 
-def test_vocab_version_detection(cdm600_with_minimal_vocabulary_tables,
-                                 base_custom_vocab_dir: Path, caplog):
+def test_custom_vocab_update(cdm600_with_minimal_vocabulary_tables,
+                             base_custom_vocab_dir: Path, caplog):
 
     wrapper = cdm600_with_minimal_vocabulary_tables
 
     load_custom_vocab_records(wrapper, ['VOCAB1', 'VOCAB2', 'VOCAB3'])
+    load_custom_concept_records(wrapper, {2000000001: 'VOCAB1',
+                                          2000000002: 'VOCAB2',
+                                          2000000003: 'VOCAB3'})
 
     with mock_custom_vocab_path(base_custom_vocab_dir, 'custom_vocab_test1'), \
             caplog.at_level(logging.INFO):
@@ -209,14 +212,14 @@ def test_vocab_version_detection(cdm600_with_minimal_vocabulary_tables,
 
     loaded_vocabs = get_custom_vocab_records(wrapper)
     assert loaded_vocabs == ['VOCAB2_v1', 'VOCAB3_v2', 'VOCAB4_v1']
-    # only records associated with new vocabs (VOCAB3, VOCAB4)
-    # should have been loaded
+    # only records associated with unchanged (VOCAB2) and new (VOCAB3, VOCAB4)
+    # vocabs should have been loaded
     loaded_concepts = get_custom_concept_records(wrapper)
-    assert loaded_concepts == [2000000003, 2000000004]
+    assert loaded_concepts == [2000000002, 2000000006, 2000000007]
 
 
-def test_class_version_detection(cdm600_with_minimal_vocabulary_tables,
-                                 base_custom_vocab_dir: Path, caplog):
+def test_custom_class_update(cdm600_with_minimal_vocabulary_tables,
+                             base_custom_vocab_dir: Path, caplog):
 
     wrapper = cdm600_with_minimal_vocabulary_tables
 
