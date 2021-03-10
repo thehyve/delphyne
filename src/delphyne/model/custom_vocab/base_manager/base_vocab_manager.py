@@ -220,7 +220,7 @@ class BaseVocabManager:
 
             if invalid_vocabs:
                 logging.warning(f'{vocab_file.name} contains vocabulary_ids '
-                                f'that do not match file prefix')
+                                f'that do not match file prefix: {invalid_vocabs}')
 
         if ignored_vocabs:
             logger.info(f'Skipped records with vocabulary_id values that '

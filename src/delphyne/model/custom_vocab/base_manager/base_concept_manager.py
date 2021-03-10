@@ -122,7 +122,7 @@ class BaseConceptManager:
 
             if invalid_vocabs:
                 logging.warning(f'{concept_file.name} contains vocabulary_ids '
-                                f'that do not match file prefix')
+                                f'that do not match file prefix: {invalid_vocabs}')
 
         if files_with_errors:
             for error in sorted(errors):
