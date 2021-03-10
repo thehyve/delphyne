@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from src.delphyne import Wrapper
 
@@ -29,17 +29,18 @@ def load_custom_class_records(wrapper: Wrapper, class_ids: List[str]) -> None:
             session.add(concept_class)
 
 
-def load_custom_concept_records(wrapper: Wrapper, concept_vocab_ids: Dict[int, str]) -> None:
-    """Add custom concept records. concept_vocab_ids is a dictionary of
-     concept_id : vocab_id pairs"""
+def load_custom_concept_records(wrapper: Wrapper, concepts: Dict[int, Tuple[str, str]]) -> None:
+    """Add custom concept records. concepts is a dictionary of
+    concept_id : (vocab_id, concept_class) dicts """
     with wrapper.db.session_scope() as session:
-        for concept_id, vocab in concept_vocab_ids.items():
+        for concept_id, values in concepts.items():
+            vocab_id, class_id = values[0], values[1]
             concept = cdm600.Concept()
             concept.concept_id = concept_id
-            concept.vocabulary_id = vocab
+            concept.vocabulary_id = vocab_id
             concept.concept_name = concept_id
             concept.concept_code = concept_id
-            concept.concept_class_id = 'ARTIFICIAL_CLASS'
+            concept.concept_class_id = class_id if class_id else 'ARTIFICIAL_CLASS'
             concept.domain_id = 'ARTIFICIAL_DOMAIN'
             concept.valid_start_date = '1970-01-01'
             concept.valid_end_date = '2099-12-31'

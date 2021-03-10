@@ -189,15 +189,16 @@ def test_custom_concept_quality(cdm600_with_minimal_vocabulary_tables,
         assert "concept 2000000002 is duplicated across one or multiple files" in caplog.text
 
 
-def test_custom_vocab_update(cdm600_with_minimal_vocabulary_tables,
-                             base_custom_vocab_dir: Path, caplog):
+def test_custom_vocab_and_concept_update(cdm600_with_minimal_vocabulary_tables,
+                                         base_custom_vocab_dir: Path, caplog):
 
     wrapper = cdm600_with_minimal_vocabulary_tables
 
     load_custom_vocab_records(wrapper, ['VOCAB1', 'VOCAB2', 'VOCAB3'])
-    load_custom_concept_records(wrapper, {2000000001: 'VOCAB1',
-                                          2000000002: 'VOCAB2',
-                                          2000000003: 'VOCAB3'})
+    load_custom_concept_records(wrapper, {2000000001: ('VOCAB1', ''),
+                                          2000000002: ('VOCAB2', ''),
+                                          2000000003: ('VOCAB3', '')
+                                          })
 
     with mock_custom_vocab_path(base_custom_vocab_dir, 'custom_vocab_test1'), \
             caplog.at_level(logging.INFO):
@@ -212,8 +213,9 @@ def test_custom_vocab_update(cdm600_with_minimal_vocabulary_tables,
 
     loaded_vocabs = get_custom_vocab_records(wrapper)
     assert loaded_vocabs == ['VOCAB2_v1', 'VOCAB3_v2', 'VOCAB4_v1']
-    # only records associated with unchanged (VOCAB2) and new (VOCAB3, VOCAB4)
-    # vocabs should have been loaded
+    # only old concepts associated with unchanged vocabs (VOCAB2)
+    # and new concepts associated with new vocabs (VOCAB3, VOCAB4)
+    # should be present
     loaded_concepts = get_custom_concept_records(wrapper)
     assert loaded_concepts == [2000000002, 2000000006, 2000000007]
 
@@ -238,3 +240,4 @@ def test_custom_class_update(cdm600_with_minimal_vocabulary_tables,
 
     loaded_records = get_custom_class_records(wrapper)
     assert loaded_records == ['CLASS2_v1', 'CLASS3_v2', 'CLASS4_v1']
+
