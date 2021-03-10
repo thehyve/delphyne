@@ -34,9 +34,16 @@ class ConceptManager:
             logger.error('No concept.tsv file found')
 
     def drop_custom_concepts(self, vocab_ids: Set[str]) -> None:
-        # Drop concepts associated with a set of custom vocabulary ids
-        # from the database
+        """
+        Drop obsolete custom concept records from the database.
 
+        Parameters
+        ----------
+        vocab_ids: set of str
+            Only concepts associated with the provided set of
+            vocabulary_ids will be dropped.
+
+        """
         logging.info(f'Dropping old custom concepts: '
                      f'{True if vocab_ids else False}')
 
@@ -49,9 +56,19 @@ class ConceptManager:
                 .delete(synchronize_session=False)
 
     def load_custom_concepts(self, vocab_ids: Set[str], valid_prefixes: Set[str]) -> None:
-        # Load concept_ids associated with a set of custom
-        # vocabulary ids to the database
+        """
+        Load new custom concept records to the database.
 
+        Parameters
+        ----------
+        vocab_ids : set of str
+            Only concepts associated with the provided set of
+            vocabulary_ids will be loaded.
+        valid_prefixes : set of str
+            Allows detection of concept_ids with a vocabulary_id that
+            doesn't match the file prefix.
+
+        """
         logging.info(f'Loading new custom concept_ids: '
                      f'{True if vocab_ids else False}')
 

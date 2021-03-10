@@ -36,17 +36,21 @@ class ClassManager:
             logger.info('No concept_class.tsv file found')
 
     def get_custom_class_sets(self) -> None:
-        # Compare custom concept_class ids and names
-        # to the ones already present in the database.
-        #
-        # Retrieves:
-        # - set of custom concept_classes to be updated in place
-        #   (same id, new name)
-        # - set of custom concept_classes to be created
-        #   (new id)
-        # - a set of obsolete custom concept_classes to be removed
-        #   (id is not in use anymore)
+        """
+        Compare custom concept_classes between files and database.
 
+        Detects differences in both concept_class_id and
+        concept_class_name.
+
+        Retrieves:
+        - a set of custom concept_classes to be updated in place
+          (same id, new name)
+        - a set of custom concept_classes to be created
+          (new id)
+        - a set of obsolete custom concept_classes to be removed
+          (id not in use anymore)
+
+        """
         logging.info('Looking for new custom class versions')
 
         classes_old = self._get_old_custom_classes_from_database()
@@ -154,8 +158,7 @@ class ClassManager:
         return class_dict
 
     def drop_custom_classes(self) -> None:
-        # Drop obsolete custom concept_classes from the database
-
+        """Drop obsolete custom concept_classes from the database."""
         classes_to_drop = self.custom_classes_unused
 
         logging.info(f'Dropping unused custom concept_class versions: '
@@ -170,8 +173,7 @@ class ClassManager:
                 .delete(synchronize_session=False)
 
     def load_custom_classes(self) -> None:
-        # Load new custom concept_classes to the database
-
+        """Load new custom concept_class records to the database."""
         classes_to_create = self.custom_classes_to_create
 
         logging.info(f'Loading new custom classes: '
@@ -205,9 +207,12 @@ class ClassManager:
                         f'{ignored_classes}')
 
     def update_custom_classes(self) -> None:
-        # Update the name of existing custom concept_classes in the
-        # database
+        """
+        Update existing custom concept_classes in the database.
 
+        concept_class_name is updated in place.
+
+        """
         classes_to_update = self.custom_classes_to_update
 
         logging.info(f'Updating custom class names: '

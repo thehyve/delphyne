@@ -117,15 +117,18 @@ class VocabManager:
         return vocab_dict
 
     def get_custom_vocabulary_sets(self) -> None:
-        # Compare custom vocabulary ids from disk
-        # to the ones already present in the database.
-        #
-        # Retrieves:
-        # - a set of custom vocabularies to be updated
-        #   (new id, or same id and new version)
-        # - a set of obsolete custom vocabularies to be removed
-        #   (id is not in use anymore)
+        """
+        Compare custom vocabularies between files and database.
 
+        Only detects differences in vocabulary_version.
+
+        Retrieves:
+        - a set of custom vocabularies to be updated
+          (new id, or same id and new version)
+        - a set of obsolete custom vocabularies to be removed
+          (id not in use anymore)
+
+        """
         logging.info('Looking for new custom vocabulary versions')
 
         vocab_old = self.vocabs_from_database
@@ -159,9 +162,7 @@ class VocabManager:
             logging.info('No obsolete version found in database')
 
     def drop_custom_vocabs(self) -> None:
-        # Drop updated and obsolete custom vocabularies
-        # from the database
-
+        """Drop obsolete custom vocabularies from the database."""
         vocabs_to_drop = self.custom_vocabs_to_update | self.custom_vocabs_unused
 
         logging.info(f'Dropping old custom vocabulary versions: '
@@ -176,8 +177,11 @@ class VocabManager:
                 .delete(synchronize_session=False)
 
     def load_custom_vocabs(self) -> None:
-        # Load new and updated custom vocabularies to the database
+        """
+        Load custom vocabulary records to the database.
 
+        Both new and updated vocabularies will be loaded.
+        """
         vocabs_to_create = self.custom_vocabs_to_update
 
         logging.info(f'Loading new custom vocabulary versions: '
