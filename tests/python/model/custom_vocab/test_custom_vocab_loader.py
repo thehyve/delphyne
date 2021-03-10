@@ -269,8 +269,7 @@ def test_file_prefix_recognition_vocabs_and_classes(cdm600_with_minimal_vocabula
     load_custom_vocab_records(wrapper, ['VOCAB1', 'VOCAB2', 'VOCAB3', 'VOCAB4'])
     load_custom_class_records(wrapper, ['CLASS1', 'CLASS2'])
 
-    with mock_custom_vocab_path(base_custom_vocab_dir, 'custom_vocab_test3'),\
-            caplog.at_level(logging.INFO):
+    with mock_custom_vocab_path(base_custom_vocab_dir, 'custom_vocab_test3'):
         wrapper.vocab_manager.custom_vocabularies.load()
 
         loaded_vocabs = get_custom_vocab_records(wrapper)
@@ -280,10 +279,10 @@ def test_file_prefix_recognition_vocabs_and_classes(cdm600_with_minimal_vocabula
         # also when file prefix corresponds to an unchanged vocabulary
         # (e.g. updated VOCAB4 in file with prefix of unchanged VOCAB3)
 
-        assert "VOCAB1_vocabulary contains vocabulary_ids that do not match file prefix:' \
-               ' {'VOCAB2'}"
-        assert "VOCAB3_vocabulary contains vocabulary_ids that do not match file prefix:" \
-               " {'VOCAB4'}"
+        assert "VOCAB1_vocabulary.tsv contains vocabulary_ids that do not match file prefix:" \
+               " {'VOCAB2'}" in caplog.text
+        assert "VOCAB3_vocabulary.tsv contains vocabulary_ids that do not match file prefix:" \
+               " {'VOCAB4'}" in caplog.text
         assert loaded_vocabs == ['VOCAB1_v2', 'VOCAB2_v2', 'VOCAB3_v1', 'VOCAB4_v2']
 
         # classes are updated irrespective of the file prefix
