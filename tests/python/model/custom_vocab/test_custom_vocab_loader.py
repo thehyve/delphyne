@@ -261,20 +261,30 @@ def test_custom_class_and_concept_update(cdm600_with_minimal_vocabulary_tables,
                                (2000000003, 'CLASS3')]
 
 
-def test_error_if_new_class_with_same_vocabulary(cdm600_with_minimal_vocabulary_tables,
-                                                 base_custom_vocab_dir: Path, caplog):
+def test_file_prefix_recognition_vocabs_and_classes(cdm600_with_minimal_vocabulary_tables,
+                                                    base_custom_vocab_dir: Path, caplog):
 
     wrapper = cdm600_with_minimal_vocabulary_tables
 
-    load_custom_class_records(wrapper, ['CLASS1'])
-    load_custom_vocab_records(wrapper, ['VOCAB1'])
-    load_custom_concept_records(wrapper, {2000000001: ('VOCAB1', 'CLASS1')})
+    load_custom_vocab_records(wrapper, ['VOCAB1', 'VOCAB2', 'VOCAB3', 'VOCAB4'])
+    load_custom_class_records(wrapper, ['CLASS1', 'CLASS2'])
 
-    # Vocabulary updates triggers concept table updates,
-    # but class updates do not
     with mock_custom_vocab_path(base_custom_vocab_dir, 'custom_vocab_test3'),\
             caplog.at_level(logging.INFO):
-        message = re.escape('Key (concept_class_id)=(CLASS1) is still referenced from table '
-                            '"concept".')
-        with pytest.raises(IntegrityError, match=message):
-            wrapper.vocab_manager.custom_vocabularies.load()
+        wrapper.vocab_manager.custom_vocabularies.load()
+
+        loaded_vocabs = get_custom_vocab_records(wrapper)
+        loaded_classes = get_custom_class_records(wrapper)
+
+        # vocabularies are updated even if not matching file prefix,
+        # also when file prefix corresponds to an unchanged vocabulary
+        # (e.g. updated VOCAB4 in file with prefix of unchanged VOCAB3)
+
+        assert "VOCAB1_vocabulary contains vocabulary_ids that do not match file prefix:' \
+               ' {'VOCAB2'}"
+        assert "VOCAB3_vocabulary contains vocabulary_ids that do not match file prefix:" \
+               " {'VOCAB4'}"
+        assert loaded_vocabs == ['VOCAB1_v2', 'VOCAB2_v2', 'VOCAB3_v1', 'VOCAB4_v2']
+
+        # classes are updated irrespective of the file prefix
+        assert loaded_classes == ['CLASS1_v2', 'CLASS2_v2']
