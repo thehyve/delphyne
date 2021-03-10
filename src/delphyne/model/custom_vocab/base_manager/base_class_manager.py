@@ -164,7 +164,7 @@ class BaseClassManager:
         if not classes_to_drop:
             return
 
-        with self._db.tracked_session_scope(name='drop_concepts') as (session, _):
+        with self._db.tracked_session_scope(name='drop_classes') as (session, _):
             session.query(self._cdm.ConceptClass) \
                 .filter(self._cdm.ConceptClass.concept_class_id.in_(classes_to_drop)) \
                 .delete(synchronize_session=False)
