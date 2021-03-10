@@ -44,6 +44,19 @@ def get_custom_class_records(wrapper: Wrapper) -> List[str]:
         return records
 
 
+def get_custom_concept_records(wrapper: Wrapper) -> List[str]:
+    """
+    Return list of concept_class_names for custom classes only.
+    """
+    with wrapper.db.session_scope() as session:
+        records = session.query(cdm600.Concept) \
+            .filter(cdm600.Concept.concept_id > 2000000000) \
+            .all()
+        records = [r.concept_id for r in records]
+        records.sort()
+        return records
+
+
 @pytest.fixture(scope='module')
 def base_custom_vocab_dir(test_data_dir: Path) -> Path:
     return test_data_dir / 'custom_vocabs'
@@ -194,8 +207,12 @@ def test_vocab_version_detection(cdm600_with_minimal_vocabulary_tables,
     assert 'Found new vocabulary version: VOCAB3 : VOCAB3_v1 -> VOCAB3_v2' in caplog.text
     assert 'Found new vocabulary version: VOCAB4 : None -> VOCAB4_v1' in caplog.text
 
-    loaded_records = get_custom_vocab_records(wrapper)
-    assert loaded_records == ['VOCAB2_v1', 'VOCAB3_v2', 'VOCAB4_v1']
+    loaded_vocabs = get_custom_vocab_records(wrapper)
+    assert loaded_vocabs == ['VOCAB2_v1', 'VOCAB3_v2', 'VOCAB4_v1']
+    # only records associated with new vocabs (VOCAB3, VOCAB4)
+    # should have been loaded
+    loaded_concepts = get_custom_concept_records(wrapper)
+    assert loaded_concepts == [2000000003, 2000000004]
 
 
 def test_class_version_detection(cdm600_with_minimal_vocabulary_tables,
@@ -218,5 +235,3 @@ def test_class_version_detection(cdm600_with_minimal_vocabulary_tables,
 
     loaded_records = get_custom_class_records(wrapper)
     assert loaded_records == ['CLASS2_v1', 'CLASS3_v2', 'CLASS4_v1']
-
-
