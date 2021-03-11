@@ -22,15 +22,15 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         Database instance to interact with.
     cdm : module
         Module containing all CDM table definitions.
-    block_loading : bool
-        If True, calls to load_custom_vocabulary_tables will be
+    enable_loading : bool
+        If False, calls to load_custom_vocabulary_tables will be
         ignored.
     """
 
-    def __init__(self, db: Database, cdm, block_loading: bool):
+    def __init__(self, db: Database, cdm, enable_loading: bool):
         self._db = db
         self._cdm = cdm
-        self._block_loading = block_loading
+        self._enable_loading = enable_loading
         self._custom_vocab_files: List[str] = []
         self._custom_class_files: List[str] = []
         self._custom_concept_files: List[str] = []
@@ -83,8 +83,8 @@ class CustomVocabLoader(BaseVocabManager, BaseClassManager, BaseConceptManager):
         -------
         None
         """
-        logger.info(f'Loading custom vocabulary tables: {not self._block_loading}')
-        if self._block_loading:
+        logger.info(f'Loading custom vocabulary tables: {self._enable_loading}')
+        if not self._enable_loading:
             return
 
         self._initialize_table_managers()
