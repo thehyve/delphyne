@@ -4,10 +4,11 @@ import logging
 import re
 from collections import Counter
 from pathlib import Path
-from typing import Dict, Union, Optional
+from typing import Callable, Dict, Union, Optional
 
-from sqlalchemy import text
+from sqlalchemy import text, Table, MetaData
 from sqlalchemy.engine.result import ResultProxy
+from sqlalchemy.exc import InvalidRequestError
 
 from .etl_stats import EtlTransformation, open_transformation
 from .._paths import SQL_TRANSFORMATIONS_DIR
@@ -90,12 +91,72 @@ class RawSqlWrapper:
                 try:
                     statement = text(query).execution_options(autocommit=True)
                     result = con.execute(statement)
-                    self._collect_transformation_statistics(result, query, transformation_metadata)
+                    self._collect_query_statistics(result, query, transformation_metadata)
                 except Exception as msg:
                     logger.error(f'Query failed: {query_name}')
                     logger.error(query)
                     logger.error(msg)
                     transformation_metadata.query_success = False
+
+    def execute_sql_transformation(self, statement: Callable) -> None:
+        """
+        Execute an ETL transformation via a python statement.
+
+        Recommended for table to table transformations, i.e. when the
+        source data is read from an existing database table instead of
+        file. The statement must return a SQLAlchemy query object.
+
+        Parameters
+        ----------
+        statement : Callable
+            Python function which takes this wrapper as input and
+            returns a SQLAlchemy query object to be executed.
+            It will be called as a transformation.
+
+        Returns
+        -------
+        None
+        """
+        logger.info(f'Executing transformation: {statement.__name__}')
+        with self.db.tracked_session_scope(name=statement.__name__, raise_on_error=False) \
+                as (session, transformation_metadata):
+            query = statement(self)
+            result = session.execute(query)
+            query_string = result.context.statement
+            self._collect_query_statistics(result, query_string, transformation_metadata)
+
+    def get_table(self, schema: str, table_name: str) -> Optional[Table]:
+        """
+        Get a SQLAlchemy Table object from an existing database schema.
+
+        The table object is obtained through metadata reflection; useful
+        when retrieving tables that are not defined in the ORM model
+        (e.g. table is in a custom source schema). For tables that
+        already have an ORM definition, this method is equivalent to
+        using <TableName>.__table__.
+
+        Parameters
+        ----------
+        schema: str
+            Name of the schema to retrieve the table from. This may
+            also be a schema placeholder, in which case it will be
+            translated to the runtime schema name.
+        table_name : str
+            Name of the table to retrieve. An error message will be
+            displayed if the table cannot be found.
+
+        Returns
+        -------
+        Table
+        """
+        m = MetaData(bind=self.db.engine)
+        schema = self.db.schema_translate_map.get(schema, schema)
+        try:
+            m.reflect(schema=schema, only=[table_name], resolve_fks=False)
+        except InvalidRequestError as e:
+            logger.error(f'Table with name "{table_name}" not found in "{schema}" schema')
+            raise e
+        return m.tables[f'{schema}.{table_name}']
 
     @staticmethod
     def apply_sql_parameters(parameterized_query: str, sql_parameters: Dict[str, str]) -> str:
@@ -118,14 +179,16 @@ class RawSqlWrapper:
         replacement_dict = {'@' + key: value for key, value in sql_parameters.items()}
         return replace_substrings(parameterized_query, replacement_dict)
 
-    def _collect_transformation_statistics(self,
-                                           result: ResultProxy,
-                                           query: str,
-                                           transformation_metadata: EtlTransformation
-                                           ) -> None:
+    def _collect_query_statistics(self,
+                                  result: ResultProxy,
+                                  query: str,
+                                  transformation_metadata: EtlTransformation
+                                  ) -> None:
         query_type = self._parse_query_type(query)
         target_table: str = self._parse_target_table_from_query(query)
         row_count: int = result.rowcount
+
+        logger.info(f'Saved {row_count} objects')
 
         if query_type == 'INSERT':
             transformation_metadata.insertion_counts = Counter({target_table: row_count})
