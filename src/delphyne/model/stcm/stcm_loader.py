@@ -183,7 +183,8 @@ class StcmLoader:
 
         if not stcm_vocabs_to_delete:
             return
-        logger.info('Deleting obsolete stcm and stcm_version records')
+        logger.info(f'Deleting obsolete stcm and stcm_version records for vocabulary_ids:'
+                    f' {stcm_vocabs_to_delete}')
         with self._db.session_scope() as session:
             stcm_table = self._cdm.SourceToConceptMap
             q = session.query(stcm_table)

@@ -126,7 +126,8 @@ def test_load_stcm(cdm600_wrapper_no_constraints: Wrapper, base_stcm_dir: Path, 
         versions = get_all_stcm_versions(wrapper)
         assert records == [('code3', 'MY_VOCAB2')]
         assert versions == [('MY_VOCAB2', '0.2')]
-    assert "Deleting obsolete stcm and stcm_version records" in caplog.text
+    assert "Deleting obsolete stcm and stcm_version records for vocabulary_ids:" \
+           " {'MY_VOCAB1', 'MY_VOCAB2'}" in caplog.text
 
 
 def test_stcm_delete(cdm600_wrapper_no_constraints: Wrapper, base_stcm_dir: Path):
