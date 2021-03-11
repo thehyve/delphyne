@@ -150,6 +150,7 @@ class StcmLoader:
                                     f'Expected file at {STCM_VERSION_FILE}')
         with STCM_VERSION_FILE.open('r') as version_file:
             reader = csv.DictReader(version_file, delimiter='\t')
+            vocab_version_dict = {}
             for line in reader:
                 vocab_id = line['source_vocabulary_id']
                 version = line['stcm_version']
@@ -158,7 +159,8 @@ class StcmLoader:
                 if vocab_id not in self._loaded_vocabulary_ids:
                     raise ValueError(f'{vocab_id} is not present in the vocabulary table. '
                                      'Make sure to add it as a custom vocabulary.')
-                self._provided_stcm_versions[vocab_id] = version
+                vocab_version_dict[vocab_id] = version
+            self._provided_stcm_versions = vocab_version_dict
 
     def _check_stcm_version_table_exists(self) -> None:
         metadata = MetaData(bind=self._db.engine)
