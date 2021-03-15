@@ -5,13 +5,14 @@ Transformations
     :local:
     :backlinks: none
 
+
 Introduction
 -------------
 The delphyne :class:`.Wrapper` offers different ways to execute transformation scripts.
 Basically, there are three options:
- - Write a Python function, returning the results as ORM objects.
+ - Write a Python function, returning the results as `SQLAlchemy ORM objects <https://docs.sqlalchemy.org/en/14/orm/tutorial.html>`_.
  - Write a SQL query, directly inserting into the target table.
- - Write a query using the SQLAlchemy expression language.
+ - Write a Python function, creating a query using the `SQLAlchemy expression language <https://docs.sqlalchemy.org/en/14/core/tutorial.html>`_.
 
 For both options the :class:`.Wrapper` has built-in methods that coordinate the execution.
 These methods, detailed below, use SQLAlchemy to handle database operations and log the execution statistics.
@@ -20,11 +21,12 @@ This provides a standardised interface independent of whether you are using Pyth
 It is good practice to create a separate transformation file (either Python or SQL) for each table to table
 transformation.
 This improves maintainability and allows for delphyne creating a detailed mapping log.
-In addition, the advised convention for the transformation file naming is `<source_table>_to_<target_table>.py/sql`.
+In addition, the advised convention for the transformation file naming is ``<source_table>_to_<target_table>.py/sql``.
 
-Plain Python
--------------
-The plain Python approach allows the use of 'simple' Python to write transformations.
+
+SQLAlchemy ORM
+---------------
+The SQLAlchemy ORM approach allows the use of 'simple' Python to write transformations.
 This function takes the wrapper as input and produces OMOP records as SQLAlchemy ORM objects.
 It can return these objects in two different ways (see below).
 The convention is to put the transformation scripts in the `src/main/python/transformation` folder.
@@ -74,7 +76,6 @@ In the wrapper these two transformations can be called like this:
 
     self.execute_transformation(my_transformation)
     self.execute_batch_transformation(my_batch_transformation)
-
 
 
 Raw SQL
