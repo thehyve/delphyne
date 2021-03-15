@@ -53,6 +53,6 @@ Limitations
 -----------
 
 As SQL Server's bulk insert method requires a local file path, it can only be used if you're running
-Delphyne in the same environment as the database.
+delphyne in the same environment as the database.
 To insert the vocabularies manually, you can find instructions in
 the `CommonDataModel repository <https://github.com/OHDSI/CommonDataModel>`_.

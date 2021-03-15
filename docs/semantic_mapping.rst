@@ -5,12 +5,12 @@ Semantic mapping tools
     :local:
     :backlinks: none
 
-The section describes available Delphyne's tools to map source data to standard OMOP concept_ids during ETL execution.
+The section describes available delphyne's tools to map source data to standard OMOP concept_ids during ETL execution.
 
 Vocabulary-based mappings
 -------------------------
 
-Delphyne's :class:`.CodeMapper` class enables the creation of mapping dictionaries from non-standard OMOP vocabulary
+delphyne's :class:`.CodeMapper` class enables the creation of mapping dictionaries from non-standard OMOP vocabulary
 terms to valid standard concept_ids. Once created, a mapping dictionary can be used in any transformation to quickly
 lookup mappings for any source term.
 
