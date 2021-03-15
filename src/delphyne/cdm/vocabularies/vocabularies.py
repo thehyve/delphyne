@@ -6,8 +6,10 @@ CDM 6.0.0 check constraints are included.
 
 import datetime
 
-from sqlalchemy import (Column, Date, ForeignKey, Integer, Numeric, String,
-                        Text, DateTime, CheckConstraint)
+from sqlalchemy import (
+    Column, Date, ForeignKey, Integer, Numeric, String,
+    DateTime, CheckConstraint, VARCHAR,
+)
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
@@ -28,7 +30,7 @@ class BaseConcept:
 
     @declared_attr
     def concept_id(cls):
-        return Column(Integer, primary_key=True)
+        return Column(Integer, primary_key=True, autoincrement=False)
 
     @declared_attr
     def concept_name(cls):
@@ -340,7 +342,7 @@ class BaseSourceToConceptMap:
 
     @declared_attr
     def source_code(cls):
-        return Column(Text, primary_key=True, index=True)
+        return Column(VARCHAR(1000), primary_key=True, index=True)
 
     @declared_attr
     def source_concept_id(cls):

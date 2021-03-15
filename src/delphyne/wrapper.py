@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional, List
 
 import sys
-from sqlalchemy import Table
+from sqlalchemy import Table, inspect
 from sqlalchemy.schema import CreateSchema
 
 from ._paths import SOURCE_DATA_CONFIG_PATH
@@ -147,11 +147,12 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         -------
         None
         """
+        existing_schemas = inspect(self.db.engine).get_schema_names()
         with self.db.engine.connect() as conn:
             for schema_name in self.db.schemas:
-                if not conn.dialect.has_schema(conn, schema_name):
+                if schema_name not in existing_schemas:
                     logger.info(f'Creating schema: {schema_name}')
-                    self.db.engine.execute(CreateSchema(schema_name))
+                    conn.execute(CreateSchema(schema_name))
 
     def summarize(self) -> None:
         """

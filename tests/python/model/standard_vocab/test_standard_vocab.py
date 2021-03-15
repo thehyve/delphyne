@@ -37,7 +37,6 @@ def insert_dummy_domain_record(wrapper: Wrapper):
         session.add(domain_record)
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_standard_vocab_exceptions(cdm600_wrapper_with_tables_created: Wrapper,
                                    base_standard_vocab_dir: Path,
                                    ):
@@ -71,7 +70,6 @@ def test_standard_vocab_exceptions(cdm600_wrapper_with_tables_created: Wrapper,
             wrapper.vocab_manager.standard_vocabularies.load()
 
 
-@pytest.mark.usefixtures("container", "test_db")
 def test_standard_vocab_loading(cdm600_wrapper_with_tables_created: Wrapper,
                                 base_standard_vocab_dir: Path,
                                 ):

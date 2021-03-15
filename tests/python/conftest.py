@@ -1,5 +1,6 @@
 import os
 from collections import namedtuple
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Dict
 
@@ -98,13 +99,23 @@ def default_run_config() -> Dict:
 
 
 @pytest.fixture(scope='session')
+def module_scope_db_config() -> Dict:
+    config_file = _CONFIG_DIR / 'module_scope_db_config.yml'
+    return read_yaml_file(config_file)
+
+
+@pytest.fixture(scope='session')
 def default_main_config(default_run_config) -> MainConfig:
     return MainConfig(**default_run_config)
 
 
 @pytest.fixture(scope='session')
-def test_db_uri(default_main_config: MainConfig) -> str:
-    db_config = default_main_config.database
+def module_scope_db_main_config(module_scope_db_config) -> MainConfig:
+    return MainConfig(**module_scope_db_config)
+
+
+def _get_db_string_from_main_config(config: MainConfig) -> str:
+    db_config = config.database
     hostname = db_config.host
     port = db_config.port
     database = db_config.database_name
@@ -113,40 +124,61 @@ def test_db_uri(default_main_config: MainConfig) -> str:
     return f'postgresql://{username}:{password}@{hostname}:{port}/{database}'
 
 
-@pytest.mark.usefixtures("container")
+@pytest.fixture(scope='session')
+def test_db_uri(default_main_config: MainConfig) -> str:
+    """Return DB uri for the function-scope DB."""
+    return _get_db_string_from_main_config(default_main_config)
+
+
+@pytest.fixture(scope='session')
+def test_db_module_scope_uri(module_scope_db_main_config: MainConfig) -> str:
+    """Return DB uri for the module-scope DB."""
+    return _get_db_string_from_main_config(module_scope_db_main_config)
+
+
 @pytest.fixture(scope='function')
-def test_db(test_db_uri: str) -> None:
+def test_db(container, test_db_uri: str) -> None:
+    """Function-scope test DB"""
+    with _test_db_fixture_implementation(test_db_uri) as result:
+        yield result
+
+
+@pytest.fixture(scope='module')
+def test_db_module(container, test_db_module_scope_uri: str) -> None:
+    """Module-scope test DB"""
+    with _test_db_fixture_implementation(test_db_module_scope_uri) as result:
+        yield result
+
+
+@contextmanager
+def _test_db_fixture_implementation(test_db_uri: str):
     engine = create_engine(test_db_uri)
     create_database(engine.url)
     yield
     drop_database(engine.url)
 
 
-@pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
-def wrapper_cdm531(default_main_config: MainConfig) -> Wrapper:
+def wrapper_cdm531(test_db, default_main_config: MainConfig) -> Wrapper:
     wrapper = Wrapper(default_main_config, cdm531)
     return wrapper
 
 
-@pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
-def wrapper_cdm600(default_main_config: MainConfig) -> Wrapper:
+def wrapper_cdm600(test_db, default_main_config: MainConfig) -> Wrapper:
     wrapper = Wrapper(default_main_config, cdm600)
     return wrapper
 
 
-@pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
-def cdm531_wrapper_with_tables_created(wrapper_cdm531: Wrapper) -> Wrapper:
+def cdm531_wrapper_with_tables_created(test_db, wrapper_cdm531: Wrapper) -> Wrapper:
     wrapper_cdm531.create_schemas()
     wrapper_cdm531.create_cdm()
     return wrapper_cdm531
 
 
-@pytest.mark.usefixtures("test_db")
 @pytest.fixture(scope='function')
-def cdm600_wrapper_with_tables_created(wrapper_cdm600: Wrapper) -> Wrapper:
+def cdm600_wrapper_with_tables_created(test_db, wrapper_cdm600: Wrapper) -> Wrapper:
     wrapper_cdm600.create_schemas()
     wrapper_cdm600.create_cdm()
     return wrapper_cdm600

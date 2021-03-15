@@ -5,9 +5,6 @@ Standard vocabularies
     :local:
     :backlinks: none
 
-.. note::
-   delphyne currently only supports postgresql for loading standard vocabularies. For other dialects
-   please use the instructions on the `CommonDataModel repository <https://github.com/OHDSI/CommonDataModel>`_.
 
 Vocabulary files
 ----------------
@@ -50,3 +47,12 @@ This will drop all indexes and constraints on the tables before insertion, and r
 
 To prevent accidental reloading of vocabularies, they can only be loaded if all the target tables are empty.
 If you do want to reload them, you therefore need to drop the contents manually.
+
+
+Limitations
+-----------
+
+As SQL Server's bulk insert method requires a local file path, it can only be used if you're running
+delphyne in the same environment as the database.
+To insert the vocabularies manually, you can find instructions in
+the `CommonDataModel repository <https://github.com/OHDSI/CommonDataModel>`_.

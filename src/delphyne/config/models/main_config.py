@@ -10,11 +10,18 @@ _REQUIRED_SCHEMAS = [VOCAB_SCHEMA, CDM_SCHEMA]
 
 
 class _DataBase(BaseModel):
+    drivername: Optional[str]
     host: str
     port: int
     database_name: str
     username: str
     password: Optional[SecretStr]
+    query: Optional[Dict[str, str]]
+
+    @validator('drivername', always=True)
+    def missing_drivername(cls, drivername):
+        # Set postgresql as the default driver
+        return drivername or 'postgresql'
 
     @validator('password', always=True)
     def missing_password(cls, password):
