@@ -5,12 +5,13 @@ Transformations
     :local:
     :backlinks: none
 
-General intro
+Introduction
 -------------
 The delphyne :class:`.Wrapper` offers different ways to execute transformation scripts.
-Basically, there are two options:
+Basically, there are three options:
  - Write a Python function, returning the results as ORM objects.
  - Write a SQL query, directly inserting into the target table.
+ - Write a query using the SQLAlchemy expression language.
 
 For both options the :class:`.Wrapper` has built-in methods that coordinate the execution.
 These methods, detailed below, use SQLAlchemy to handle database operations and log the execution statistics.
@@ -21,9 +22,9 @@ transformation.
 This improves maintainability and allows for delphyne creating a detailed mapping log.
 In addition, the advised convention for the transformation file naming is `<source_table>_to_<target_table>.py/sql`.
 
-ORM
----
-The ORM approach allows the use of pure Python to write transformations.
+Plain Python
+-------------
+The plain Python approach allows the use of 'simple' Python to write transformations.
 This function takes the wrapper as input and produces OMOP records as SQLAlchemy ORM objects.
 It can return these objects in two different ways (see below).
 The convention is to put the transformation scripts in the `src/main/python/transformation` folder.
@@ -33,18 +34,6 @@ There are two ways of execution the transformation, each requiring a different r
 The first mode, used by :meth:`.Wrapper.execute_transformation`.
 This expects the transformation function to return the full list of ORM objects at once.
 All returned records are committed to the database at the same time.
-
-While this is straightforward, it does require to store all records in memory.
-For large tables there is a 'batch' mode :meth:`.Wrapper.execute_batch_transformation`.
-This expects the transformation function to yield the ORM objects one at a time.
-The wrapper will commits the yielded records to the database in batches of given size.
-
-The pseudo-code for a transformation is given below, with the only difference between the two
-execution modes being the way the omop records are returned.
-
-Below we give two Python pseudo-codes, one for a 'regular' transformation and a batch transformation.
-
-**Regular**
 
 .. code-block:: python
 
@@ -61,7 +50,10 @@ Below we give two Python pseudo-codes, one for a 'regular' transformation and a 
             records_to_insert.append(records_to_insert)
         return records_to_insert
 
-**Batch**
+While this is straightforward, it does require to store all records in memory.
+For large tables there is a 'batch' mode :meth:`.Wrapper.execute_batch_transformation`.
+This expects the transformation function to yield the ORM objects one at a time.
+The wrapper will commits the yielded records to the database in batches of given size.
 
 .. code-block:: python
 
@@ -76,7 +68,7 @@ Below we give two Python pseudo-codes, one for a 'regular' transformation and a 
             )
             yield omop_record
 
-In the wrapper these can be executed like this:
+In the wrapper these two transformations can be called like this:
 
 .. code-block:: python
 
@@ -110,3 +102,13 @@ The convention is to put these transformation scripts in the `src/main/sql` fold
      <source_column2>,
      ...
     FROM @source_schema.<source_table>
+
+
+SQLAlchemy query
+-------------
+Instead of writing plain SQL query, the query can also be written using SQLAlchemy expressions.
+SQLAlchemy translates the expressions into SQL.
+This has the advantage that it can be compiled to any SQL dialect and makes the query agnostic of the used
+Relational Database Management System (RDBMS).
+
+**TBC**
