@@ -22,8 +22,11 @@ it's good practice to prepend the vocabulary_id to the file name (e.g. MYVOCAB_s
 This way, if the mapping version associated with that vocabulary hasn't changed (see `Versioning`_),
 the file will be ignored without needing to parse the file contents.
 
-Below is an **STCM file example**; in addition to the fields shown, it should contain
-``valid_start_date``, ``valid_end_date`` (mandatory), and ``source_code_description``, ``invalid_reason`` (optional):
+Each STCM file is expected to contain a header with field names matching the column names
+of the SOURCE_TO_CONCEPT_MAP table (in lowercase).
+Below is an **STCM file example**; in addition to the fields shown, it must contain
+``valid_start_date``, ``valid_end_date`` (value is mandatory),
+and ``source_code_description``, ``invalid_reason`` (value is optional):
 
 .. list-table:: mixed_vocabs_stcm.csv
    :widths: auto
@@ -50,8 +53,9 @@ The ``source_concept_id`` field should be set to ``0`` or a custom concept_id ab
 in the latter case, make sure to load the corresponding CONCEPT records to the vocabulary tables
 (see instructions in :ref:`Custom vocabularies`).
 
-In addition to STCM files, you must also provide a single tab-separated file named **stcm_versions.tsv**.
-This file is needed for the versioning of STCM records (see `Versioning`_).
+In addition to STCM files, you must always provide a single tab-separated file named **stcm_versions.tsv**,
+containing the header fields shown below (in lowercase). This file maps to the SOURCE_TO_CONCEPT_MAP_VERSION table
+and is needed for the versioning of STCM records (see `Versioning`_).
 
 .. list-table:: stcm_versions.tsv
    :widths: auto
@@ -88,9 +92,8 @@ Make sure to add any custom vocabulary used in the stcm tables to the custom voc
 Add to pipeline
 ---------------
 
-Make sure the ``skip_source_to_concept_map_loading`` option in your config.yml file is set to ``False``.
-
-To load STCM files, add the following call to your Wrapper's run method:
+To load STCM files, set the ``skip_source_to_concept_map_loading`` option in your config.yml to ``False``,
+and add the following call to your Wrapper's run method:
 
 .. code-block:: python
 
@@ -107,12 +110,14 @@ and replace the previous call with the following in the Wrapper's run method:
 
 Versioning
 ----------
+
 STCM records are always associated with a mapping version (``stcm_version``) through their ``source_vocabulary_id``;
 this relationship is captured in the SOURCE_TO_CONCEPT_MAP_VERSION table.
 
 When you update the mapping version for a given ``source_vocabulary_id`` in the ``stcm_versions.tsv`` file,
 this will update the SOURCE_TO_CONCEPT_MAP_VERSION table, and cause all SOURCE_TO_CONCEPT_MAP records associated with
 that vocabulary to be dropped and replaced with new records from the provided STCM files, if any.
+If you completely remove a ``source_vocabulary_id`` from ``stcm_versions.tsv``, associated records will also be dropped.
 
 .. note::
    The SOURCE_TO_CONCEPT_MAP_VERSION table is not part of the standard OMOP CDM. We specifically introduced it in our

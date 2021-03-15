@@ -9,8 +9,10 @@ Custom Vocabulary files
 -----------------------
 
 Non-standard vocabulary data can be provided as tab-delimited (tsv) files.
-The file names must end with the name of the vocabulary table they should be inserted in
+The file names must end with the name of the vocabulary table they should be inserted into
 (e.g. concept.tsv). File name matching is case-insensitive.
+Each file is expected to contain a header with field names matching the column names
+of the database table the file maps to (in lowercase).
 Currently, target tables CONCEPT, CONCEPT_CLASS, and VOCABULARY are supported.
 
 The custom vocabulary files may contain data from one or more custom vocabularies.
@@ -35,6 +37,8 @@ Files have to be placed in te following folder:
                 ├── MYVOCAB_concept.tsv
                 ├── MYVOCAB_concept_class.tsv
                 ├── MYVOCAB_vocabulary.tsv
+                ├── mixed_concept.tsv
+                ├── mixed_concept_class.tsv
                 ├── mixed_vocabulary.tsv
                 └── etc.
 
