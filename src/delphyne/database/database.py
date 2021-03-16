@@ -44,8 +44,6 @@ class Database:
 
     Attributes
     ----------
-    schemas
-    reflected_metadata
     engine : sqlalchemy.engine.base.Engine
         Database engine.
     constraint_manager : ConstraintManager
