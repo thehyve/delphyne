@@ -117,7 +117,7 @@ this relationship is captured in the SOURCE_TO_CONCEPT_MAP_VERSION table.
 When you update the mapping version for a given ``source_vocabulary_id`` in the ``stcm_versions.tsv`` file,
 this will update the SOURCE_TO_CONCEPT_MAP_VERSION table, and cause all SOURCE_TO_CONCEPT_MAP records associated with
 that vocabulary to be dropped and replaced with new records from the provided STCM files, if any.
-If you completely remove a ``source_vocabulary_id`` from ``stcm_versions.tsv``, associated records will also be dropped.
+If you remove a ``source_vocabulary_id`` from ``stcm_versions.tsv``, associated records will also be dropped.
 
 .. note::
    The SOURCE_TO_CONCEPT_MAP_VERSION table is not part of the standard OMOP CDM. We specifically introduced it in our
