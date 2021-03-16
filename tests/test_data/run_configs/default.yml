@@ -10,9 +10,9 @@ schema_translate_map:
   vocabulary_schema: 'vocab'
 
 run_options:
-  skip_vocabulary_loading: False
-  skip_custom_vocabulary_loading: True
-  skip_source_to_concept_map_loading: False
+  load_vocabulary: True
+  load_custom_vocabulary: False
+  load_source_to_concept_map: True
   write_reports: False
 
 sql_parameters:

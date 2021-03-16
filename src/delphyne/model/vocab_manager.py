@@ -30,13 +30,13 @@ class VocabManager:
         self._db = db
         self._cdm = cdm
 
-        self._skip_standard_vocabs = config.run_options.skip_vocabulary_loading
-        self._skip_custom_vocabs = config.run_options.skip_custom_vocabulary_loading
-        self._skip_stcm = config.run_options.skip_source_to_concept_map_loading
+        self._load_standard_vocabs = config.run_options.load_vocabulary
+        self._load_custom_vocabs = config.run_options.load_custom_vocabulary
+        self._load_stcm = config.run_options.load_source_to_concept_map
 
-        self.standard_vocabularies = StandardVocabLoader(db, cdm, self._skip_standard_vocabs)
-        self.custom_vocabularies = CustomVocabLoader(db, cdm, self._skip_custom_vocabs)
-        self.stcm = StcmLoader(db, cdm, self._skip_stcm)
+        self.standard_vocabularies = StandardVocabLoader(db, cdm, self._load_standard_vocabs)
+        self.custom_vocabularies = CustomVocabLoader(db, cdm, self._load_custom_vocabs)
+        self.stcm = StcmLoader(db, cdm, self._load_stcm)
 
     def load_custom_vocab_and_stcm_tables(self) -> None:
         """
@@ -54,12 +54,12 @@ class VocabManager:
         stcm_version_table_name = self._cdm.SourceToConceptMapVersion.__tablename__
 
         # Temporarily drop STCM tables FKs only when the custom
-        # vocabulary loading is not skipped (to avoid FK violations)
-        if not self._skip_custom_vocabs:
+        # vocabulary loading is enabled (to avoid FK violations)
+        if self._load_custom_vocabs:
             self._drop_stcm_fks(stcm_table_name, stcm_version_table_name)
         self.custom_vocabularies.load()
         self.stcm.load()
-        if not self._skip_custom_vocabs:
+        if self._load_custom_vocabs:
             self._add_stcm_fks(stcm_table_name, stcm_version_table_name)
 
     def _drop_stcm_fks(self, stcm_table: str, stcm_version_table: str):

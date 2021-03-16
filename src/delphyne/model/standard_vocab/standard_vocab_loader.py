@@ -43,15 +43,15 @@ class StandardVocabLoader:
         Database instance to interact with.
     cdm : module
         Module containing all CDM table definitions.
-    block_loading : bool
-        If True, calls to load tables will be ignored.
+    enable_loading : bool
+        If False, calls to load tables will be ignored.
     """
 
-    def __init__(self, db: Database, cdm, block_loading: bool):
+    def __init__(self, db: Database, cdm, enable_loading: bool):
         self._db = db
         self._dialect = db.engine.name
         self._cdm = cdm
-        self._block_loading = block_loading
+        self._enable_loading = enable_loading
 
         self._standard_vocab_files: Set[Path] = set()
         self._table_file_mapping: Dict[str, Path] = {}
@@ -68,8 +68,8 @@ class StandardVocabLoader:
         -------
         None
         """
-        logger.info(f'Loading standard vocabularies: {not self._block_loading}')
-        if self._block_loading:
+        logger.info(f'Loading standard vocabularies: {self._enable_loading}')
+        if not self._enable_loading:
             return
 
         self._check_engine_support()

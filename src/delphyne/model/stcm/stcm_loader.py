@@ -31,14 +31,14 @@ class StcmLoader:
         Database instance to interact with.
     cdm : module
         Module containing all CDM table definitions.
-    block_loading : bool
-        If True, calls to load tables will be ignored.
+    enable_loading : bool
+        If False, calls to load tables will be ignored.
     """
 
-    def __init__(self, db: Database, cdm, block_loading: bool):
+    def __init__(self, db: Database, cdm, enable_loading: bool):
         self._db = db
         self._cdm = cdm
-        self._block_loading = block_loading
+        self._enable_loading = enable_loading
         # STCM versions previously loaded into the db
         self._loaded_stcm_versions: Dict[str, str] = {}
         # Newly provided STCM versions from stcm_versions.tsv
@@ -80,8 +80,8 @@ class StcmLoader:
         -------
         None
         """
-        logger.info(f'Loading source_to_concept_map files: {not self._block_loading}')
-        if self._block_loading:
+        logger.info(f'Loading source_to_concept_map files: {self._enable_loading}')
+        if not self._enable_loading:
             return
         self._invalidate_cache()
         if not STCM_DIR.exists():

@@ -75,7 +75,7 @@ with the following attributes:
    mapping.target_vocabulary_id     # 'SNOMED'
 
 If a code is not found in the mapping dictionary, :meth:`~.MappingDict.lookup()` returns a list containing
-a single :class:`.CodeMapping` object with both ``source_concept_id`` and ``target_concept_id`` set to 0.
+a single :class:`.CodeMapping` object with both ``source_concept_id`` and ``target_concept_id`` set to ``0``.
 
 Use the option ``target_concept_id_only=True`` to retrieve a list of ``target_concept_id`` instead of full mapping objects.
 Use ``first_only=True`` to retrieve the first available match instead of a list of all matches.
