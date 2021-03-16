@@ -92,7 +92,7 @@ Make sure to add any custom vocabulary used in the stcm tables to the custom voc
 Add to pipeline
 ---------------
 
-To load STCM files, set the ``skip_source_to_concept_map_loading`` option in your config.yml to ``False``,
+To load STCM files, set the ``load_source_to_concept_map`` option in your config.yml to ``True``,
 and add the following call to your Wrapper's run method:
 
 .. code-block:: python
@@ -101,7 +101,7 @@ and add the following call to your Wrapper's run method:
 
 If you are loading **custom vocabularies associated with the STCM records**
 (typically the case when loading STCM tables for the first time),
-also set ``skip_custom_vocabulary_loading`` to ``False`` in config.yml,
+also set ``load_custom_vocabulary`` to ``True`` in config.yml,
 and replace the previous call with the following in the Wrapper's run method:
 
 .. code-block:: python

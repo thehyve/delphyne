@@ -36,7 +36,7 @@ the standard vocabularies folder:
 Add to pipeline
 ---------------
 
-Make sure the ``skip_vocabulary_loading`` option in your config.yml is set to ``False``.
+Make sure the ``load_vocabulary`` option in your config.yml is set to ``True``.
 As part of your Wrapper's run method, the following line must be included:
 
 .. code-block:: python

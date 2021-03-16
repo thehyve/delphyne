@@ -45,7 +45,7 @@ Files have to be placed in te following folder:
 Add to pipeline
 ---------------
 
-Make sure the ``skip_custom_vocabulary_loading`` option in your config.yml is set to False.
+Make sure the ``load_custom_vocabulary`` option in your config.yml is set to ``True``.
 
 If you're also using STCM files, the recommended way to load
 the files is with the following call as part of your Wrapper's run method:
