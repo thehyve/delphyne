@@ -9,7 +9,8 @@ delphyne
    transformations
    standard_vocab
    custom_vocab
-   code_mapper
+   stcm
+   semantic_mapping
    reference
    changelog_link
 
