@@ -1,25 +1,26 @@
-Semantic mapping
-================
+Semantic mapping tools
+======================
 
 .. contents::
     :local:
     :backlinks: none
 
-The section describes available Delphyne's methods to map source data to standard OMOP concept_ids.
+The section describes available delphyne's tools to map source data to standard OMOP concept_ids during ETL execution.
 
-CodeMapper
-----------
+Vocabulary-based mappings
+-------------------------
 
-Delphyne's :class:`.CodeMapper` class enables the creation
-of mapping dictionaries from non-standard OMOP vocabulary terms to valid standard concept_ids.
-Mappings are built on information extracted from the CONCEPT and CONCEPT_RELATIONSHIP tables.
-For example, it is possible to automatically map ICD10CM ontology terms to their SNOMED standard concept_id equivalent.
-Once created, a mapping dictionary can be used in any transformation to quickly lookup target concept_id information
-for any source term.
+delphyne's :class:`.CodeMapper` class enables the creation of mapping dictionaries from non-standard OMOP vocabulary
+terms to valid standard concept_ids. Once created, a mapping dictionary can be used in any transformation to quickly
+lookup mappings for any source term.
 
-Note that creating a mapping dictionary with this method is only possible for official OMOP vocabularies;
+Mappings are built on information extracted from the CONCEPT and CONCEPT_RELATIONSHIP tables. For example, it is
+possible to automatically extract mappings from ICD10CM ontology terms to their equivalent standard concept_id
+(typically SNOMED).
+
+Note that creating a mapping dictionary with this method is only possible for **official OMOP vocabularies**;
 if a source vocabulary is not available from `Athena <https://athena.ohdsi.org/vocabulary/list>`_,
-other mapping methods should be considered (e.g. loading the mappings directly from file).
+alternative methods should be considered.
 
 Creating a mapping dictionary
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -29,8 +30,8 @@ for one or multiple source vocabularies at once, identified by their OMOP vocabu
 When possible, it is recommended to use the ``restrict_to_codes`` argument to load mappings
 only for the source codes that will be actually used in the transformations, thus limiting memory usage.
 
-Delphyne's :class:`.Wrapper` class provides a ready-to-use :class:`.CodeMapper` instance under
-the attribute ``code_mapper``. You can use it to create a mapping dictionary inside a transformation script as follows:
+Delphyne's :class:`.Wrapper` class provides a ready-to-use :class:`.CodeMapper` instance under the attribute
+``self.code_mapper``. You can use it to create a mapping dictionary inside a transformation script as follows:
 
 .. code-block:: python
 
@@ -74,7 +75,25 @@ with the following attributes:
    mapping.target_vocabulary_id     # 'SNOMED'
 
 If a code is not found in the mapping dictionary, :meth:`~.MappingDict.lookup()` returns a list containing
-a single :class:`.CodeMapping` object with both ``source_concept_id`` and ``target_concept_id`` set to 0.
+a single :class:`.CodeMapping` object with both ``source_concept_id`` and ``target_concept_id`` set to ``0``.
 
 Use the option ``target_concept_id_only=True`` to retrieve a list of ``target_concept_id`` instead of full mapping objects.
 Use ``first_only=True`` to retrieve the first available match instead of a list of all matches.
+
+STCM mappings
+-------------
+
+The :class:`.Wrapper` class provides a :meth:`~.Wrapper.lookup_stcm()` method to extract mappings from the
+SOURCE_TO_CONCEPT_MAP table. Note that you will need to populate the table yourself before being able to use this
+method (see :ref:`Source to concept map` for instructions).
+
+Looking up STCM mappings
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can lookup mapping information for a single source code at a time as follows:
+
+.. code-block:: python
+
+   mapping = wrapper.lookup_stcm(source_vocabulary_id='MY_VOCAB', source_code='ABC')
+
+The result is a single standard OMOP concept_id, or ``0`` if nothing is found.

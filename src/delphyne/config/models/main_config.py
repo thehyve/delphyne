@@ -31,9 +31,9 @@ class _DataBase(BaseModel):
 
 
 class _RunOptions(BaseModel):
-    skip_vocabulary_loading: bool
-    skip_custom_vocabulary_loading: bool
-    skip_source_to_concept_map_loading: bool
+    load_vocabulary: bool
+    load_custom_vocabulary: bool
+    load_source_to_concept_map: bool
     write_reports: bool
 
 
