@@ -88,11 +88,10 @@ class StcmLoader:
             raise FileNotFoundError(f'{STCM_DIR.resolve()} folder not found')
         self._get_loaded_stcm_versions()
         self._get_provided_stcm_versions()
+        self._delete_outdated_stcm_records()
         if not self._stcm_vocabs_to_update:
             logger.info('No new STCM versions provided')
             return
-        self._delete_outdated_stcm_records()
-
         stcm_files = self._get_stcm_files()
         vocab_ids_all = set(self._provided_stcm_versions.keys())
         for stcm_file in stcm_files:
@@ -151,6 +150,7 @@ class StcmLoader:
                                     f'Expected file at {STCM_VERSION_FILE}')
         with STCM_VERSION_FILE.open('r') as version_file:
             reader = csv.DictReader(version_file, delimiter='\t')
+            vocab_version_dict = {}
             for line in reader:
                 vocab_id = line['source_vocabulary_id']
                 version = line['stcm_version']
@@ -159,7 +159,8 @@ class StcmLoader:
                 if vocab_id not in self._loaded_vocabulary_ids:
                     raise ValueError(f'{vocab_id} is not present in the vocabulary table. '
                                      'Make sure to add it as a custom vocabulary.')
-                self._provided_stcm_versions[vocab_id] = version
+                vocab_version_dict[vocab_id] = version
+            self._provided_stcm_versions = vocab_version_dict
 
     def _check_stcm_version_table_exists(self) -> None:
         metadata = MetaData(bind=self._db.engine)
@@ -172,23 +173,30 @@ class StcmLoader:
             raise
 
     def _delete_outdated_stcm_records(self) -> None:
-        # Delete STCM records for all source_vocabulary_ids for which a
-        # new version is provided in the stcm version file.
-        if not self._stcm_vocabs_to_update:
+        # Delete STCM records whose source_vocabulary_ids have been
+        # removed from stcm version or updated to a new version
+        # (excluding completely new vocabulary_ids)
+        obsolete_vocabs = self._loaded_stcm_versions.keys() - self._provided_stcm_versions.keys()
+        updated_vocabs = self._stcm_vocabs_to_update & self._loaded_stcm_versions.keys()
+
+        stcm_vocabs_to_delete = obsolete_vocabs | updated_vocabs
+
+        if not stcm_vocabs_to_delete:
             return
-        logger.info(f'Deleting STCM records for vocabulary_ids: {self._stcm_vocabs_to_update}')
+        logger.info(f'Deleting obsolete stcm and stcm_version records for vocabulary_ids:'
+                    f' {sorted(stcm_vocabs_to_delete)}')
         with self._db.session_scope() as session:
             stcm_table = self._cdm.SourceToConceptMap
             q = session.query(stcm_table)
-            q = q.filter(stcm_table.source_vocabulary_id.in_(self._stcm_vocabs_to_update))
+            q = q.filter(stcm_table.source_vocabulary_id.in_(stcm_vocabs_to_delete))
+            q.delete(synchronize_session=False)
+
+            stcm_version_table = self._cdm.SourceToConceptMapVersion
+            q = session.query(stcm_version_table)
+            q = q.filter(stcm_version_table.source_vocabulary_id.in_(stcm_vocabs_to_delete))
             q.delete(synchronize_session=False)
 
     def _update_stcm_version_table(self) -> None:
-        with self._db.session_scope() as session:
-            stcm_version_table = self._cdm.SourceToConceptMapVersion
-            q = session.query(stcm_version_table)
-            q = q.filter(stcm_version_table.source_vocabulary_id.in_(self._stcm_vocabs_to_update))
-            q.delete(synchronize_session=False)
 
         with self._db.session_scope() as session:
             for vocab_id in self._stcm_vocabs_to_update:

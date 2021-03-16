@@ -27,6 +27,16 @@ def get_all_stcm_records(wrapper: Wrapper) -> List[Tuple]:
         return [(r.source_code, r.source_vocabulary_id) for r in records]
 
 
+def get_all_stcm_versions(wrapper: Wrapper) -> List[Tuple]:
+    """
+    Return list of source_to_concept_map_version rows as tuples,
+    containing source_vocabulary_id and stcm_version.
+    """
+    with wrapper.db.session_scope() as session:
+        records = session.query(SourceToConceptMapVersion).all()
+        return [(r.source_vocabulary_id, r.stcm_version) for r in records]
+
+
 @pytest.fixture(scope='session')
 def base_stcm_dir(test_data_dir: Path) -> Path:
     return test_data_dir / 'stcm'
@@ -89,13 +99,17 @@ def test_load_stcm(cdm600_wrapper_no_constraints: Wrapper, base_stcm_dir: Path, 
     with mock_stcm_paths(base_stcm_dir, 'stcm1'):
         wrapper.vocab_manager.stcm.load()
         records = get_all_stcm_records(wrapper)
+        versions = get_all_stcm_versions(wrapper)
         assert records == [('code1', 'MY_VOCAB1')]
+        assert versions == [('MY_VOCAB1', '0.1')]
 
     # New MY_VOCAB2 vocabulary, MY_VOCAB1 unchanged
     with mock_stcm_paths(base_stcm_dir, 'stcm2'), caplog.at_level(logging.INFO):
         wrapper.vocab_manager.stcm.load()
         records = get_all_stcm_records(wrapper)
+        versions = get_all_stcm_versions(wrapper)
         assert records == [('code1', 'MY_VOCAB1'), ('code2', 'MY_VOCAB2')]
+        assert versions == [('MY_VOCAB1', '0.1'), ('MY_VOCAB2', '0.1')]
     assert "Skipping file MY_VOCAB1_stcm.csv" in caplog.text
     assert "already loaded under the current version: [('MY_VOCAB1', 1)]" in caplog.text
 
@@ -104,6 +118,16 @@ def test_load_stcm(cdm600_wrapper_no_constraints: Wrapper, base_stcm_dir: Path, 
     with mock_stcm_paths(base_stcm_dir, 'stcm2'), caplog.at_level(logging.INFO):
         wrapper.vocab_manager.stcm.load()
     assert "No new STCM versions provided" in caplog.text
+
+    # MY_VOCAB2 updated, MY_VOCAB1 removed
+    with mock_stcm_paths(base_stcm_dir, 'stcm3'), caplog.at_level(logging.INFO):
+        wrapper.vocab_manager.stcm.load()
+        records = get_all_stcm_records(wrapper)
+        versions = get_all_stcm_versions(wrapper)
+        assert records == [('code3', 'MY_VOCAB2')]
+        assert versions == [('MY_VOCAB2', '0.2')]
+    assert "Deleting obsolete stcm and stcm_version records for vocabulary_ids:" \
+           " ['MY_VOCAB1', 'MY_VOCAB2']" in caplog.text
 
 
 def test_stcm_delete(cdm600_wrapper_no_constraints: Wrapper, base_stcm_dir: Path):
