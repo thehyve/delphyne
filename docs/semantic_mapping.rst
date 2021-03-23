@@ -85,7 +85,7 @@ STCM mappings
 
 The :class:`.Wrapper` class provides a :meth:`~.Wrapper.lookup_stcm()` method to extract mappings from the
 SOURCE_TO_CONCEPT_MAP table. Note that you will need to populate the table yourself before being able to use this
-method (see :ref:`Source to concept map` for instructions).
+method (see :ref:`stcm:Source to concept map` for instructions).
 
 Looking up STCM mappings
 ^^^^^^^^^^^^^^^^^^^^^^^^

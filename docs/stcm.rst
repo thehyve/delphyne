@@ -7,7 +7,7 @@ Source to concept map
 
 The SOURCE_TO_CONCEPT_MAP (STCM) table is a legacy vocabulary table that allows to store mappings from
 source codes to standard OMOP concept_ids. Aside from documenting semantic mapping choices inside your database,
-it can be conveniently used for lookups during the ETL process - see :ref:`STCM mappings` for details.
+it can be conveniently used for lookups during the ETL process - see :ref:`semantic_mapping:STCM mappings` for details.
 
 STCM files
 ----------
@@ -51,7 +51,7 @@ and ``source_code_description``, ``invalid_reason`` (value is optional):
 
 The ``source_concept_id`` field should be set to ``0`` or a custom concept_id above 2 billion;
 in the latter case, make sure to load the corresponding CONCEPT records to the vocabulary tables
-(see instructions in :ref:`Custom vocabularies`).
+(see instructions in :ref:`custom_vocab:Custom vocabularies`).
 
 In addition to STCM files, you must always provide a single tab-separated file named **stcm_versions.tsv**,
 containing the header fields shown below (in lowercase). This file maps to the SOURCE_TO_CONCEPT_MAP_VERSION table
@@ -87,7 +87,7 @@ Files have to be placed in te following folder:
    because this is currently the STCM export format provided by Usagi.
 
 Make sure to add any custom vocabulary used in the stcm tables to the custom vocabulary folder
-(see :ref:`Custom Vocabulary files`).
+(see :ref:`custom_vocab:Custom Vocabulary files`).
 
 Add to pipeline
 ---------------
