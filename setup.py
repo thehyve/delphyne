@@ -35,7 +35,7 @@ setup(
         "SQLAlchemy >= 1.3, <1.4",
         "SQLAlchemy-Utils >= 0.36, <1",
         "pandas >= 1.0.5, <2",
-        "PyYAML >= 5.3, <6",
+        "PyYAML >= 5.4, <6",
     ],
     license="GNU General Public License v3",
     long_description=readme,
