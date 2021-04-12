@@ -1,0 +1,3 @@
+vocabulary_id	vocabulary_name	vocabulary_reference	vocabulary_version	vocabulary_concept_id
+VOCAB3	Unchanged vocabulary, matches file prefix	VOCAB3	VOCAB3_v1	0
+VOCAB4	Updated vocabulary, does not match file prefix	VOCAB4	VOCAB4_v2	0

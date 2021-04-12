@@ -1,0 +1,4 @@
+concept_id	concept_name	domain_id	vocabulary_id	concept_class_id	standard_concept	concept_code	valid_start_date	valid_end_date	invalid_reason
+2000000001	updated vocab & new class (old deleted)	ARTIFICIAL_DOMAIN	VOCAB1	CLASS4	S	CONCEPT1	2020-01-01	2099-12-31
+2000000002	updated vocab & new class (old exists)	ARTIFICIAL_DOMAIN	VOCAB1	CLASS4	S	CONCEPT2	2020-01-01	2099-12-31
+2000000003	same vocab, updated class version	ARTIFICIAL_DOMAIN	VOCAB2	CLASS3	S	CONCEPT3	2020-01-01	2099-12-31

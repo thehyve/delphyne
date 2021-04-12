@@ -11,7 +11,7 @@ schema_translate_map:
 
 run_options:
   load_vocabulary: True
-  load_custom_vocabulary: False
+  load_custom_vocabulary: True
   load_source_to_concept_map: True
   write_reports: False
 

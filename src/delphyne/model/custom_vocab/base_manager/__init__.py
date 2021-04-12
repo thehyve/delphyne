@@ -1,5 +1,5 @@
-"""Vocabulary base classes package."""
+"""Vocabulary manager classes package."""
 
-from .base_vocab_manager import BaseVocabManager
-from .base_class_manager import BaseClassManager
-from .base_concept_manager import BaseConceptManager
+from .vocab_manager import VocabManager
+from .class_manager import ClassManager
+from .concept_manager import ConceptManager
