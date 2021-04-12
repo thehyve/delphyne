@@ -112,6 +112,7 @@ class ConceptManager:
                         errors.add(f'{concept_file.name} must contain concept_ids starting at '
                                    f'2\'000\'000\'000 (2B+ convention)')
                         file_errors = True
+                        continue
                     if concept_id in unique_concepts_check:
                         errors.add(f'concept {concept_id} is duplicated across one or multiple '
                                    f'files')
