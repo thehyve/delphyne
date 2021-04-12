@@ -25,6 +25,7 @@ autodoc_default_options = {
 
 add_module_names = False
 autosummary_generate = True
+autosectionlabel_prefix_document =  True
 autodoc_typehints = 'description'
 
 # html_theme = "sphinx_rtd_theme"
