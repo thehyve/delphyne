@@ -44,8 +44,8 @@ class ConceptManager:
             vocabulary_ids will be dropped.
 
         """
-        logging.info(f'Dropping old custom concepts: '
-                     f'{True if vocab_ids else False}')
+        logger.info(f'Dropping old custom concepts: '
+                    f'{True if vocab_ids else False}')
 
         if not vocab_ids:
             return
@@ -70,8 +70,8 @@ class ConceptManager:
             vocabulary_id that doesn't match the file prefix.
 
         """
-        logging.info(f'Loading new custom concept_ids: '
-                     f'{True if vocab_ids else False}')
+        logger.info(f'Loading new custom concept_ids: '
+                    f'{True if vocab_ids else False}')
 
         if not vocab_ids:
             return
@@ -142,20 +142,16 @@ class ConceptManager:
                             valid_end_date=row['valid_end_date'],
                             invalid_reason=row['invalid_reason']
                         ))
-                    elif vocabulary_id not in valid_prefixes:
-                        logger.warning(f'concept {concept_id} is associated to unknown vocabulary '
-                                       f'{vocabulary_id}')
-                        file_errors = True
 
             if file_errors:
                 files_with_errors.add(concept_file.name)
 
             if unknown_vocabs:
-                logging.warning(f'{concept_file.name} contains unknown vocabulary_ids: '
-                                f'{unknown_vocabs}')
+                logger.warning(f'{concept_file.name} contains unknown vocabulary_ids: '
+                               f'{unknown_vocabs}')
             if invalid_vocabs:
-                logging.warning(f'{concept_file.name} contains valid vocabulary_ids '
-                                f'that do not match file prefix: {invalid_vocabs}')
+                logger.warning(f'{concept_file.name} contains valid vocabulary_ids '
+                               f'that do not match file prefix: {invalid_vocabs}')
 
         if files_with_errors:
             for error in sorted(errors):

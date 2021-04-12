@@ -51,7 +51,7 @@ class ClassManager:
           (id not in use anymore)
 
         """
-        logging.info('Looking for new custom class versions')
+        logger.info('Looking for new custom class versions')
 
         classes_old = self._get_old_custom_classes_from_database()
         classes_new = self._get_new_custom_classes_from_disk()
@@ -67,8 +67,8 @@ class ClassManager:
                 continue
             else:
                 # if class didn't exist before, old_name is None
-                logging.info(f'Found new concept_class version: {new_id} : '
-                             f'{old_name} -> {new_name}')
+                logger.info(f'Found new concept_class version: {new_id} : '
+                            f'{old_name} -> {new_name}')
                 if old_name is None:
                     classes_to_create.add(new_id)
                 else:
@@ -77,17 +77,17 @@ class ClassManager:
         self.custom_classes_to_update = classes_to_update
         self.custom_classes_to_create = classes_to_create
         if not self.custom_classes_to_update and not self.custom_classes_to_create:
-            logging.info('No new concept_class version found on disk')
+            logger.info('No new concept_class version found on disk')
 
-        logging.info('Looking for unused custom concept_class versions')
+        logger.info('Looking for unused custom concept_class versions')
 
         self.custom_classes_unused = classes_old.keys() - classes_new.keys()
 
         for old_id in self.custom_classes_unused:
-            logging.info(f'Found obsolete concept_class version: {old_id}')
+            logger.info(f'Found obsolete concept_class version: {old_id}')
 
         if not self.custom_classes_unused:
-            logging.info('No obsolete version found in database')
+            logger.info('No obsolete version found in database')
 
     def _get_old_custom_classes_from_database(self) -> Dict[str, str]:
         # Retrieve all custom concept_classes
@@ -161,8 +161,8 @@ class ClassManager:
         """Drop obsolete custom concept_classes from the database."""
         classes_to_drop = self.custom_classes_unused
 
-        logging.info(f'Dropping unused custom concept_class versions: '
-                     f'{True if classes_to_drop else False}')
+        logger.info(f'Dropping unused custom concept_class versions: '
+                    f'{True if classes_to_drop else False}')
 
         if not classes_to_drop:
             return
@@ -176,8 +176,8 @@ class ClassManager:
         """Load new custom concept_class records to the database."""
         classes_to_create = self.custom_classes_to_create
 
-        logging.info(f'Loading new custom classes: '
-                     f'{True if classes_to_create else False}')
+        logger.info(f'Loading new custom classes: '
+                    f'{True if classes_to_create else False}')
 
         if not classes_to_create:
             return
@@ -202,9 +202,9 @@ class ClassManager:
                         ignored_classes.add(class_id)
 
         if ignored_classes:
-            logger.info(f'Skipped records with concept_class_id values that '
-                        f'were already loaded under the current name: '
-                        f'{ignored_classes}')
+            logger.debug(f'Skipped records with concept_class_id values that '
+                         f'were already loaded under the current name: '
+                         f'{ignored_classes}')
 
     def update_custom_classes(self) -> None:
         """
@@ -215,8 +215,8 @@ class ClassManager:
         """
         classes_to_update = self.custom_classes_to_update
 
-        logging.info(f'Updating custom class names: '
-                     f'{True if classes_to_update else False}')
+        logger.info(f'Updating custom class names: '
+                    f'{True if classes_to_update else False}')
 
         if not classes_to_update:
             return

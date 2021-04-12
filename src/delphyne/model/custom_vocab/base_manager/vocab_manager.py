@@ -129,7 +129,7 @@ class VocabManager:
           (id not in use anymore)
 
         """
-        logging.info('Looking for new custom vocabulary versions')
+        logger.info('Looking for new custom vocabulary versions')
 
         vocab_old = self.vocabs_from_database
         vocab_new = self.vocabs_from_disk
@@ -144,29 +144,29 @@ class VocabManager:
                 unchanged_vocabs.add(new_id)
             else:
                 # if vocabulary didn't exist before, old_version is None
-                logging.info(f'Found new vocabulary version: {new_id} : '
-                             f'{old_version} -> {new_version}')
+                logger.info(f'Found new vocabulary version: {new_id} : '
+                            f'{old_version} -> {new_version}')
 
         self.custom_vocabs_to_update = vocab_new.keys() - unchanged_vocabs
         if not self.custom_vocabs_to_update:
-            logging.info('No new vocabulary version found on disk')
+            logger.info('No new vocabulary version found on disk')
 
-        logging.info('Looking for unused custom vocabulary versions')
+        logger.info('Looking for unused custom vocabulary versions')
 
         self.custom_vocabs_unused = vocab_old.keys() - vocab_new.keys()
 
         for old_id in self.custom_vocabs_unused:
-            logging.info(f'Found obsolete vocabulary version: {old_id}')
+            logger.info(f'Found obsolete vocabulary version: {old_id}')
 
         if not self.custom_vocabs_unused:
-            logging.info('No obsolete version found in database')
+            logger.info('No obsolete version found in database')
 
     def drop_custom_vocabs(self) -> None:
         """Drop obsolete custom vocabularies from the database."""
         vocabs_to_drop = self.custom_vocabs_to_update | self.custom_vocabs_unused
 
-        logging.info(f'Dropping old custom vocabulary versions: '
-                     f'{True if vocabs_to_drop else False}')
+        logger.info(f'Dropping old custom vocabulary versions: '
+                    f'{True if vocabs_to_drop else False}')
 
         if not vocabs_to_drop:
             return
@@ -184,8 +184,8 @@ class VocabManager:
         """
         vocabs_to_create = self.custom_vocabs_to_update
 
-        logging.info(f'Loading new custom vocabulary versions: '
-                     f'{True if vocabs_to_create else False}')
+        logger.info(f'Loading new custom vocabulary versions: '
+                    f'{True if vocabs_to_create else False}')
 
         if not vocabs_to_create:
             return
@@ -223,10 +223,10 @@ class VocabManager:
                         invalid_vocabs.add(vocabulary_id)
 
             if invalid_vocabs:
-                logging.warning(f'{vocab_file.name} contains vocabulary_ids '
-                                f'that do not match file prefix: {invalid_vocabs}')
+                logger.warning(f'{vocab_file.name} contains vocabulary_ids '
+                               f'that do not match file prefix: {invalid_vocabs}')
 
         if ignored_vocabs:
-            logger.info(f'Skipped records with vocabulary_id values that '
-                        f'were already loaded under the current version: '
-                        f'{ignored_vocabs}')
+            logger.debug(f'Skipped records with vocabulary_id values that '
+                         f'were already loaded under the current version: '
+                         f'{ignored_vocabs}')
