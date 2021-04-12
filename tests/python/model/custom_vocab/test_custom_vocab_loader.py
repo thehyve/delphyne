@@ -204,7 +204,7 @@ def test_custom_vocab_and_concept_update(cdm600_with_minimal_vocabulary_tables,
                                           })
 
     with mock_custom_vocab_path(base_custom_vocab_dir, 'custom_vocab_test1'), \
-            caplog.at_level(logging.INFO):
+            caplog.at_level(logging.DEBUG):
         wrapper.vocab_manager.custom_vocabularies.load()
 
     # VOCAB1 removed, VOCAB2 unchanged, VOCAB3 updated, VOCAB4 new
@@ -236,7 +236,7 @@ def test_custom_class_and_concept_update(cdm600_with_minimal_vocabulary_tables,
                                           })
 
     with mock_custom_vocab_path(base_custom_vocab_dir, 'custom_vocab_test2'), \
-            caplog.at_level(logging.INFO):
+            caplog.at_level(logging.DEBUG):
         wrapper.vocab_manager.custom_vocabularies.load()
 
     # CLASS1 removed, CLASS2 unchanged, CLASS3 updated, CLASS4 new
@@ -279,10 +279,10 @@ def test_file_prefix_recognition_vocabs_and_classes(cdm600_with_minimal_vocabula
         # prefix - but you get warnings
         # (e.g. updated VOCAB4 in file with prefix of unchanged VOCAB3)
 
-        assert "VOCAB1_vocabulary.tsv contains vocabulary_ids that do not match file prefix:" \
-               " {'VOCAB2'}" in caplog.text
-        assert "VOCAB3_vocabulary.tsv contains vocabulary_ids that do not match file prefix:" \
-               " {'VOCAB4'}" in caplog.text
+        assert "VOCAB1_vocabulary.tsv contains vocabulary_ids that do not match file " \
+               "prefix: {'VOCAB2'}" in caplog.text
+        assert "VOCAB3_vocabulary.tsv contains vocabulary_ids that do not match file " \
+               "prefix: {'VOCAB4'}" in caplog.text
         assert loaded_vocabs == ['VOCAB1_v2', 'VOCAB2_v2', 'VOCAB3_v1', 'VOCAB4_v2']
 
         # classes are updated irrespective of the file prefix
@@ -296,7 +296,9 @@ def test_file_prefix_recognition_vocabs_and_concepts(cdm600_with_minimal_vocabul
 
     load_custom_vocab_records(wrapper, ['VOCAB1', 'VOCAB2', 'VOCAB3', 'VOCAB4'])
 
-    with mock_custom_vocab_path(base_custom_vocab_dir, 'custom_vocab_test4'):
+    with mock_custom_vocab_path(base_custom_vocab_dir, 'custom_vocab_test4'), \
+            caplog.at_level(logging.WARNING):
+
         wrapper.vocab_manager.custom_vocabularies.load()
 
         loaded_vocabs = get_custom_vocab_records(wrapper)
@@ -306,10 +308,17 @@ def test_file_prefix_recognition_vocabs_and_concepts(cdm600_with_minimal_vocabul
         # prefix matching an updated vocabulary (VOCAB1) are processed
         # (VOCAB3 is skipped). if file is processed, concept is loaded
         # even if vocab not matching file prefix - but you get warnings
-        assert "VOCAB1_concept.tsv contains vocabulary_ids that do not match file prefix:" \
+        assert "VOCAB1_concept.tsv contains unknown vocabulary_ids: {'VOCABX1'}" in caplog.text
+        assert "VOCAB1_concept.tsv contains valid vocabulary_ids that do not match file prefix:" \
                " {'VOCAB2'}" in caplog.text
-        # this file is skipped, hence no warning
-        assert "VOCAB3_concept.tsv contains vocabulary_ids that do not match file prefix:" \
+        # this file is skipped, hence no warnings
+        assert "VOCAB3_concept.tsv contains unknown vocabulary_ids: {'VOCABX2'}" not in \
+               caplog.text
+        assert "VOCAB3_concept.tsv contains valid vocabulary_ids that do not match file prefix:" \
                " {'VOCAB4'}" not in caplog.text
+        # for file with no vocab prefix, only missing vocabularies
+        # are checked:
+        assert "concept.tsv contains unknown vocabulary_ids: {'VOCABX3'}" in caplog.text
+
         assert loaded_vocabs == ['VOCAB1_v2', 'VOCAB2_v2', 'VOCAB3_v1', 'VOCAB4_v2']
-        assert loaded_concepts == [2000000001, 2000000002, 2000000005]
+        assert loaded_concepts == [2000000001, 2000000002, 2000000007]

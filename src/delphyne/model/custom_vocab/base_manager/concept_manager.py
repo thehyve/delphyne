@@ -62,11 +62,12 @@ class ConceptManager:
         Parameters
         ----------
         vocab_ids : set of str
-            Only concepts associated with the provided set of
-            vocabulary_ids will be loaded.
+            Set of new or updated vocabulary_ids. Only concepts
+            associated with these vocabulary_ids will be loaded.
         valid_prefixes : set of str
-            Allows detection of concept_ids with a vocabulary_id that
-            doesn't match the file prefix.
+            Set of all user-provided vocabulary ids. Allows detection
+            of concept_ids with an unknown vocabulary_id or a valid
+            vocabulary_id that doesn't match the file prefix.
 
         """
         logging.info(f'Loading new custom concept_ids: '
@@ -88,6 +89,7 @@ class ConceptManager:
             file_prefix = get_file_prefix(concept_file, 'concept')
             check_prefix = file_prefix in vocabs_lowercase
             invalid_vocabs = set()
+            unknown_vocabs = set()
 
             with self._db.tracked_session_scope(name=f'load_{concept_file.stem}') \
                     as (session, _), concept_file.open('r') as f_in:
@@ -98,8 +100,14 @@ class ConceptManager:
                     concept_id = row['concept_id']
                     vocabulary_id = row['vocabulary_id']
 
+                    # skip concept_ids with unknown vocabulary_id.
+                    if vocabulary_id not in valid_prefixes:
+                        unknown_vocabs.add(vocabulary_id)
+                        continue
+
                     # if file prefix is valid vocab_id,
                     # vocabulary_ids in file should match it.
+                    # the concept_id will be loaded irrespectively.
                     # comparison is case-insensitive.
                     if check_prefix and vocabulary_id.lower() != file_prefix:
                         invalid_vocabs.add(vocabulary_id)
@@ -134,12 +142,19 @@ class ConceptManager:
                             valid_end_date=row['valid_end_date'],
                             invalid_reason=row['invalid_reason']
                         ))
+                    elif vocabulary_id not in valid_prefixes:
+                        logger.warning(f'concept {concept_id} is associated to unknown vocabulary '
+                                       f'{vocabulary_id}')
+                        file_errors = True
 
             if file_errors:
                 files_with_errors.add(concept_file.name)
 
+            if unknown_vocabs:
+                logging.warning(f'{concept_file.name} contains unknown vocabulary_ids: '
+                                f'{unknown_vocabs}')
             if invalid_vocabs:
-                logging.warning(f'{concept_file.name} contains vocabulary_ids '
+                logging.warning(f'{concept_file.name} contains valid vocabulary_ids '
                                 f'that do not match file prefix: {invalid_vocabs}')
 
         if files_with_errors:
