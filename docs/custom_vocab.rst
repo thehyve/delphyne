@@ -20,6 +20,14 @@ When a vocabulary file contains data from only one custom vocabulary,
 it's good practice to prepend the vocabulary_id to the file name (e.g. MYVOCAB_concept.tsv).
 This way, if the vocabulary version hasn't changed (see `Versioning`_),
 the file will be ignored without needing to parse the file contents.
+A file without prefix (e.g. concept.tsv), or with a prefix that does not match any user-provided vocabulary_id
+(e.g. mixed_concept.tsv), will always be processed, and warnings for vocabulary_id mismatches will be turned off.
+
+.. note::
+   Currently, selective loading based on file prefix only applies to custom CONCEPT files.
+   CONCEPT_CLASS and VOCABULARY files will be processed irrespectively of the file prefix,
+   but you will get warnings if a VOCABULARY file contains vocabulary_ids that do not mach the file prefix.
+   There is no warning for CONCEPT_CLASS files.
 
 For custom vocabularies, the ``vocabulary_concept_id`` (VOCABULARY) and
 ``concept_class_concept_id`` (CONCEPT_CLASS) should always be set to ``0``.
