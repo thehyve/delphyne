@@ -108,7 +108,7 @@ class ConceptManager:
                     # NOTE: only performing checks not already enforced
                     # by CONCEPT table constraints; those will raise an
                     # exception as soon as they occur
-                    if int(concept_id) < 2000000000:
+                    if int(concept_id) < 2_000_000_000:
                         errors.add(f'{concept_file.name} must contain concept_ids starting at '
                                    f'2\'000\'000\'000 (2B+ convention)')
                         file_errors = True

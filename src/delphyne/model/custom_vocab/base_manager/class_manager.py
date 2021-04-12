@@ -136,7 +136,7 @@ class ClassManager:
                                    f'concept_class_name')
                         file_errors = True
                     if concept_id != '0':
-                        errors.add(f'{class_file.name} may not containt concept_class_concept_id'
+                        errors.add(f'{class_file.name} may not contain concept_class_concept_id'
                                    f' other than 0')
                         file_errors = True
                     if class_id in class_dict:

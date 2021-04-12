@@ -51,7 +51,7 @@ def get_custom_concept_records(wrapper: Wrapper, concept_id_only: bool = True
     """
     with wrapper.db.session_scope() as session:
         records = session.query(cdm600.Concept) \
-            .filter(cdm600.Concept.concept_id > 2000000000) \
+            .filter(cdm600.Concept.concept_id > 2_000_000_000) \
             .all()
         if concept_id_only:
             records = [r.concept_id for r in records]
@@ -162,7 +162,7 @@ def test_custom_concept_class_quality(cdm600_wrapper_with_empty_tables,
                in caplog.text
         assert "bad_concept_class.tsv may not contain an empty concept_class_name" \
                in caplog.text
-        assert "bad_concept_class.tsv may not containt concept_class_concept_id other than " \
+        assert "bad_concept_class.tsv may not contain concept_class_concept_id other than " \
                "0" \
                in caplog.text
         # class duplicated within file
