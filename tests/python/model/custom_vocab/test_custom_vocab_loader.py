@@ -312,13 +312,14 @@ def test_file_prefix_recognition_vocabs_and_concepts(cdm600_with_minimal_vocabul
         assert "VOCAB1_concept.tsv contains valid vocabulary_ids that do not match file prefix:" \
                " {'VOCAB2'}" in caplog.text
         # this file is skipped, hence no warnings
-        assert "VOCAB3_concept.tsv contains unknown vocabulary_ids: {'VOCABX2'}" not in \
-               caplog.text
-        assert "VOCAB3_concept.tsv contains valid vocabulary_ids that do not match file prefix:" \
-               " {'VOCAB4'}" not in caplog.text
+        assert "VOCAB3_concept.tsv contains unknown vocabulary_ids" not in caplog.text
+        assert "VOCAB3_concept.tsv contains valid vocabulary_ids that do not match file prefix" \
+               not in caplog.text
         # for file with no vocab prefix, only missing vocabularies
         # are checked:
-        assert "concept.tsv contains unknown vocabulary_ids: {'VOCABX3'}" in caplog.text
+        assert "no_prefix_concept.tsv contains unknown vocabulary_ids: {'VOCABX3'}" in caplog.text
+        assert "no_prefix_concept.tsv contains valid vocabulary_ids that do not match file prefix" \
+               not in caplog.text
 
         assert loaded_vocabs == ['VOCAB1_v2', 'VOCAB2_v2', 'VOCAB3_v1', 'VOCAB4_v2']
         assert loaded_concepts == [2000000001, 2000000002, 2000000007]
