@@ -14,7 +14,7 @@ Basically, there are three options:
  - Write a SQL query, directly inserting into the target table.
  - Write a Python function, creating a query using the `SQLAlchemy expression language <https://docs.sqlalchemy.org/en/14/core/tutorial.html>`_.
 
-For both options the :class:`.Wrapper` has built-in methods that coordinate the execution.
+For all of these options, the :class:`.Wrapper` has built-in methods that coordinate the execution.
 These methods, detailed below, use SQLAlchemy to handle database operations and log the execution statistics.
 This provides a standardised interface independent of whether you are using Python or SQL for the transformation logic.
 
