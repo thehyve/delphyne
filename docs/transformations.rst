@@ -7,12 +7,13 @@ Transformations
 
 
 Introduction
--------------
+------------
 The delphyne :class:`.Wrapper` offers different ways to execute transformation scripts.
 Basically, there are three options:
- - Write a Python function, returning the results as `SQLAlchemy ORM objects <https://docs.sqlalchemy.org/en/14/orm/tutorial.html>`_.
+
+ - Write a Python function, returning the results as `SQLAlchemy ORM objects <https://docs.sqlalchemy.org/en/14/orm>`_.
  - Write a SQL query, directly inserting into the target table.
- - Write a Python function, creating a query using the `SQLAlchemy expression language <https://docs.sqlalchemy.org/en/14/core/tutorial.html>`_.
+ - Write a Python function, creating a query using the `SQLAlchemy expression language <https://docs.sqlalchemy.org/en/14/core>`_.
 
 For all of these options, the :class:`.Wrapper` has built-in methods that coordinate the execution.
 These methods, detailed below, use SQLAlchemy to handle database operations and log the execution statistics.
@@ -25,16 +26,14 @@ In addition, the advised convention for the transformation file naming is ``<sou
 
 
 SQLAlchemy ORM
----------------
+--------------
 The SQLAlchemy ORM approach allows the use of 'simple' Python to write transformations.
 This function takes the wrapper as input and produces OMOP records as SQLAlchemy ORM objects.
-It can return these objects in two different ways (see below).
 The convention is to put the transformation scripts in the `src/main/python/transformation` folder.
 `See delphyne-template for examples. <https://github.com/thehyve/delphyne-template/tree/master/src/main/python/transformation>`_
 
-There are two ways of execution the transformation, each requiring a different return type.
-The first mode, used by :meth:`.Wrapper.execute_transformation`.
-This expects the transformation function to return the full list of ORM objects at once.
+There are two ways of executing the transformation, each requiring a different return type.
+:meth:`.Wrapper.execute_transformation`, expects the transformation function to return a full list of ORM objects at once.
 All returned records are committed to the database at the same time.
 
 .. code-block:: python
@@ -44,18 +43,18 @@ All returned records are committed to the database at the same time.
         records_to_insert = []
         for row in source:
             # ...transformation logic...
-            omop_record = wrapper.cdm.Observation(
+            record = wrapper.cdm.Observation(
                 person_id=...,
                 observation_concept_id=...,
                 ...
             )
-            records_to_insert.append(records_to_insert)
+            records_to_insert.append(record)
         return records_to_insert
 
-While this is straightforward, it does require to store all records in memory.
+While this is straightforward, it does require to store all output records in memory.
 For large tables there is a 'batch' mode :meth:`.Wrapper.execute_batch_transformation`.
 This expects the transformation function to yield the ORM objects one at a time.
-The wrapper will commits the yielded records to the database in batches of given size.
+The wrapper commits the yielded records to the database in batches of 10_000 records by default.
 
 .. code-block:: python
 
@@ -63,29 +62,30 @@ The wrapper will commits the yielded records to the database in batches of given
         # ...read source data...
         for row in source:
             # ...transformation logic...
-            omop_record = wrapper.cdm.Observation(
+            record = wrapper.cdm.Observation(
                 person_id=...,
                 observation_concept_id=...,
                 ...
             )
-            yield omop_record
+            yield record
 
-In the wrapper these two transformations can be called like this:
+In the wrapper's run method, these two transformations can be called like this.
+Specifying the batch size is optional.
 
 .. code-block:: python
 
     self.execute_transformation(my_transformation)
-    self.execute_batch_transformation(my_batch_transformation)
+    self.execute_batch_transformation(my_batch_transformation, batch_size=10000)
 
 
 Raw SQL
--------------
+-------
 SQL queries can easily be executed with the wrapper.
 In case of just executing a simple query, the method :meth:`.Wrapper.execute_sql_query` is used.
 If the SQL query is saved in a file, the method :meth:`.Wrapper.execute_sql_file` is used.
 
 The SQL query should handle the insertion of records.
-The easiest way to create a transformations with sql is by following the template given here.
+The easiest way to create a transformations with SQL is by following the template given here.
 If you have defined your transformation in Rabbit-in-a-Hat, then
 you can directly export `a SQL skeleton in this format <http://ohdsi.github.io/WhiteRabbit/RabbitInAHat.html#generating_a_sql_skeleton_(v090)>`_.
 The convention is to put these transformation scripts in the `src/main/sql` folder.
@@ -104,9 +104,16 @@ The convention is to put these transformation scripts in the `src/main/sql` fold
      ...
     FROM @source_schema.<source_table>
 
+Executing the file is then done by adding the following line to the wrapper's run method.
+Only the filename has to be provided, delphyne will look for the file in the `src/main/sql` folder.
+
+.. code-block:: python
+
+    execute_sql_file('my_file.sql')
+
 
 SQLAlchemy query
--------------
+----------------
 Instead of writing plain SQL query, the query can also be written using SQLAlchemy expressions.
 SQLAlchemy translates the expressions into SQL.
 This has the advantage that it can be compiled to any SQL dialect and makes the query agnostic of the used
