@@ -72,11 +72,14 @@ class _DbCheckConstraints:
     # these for the dialect in use.
     def __init__(self, database: Database):
         self._db = database
-        self.chk_support = self._check_reflection_support()
-
         self._dialect_method_lookup = {
             'mssql': self._get_chk_constraints_mssql
         }
+
+    @property
+    @lru_cache()
+    def chk_support(self) -> bool:
+        return self._check_reflection_support()
 
     @property
     @lru_cache()

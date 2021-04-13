@@ -9,11 +9,10 @@ from types import MappingProxyType
 from typing import Dict, Set, FrozenSet, ContextManager, Tuple, Union
 
 from sqlalchemy import create_engine, MetaData, inspect
-from sqlalchemy.engine.url import URL, make_url
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.engine.url import URL
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
-from sqlalchemy_utils.functions import database_exists
 
 from .constraints import ConstraintManager
 from .session_tracker import SessionTracker
@@ -102,14 +101,9 @@ class Database:
     def _can_connect_without_password(uri: URL) -> bool:
         logger.info('Attempting to connect without password')
         logger.disabled = True
-        try:
-            create_engine(uri).connect()
-        except SQLAlchemyError:
-            return False
-        else:
-            return True
-        finally:
-            logger.disabled = False
+        can_connect = Database.can_connect(uri)
+        logger.disabled = False
+        return can_connect
 
     @property
     def schemas(self) -> FrozenSet[str]:
@@ -239,17 +233,13 @@ class Database:
         bool
             Returns True if connection to database could be established.
         """
-        if isinstance(uri, str):
-            uri = make_url(uri)
         try:
-            db_exists = database_exists(uri)
-        except OperationalError as e:
-            logger.error(e)
+            create_engine(uri).connect()
+        except SQLAlchemyError as e:
+            logger.error(e, exc_info=True)
             return False
-        if not db_exists:
-            db_name = uri.database
-            logger.error(f'Could not connect. Database "{db_name}" does not exist')
-        return db_exists
+        else:
+            return True
 
     @property
     def reflected_metadata(self) -> MetaData:
