@@ -46,7 +46,7 @@ class Wrapper(OrmWrapper, RawSqlWrapper):
         self._config = config
         self.db = Database.from_config(config, cdm_.Base)
 
-        if not self.db.can_connect(str(self.db.engine.url)):
+        if not self.db.can_connect(self.db.engine.url):
             sys.exit()
 
         super().__init__(database=self.db)
