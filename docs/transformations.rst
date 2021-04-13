@@ -69,13 +69,14 @@ The wrapper commits the yielded records to the database in batches of 10_000 rec
             )
             yield record
 
-In the wrapper's run method, these two transformations can be called like this.
+Inside a wrapper method, these two transformations can be called like this.
 Specifying the batch size is optional.
 
 .. code-block:: python
-
-    self.execute_transformation(my_transformation)
-    self.execute_batch_transformation(my_batch_transformation, batch_size=10000)
+    def run(self):
+        ...
+        self.execute_transformation(my_transformation)
+        self.execute_batch_transformation(my_batch_transformation, batch_size=10000)
 
 
 Raw SQL
@@ -104,12 +105,11 @@ The convention is to put these transformation scripts in the `src/main/sql` fold
      ...
     FROM @source_schema.<source_table>
 
-Executing the file is then done by adding the following line to the wrapper's run method.
+Executing the file is then done by adding the following line to a wrapper method.
 Only the filename has to be provided, delphyne will look for the file in the `src/main/sql` folder.
 
 .. code-block:: python
-
-    execute_sql_file('my_file.sql')
+        self.execute_sql_file('my_file.sql')
 
 
 SQLAlchemy query
