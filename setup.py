@@ -33,7 +33,6 @@ setup(
         "psycopg2-binary >= 2.8, <3",
         "pydantic >= 1.7, <2",
         "SQLAlchemy >= 1.3, <1.4",
-        "SQLAlchemy-Utils >= 0.36, <1",
         "pandas >= 1.0.5, <2",
         "PyYAML >= 5.4, <6",
     ],
@@ -47,7 +46,7 @@ setup(
     package_dir={"": "src"},
     packages=["delphyne"],
     extras_require={
-        "TEST": ["pytest", "pytest-cov", "docker", "nox", "flake8"],
+        "TEST": ["pytest", "pytest-cov", "SQLAlchemy-Utils", "docker", "nox", "flake8"],
     },
     url="https://github.com/thehyve/delphyne",
     version=version['__version__'],
