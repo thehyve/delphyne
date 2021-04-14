@@ -4,7 +4,6 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from collections import Counter
-from functools import lru_cache
 from inspect import signature
 from typing import Callable, List
 
@@ -171,29 +170,3 @@ class OrmWrapper(ABC):
         transformation_metadata.deletion_counts = dc
         ic = Counter(events.get_record_targets(records_to_insert))
         transformation_metadata.insertion_counts = ic
-
-    @lru_cache(maxsize=50000)
-    def lookup_stcm(self, source_vocabulary_id: str, source_code: str) -> int:
-        """
-        Query the STCM table to get the target_concept_id.
-
-        Parameters
-        ----------
-        source_vocabulary_id : str
-            Vocabulary ID of the source code.
-        source_code : str
-            Code belonging to the source vocabulary for which to look up
-            the mapping.
-
-        Returns
-        -------
-        int
-            Target_concept_id if present, otherwise 0.
-        """
-        with self.db.session_scope() as session:
-            q = session.query(self.cdm.SourceToConceptMap)
-            result = q.filter_by(source_vocabulary_id=source_vocabulary_id,
-                                 source_code=source_code).one_or_none()
-            if result is None:
-                return 0
-            return result.target_concept_id
