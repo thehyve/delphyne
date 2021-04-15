@@ -119,4 +119,35 @@ SQLAlchemy translates the expressions into SQL.
 This has the advantage that it can be compiled to any SQL dialect and makes the query agnostic of the used
 Relational Database Management System (RDBMS).
 
-**TBC**
+
+.. code-block:: python
+
+    from sqlalchemy import select
+
+    def my_sql_transformation(wrapper):
+    
+        source_table = wrapper.cdm.<source_table>.__table__
+        target_table = wrapper.cdm.<target_table>.__table__
+
+        sel = select([
+            source_table.columns['source_column_1'],
+            source_table.columns['source_column_2'],
+            ...
+            ])\
+            .select_from(source_table)
+
+        ins = target_table.insert().from_select(sel.columns, sel)
+        
+        return ins
+        
+In case the source table is not part of the CDM schema, you can obtain it with the following method, which leverages SQLAlchemy's ability to create reflected table objects from the database itself:
+
+.. code-block:: python
+        source_table = wrapper.get_table(schema='my_source_schema', table_name='my_source_table')
+        
+Inside a wrapper method, the transformations can be called like this, similar to ORM transformations.
+
+.. code-block:: python
+    def run(self):
+        ...
+        self.execute_sql_transformation(my_sql_transformation)
