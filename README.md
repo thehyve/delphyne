@@ -52,6 +52,12 @@ pytest
 nox -s tests
 ```
 
+## Documentation
+The documentation is generated from the method descriptions and the files in `/docs`.
+
+To update the documentation, edit the respective `.rst` files, then execute `nox -s docs` in the main project folder.
+To preview the documentation pages, open `docs/_build/index.html` in your browser.
+
 ## License
 [GPLv3](https://github.com/thehyve/delphyne/blob/master/LICENSE)
 
