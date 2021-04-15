@@ -73,6 +73,7 @@ Inside a wrapper method, these two transformations can be called like this.
 Specifying the batch size is optional.
 
 .. code-block:: python
+
     def run(self):
         ...
         self.execute_transformation(my_transformation)
@@ -109,6 +110,9 @@ Executing the file is then done by adding the following line to a wrapper method
 Only the filename has to be provided, delphyne will look for the file in the `src/main/sql` folder.
 
 .. code-block:: python
+
+    def run(self):
+        ...
         self.execute_sql_file('my_file.sql')
 
 
@@ -143,11 +147,13 @@ Relational Database Management System (RDBMS).
 In case the source table is not part of the CDM schema, you can obtain it with the following method, which leverages SQLAlchemy's ability to create reflected table objects from the database itself:
 
 .. code-block:: python
-        source_table = wrapper.get_table(schema='my_source_schema', table_name='my_source_table')
+
+    source_table = wrapper.get_table(schema='my_source_schema', table_name='my_source_table')
         
 Inside a wrapper method, the transformations can be called like this, similar to ORM transformations.
 
 .. code-block:: python
+
     def run(self):
         ...
         self.execute_sql_transformation(my_sql_transformation)
