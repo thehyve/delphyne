@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, Union, List, Set, Dict, NamedTuple
+from functools import lru_cache
+from typing import Optional, Union, List, Set, Dict, NamedTuple, Tuple
 
 from sqlalchemy import and_
 from sqlalchemy.orm import aliased
@@ -348,3 +349,28 @@ class CodeMapper:
                                f'have no mapping to valid standard concept_id (mapped to 0): '
                                f'{found_without_mapping}')
         return mapping_dict
+
+    @lru_cache(maxsize=50000)
+    def lookup_stcm(self, source_vocabulary_id: str, source_code: str) -> Tuple[int]:
+        """
+        Query the STCM table to get the target_concept_id(s).
+
+        Parameters
+        ----------
+        source_vocabulary_id : str
+            Vocabulary ID of the source code.
+        source_code : str
+            Code belonging to the source vocabulary for which to look up
+            the mapping.
+
+        Returns
+        -------
+        tuple of int
+            One or multiple target_concept_id values if present,
+            otherwise an empty tuple.
+        """
+        with self.db.session_scope() as session:
+            q = session.query(self.cdm.SourceToConceptMap)
+            result = q.filter_by(source_vocabulary_id=source_vocabulary_id,
+                                 source_code=source_code).all()
+            return tuple(r.target_concept_id for r in result)

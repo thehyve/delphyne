@@ -83,7 +83,7 @@ Use ``first_only=True`` to retrieve the first available match instead of a list 
 STCM mappings
 -------------
 
-The :class:`.Wrapper` class provides a :meth:`~.Wrapper.lookup_stcm()` method to extract mappings from the
+The :class:`.CodeMapper` class provides a :meth:`~.CodeMapper.lookup_stcm()` method to extract mappings from the
 SOURCE_TO_CONCEPT_MAP table. Note that you will need to populate the table yourself before being able to use this
 method (see :ref:`stcm:Source to concept map` for instructions).
 
@@ -94,6 +94,10 @@ You can lookup mapping information for a single source code at a time as follows
 
 .. code-block:: python
 
-   mapping = wrapper.lookup_stcm(source_vocabulary_id='MY_VOCAB', source_code='ABC')
+   mapping = wrapper.code_mapper.lookup_stcm(source_vocabulary_id='MY_VOCAB', source_code='ABC')
 
-The result is a single standard OMOP concept_id, or ``0`` if nothing is found.
+The result is a tuple containing one or multiple target_concept_id values if available.
+If no target_concept_id could be found for the provided source_code, an empty tuple is returned.
+
+.. note::
+   STCM lookups are cached, meaning that recurrent lookups will not require a database query.
