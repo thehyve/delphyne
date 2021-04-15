@@ -83,7 +83,7 @@ Use ``first_only=True`` to retrieve the first available match instead of a list 
 STCM mappings
 -------------
 
-The :class:`.Wrapper` class provides a :meth:`~.Wrapper.lookup_stcm()` method to extract mappings from the
+The :class:`.CodeMapper` class provides a :meth:`~.CodeMapper.lookup_stcm()` method to extract mappings from the
 SOURCE_TO_CONCEPT_MAP table. Note that you will need to populate the table yourself before being able to use this
 method (see :ref:`stcm:Source to concept map` for instructions).
 
