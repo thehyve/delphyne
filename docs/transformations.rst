@@ -33,7 +33,7 @@ The convention is to put the transformation scripts in the `src/main/python/tran
 `See delphyne-template for examples. <https://github.com/thehyve/delphyne-template/tree/master/src/main/python/transformation>`_
 
 There are two ways of executing the transformation, each requiring a different return type.
-:meth:`.Wrapper.execute_transformation`, expects the transformation function to return a full list of ORM objects at once.
+:meth:`.Wrapper.execute_transformation` expects the transformation function to return a full list of ORM objects at once.
 All returned records are committed to the database at the same time.
 
 .. code-block:: python
@@ -69,7 +69,7 @@ The wrapper commits the yielded records to the database in batches of 10_000 rec
             )
             yield record
 
-Inside a wrapper method, these two transformations can be called like this.
+Inside a wrapper method, these two transformations can be called like given below.
 Specifying the batch size is optional.
 
 .. code-block:: python
