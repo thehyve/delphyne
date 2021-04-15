@@ -128,6 +128,7 @@ Relational Database Management System (RDBMS).
 
     from sqlalchemy import select
 
+
     def my_sql_transformation(wrapper):
     
         source_table = wrapper.cdm.<source_table>.__table__
@@ -144,13 +145,14 @@ Relational Database Management System (RDBMS).
         
         return ins
         
-In case the source table is not part of the CDM schema, you can obtain it with the following method, which leverages SQLAlchemy's ability to create reflected table objects from the database itself:
+In case the source table is not part of the CDM schema, you can obtain it with using :meth:`.Wrapper.get_table`, which leverages SQLAlchemy's ability to create reflected table objects from the database itself:
 
 .. code-block:: python
 
     source_table = wrapper.get_table(schema='my_source_schema', table_name='my_source_table')
         
-Inside a wrapper method, the transformations can be called like this, similar to ORM transformations.
+Inside a wrapper method, the transformations can be called like using a dedicated wrapper :meth:`.Wrapper.execute_sql_transformation`,
+similar to ORM transformations.
 
 .. code-block:: python
 
