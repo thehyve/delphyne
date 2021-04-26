@@ -7,6 +7,7 @@ delphyne
 
    cdm
    transformations
+   constraints
    standard_vocab
    custom_vocab
    stcm
