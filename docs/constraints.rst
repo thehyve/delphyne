@@ -34,8 +34,10 @@ Drop/add constraints
 Dropping or adding constraints can be done at any time during the data transformation process.
 Depending on the aim, this can be applied to a single constraint, up until the full set of
 constraints across all tables.
-Dropping indexes/constraints does not cascade, meaning they can only be dropped if it doesn't violate other
-database relationships.
+
+.. note::
+   Dropping indexes/constraints does not cascade. This means they can only be dropped if it doesn't violate other
+   database relationships, and only added if the prerequisite objects are present.
 
 Singular
 ^^^^^^^^
@@ -64,17 +66,27 @@ Multiple
 Constraints and/or indexes can also be dropped or added on table-level. From smallest to largest, the levels are:
 single table, cdm (non-vocabulary) tables, and the complete set of tables in your model (including vocabularies).
 
-All of these methods have arguments that allow you to specify the categories of the relationships that should be added
+.. code-block:: python
+
+    # Drop all indexes/constraints on the observation table
+    wrapper.db.constraint_manager.drop_table_constraints('observation')
+    # Drop all indexes/constraints on all non-vocabulary tables
+    wrapper.db.constraint_manager.drop_cdm_constraints()
+    # Drop all indexes/constraints on all tables
+    wrapper.db.constraint_manager.drop_all_constraints()
+
+All of these methods have arguments that allow you to specify the categories of the objects that should be added
 or dropped: PKs, indexes and constraints (includes FKs, check and unique constraints).
+The default behavior is to include all objects.
 
 Dropping behavior ignores the CDM model, i.e. it will look at the objects currently active on the respective tables,
-and drops all objects that match the specified categories (e.g. indexes, PKs).
+and drops all that match the specified categories (e.g. indexes, PKs).
 
 Adding behavior on the other hand, will look at the objects specified in the CDM model.
 It will, however, only add objects that are not already active in the database.
 Any index/constraint that is already active, under the same or a different name, will therefore be skipped.
 
-E.g. to drop all constraints (but not PKs and indexes) on all non-vocabulary tables:
+E.g. the following drops all constraints (but not PKs and indexes) on all non-vocabulary tables:
 
 .. code-block:: python
 
@@ -85,7 +97,7 @@ E.g. to drop all constraints (but not PKs and indexes) on all non-vocabulary tab
 
 Drop or add methods can only be run successfully if the action does not cause conflicts.
 E.g. dropping a PK will not be possible if other FKs still depend on it. The default behavior in case an action
-cannot be performed is to raise a ``ValueError``.
+cannot be performed is to raise an exception.
 Any constraints/indexes that were already dropped or added as part of the method will not be rolled back.
 To only log these occurrences without raising an exception, and continue to try to add/drop remaining
 objects (if any), the ``errors='ignore'`` argument can be provided.
@@ -109,4 +121,3 @@ If, for example, the transformation that populates the CONDITION_OCCURRENCE tabl
 field of the PERSON table, it would benefit from having the PK already being present on the PERSON table.
 
 The same principle applies when transformations require 'lookups' in already populated CDM tables.
-
