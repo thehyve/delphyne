@@ -12,7 +12,7 @@ from ...cdm import vocabularies
 # they have a name for them to be dropped. See:
 # https://docs.sqlalchemy.org/en/13/core/constraints.html#configuring-constraint-naming-conventions
 NAMING_CONVENTION = {
-    "ix": 'ix_%(table_name)s_%(column_0_N_name)s',
+    "ix": "ix_%(table_name)s_%(column_0_N_name)s",
     "uq": "uq_%(table_name)s_%(column_0_name)s",
     "ck": "ck_%(table_name)s_%(constraint_name)s",
     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
