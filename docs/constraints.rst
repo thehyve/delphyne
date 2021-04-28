@@ -39,8 +39,8 @@ constraints across all tables.
    Dropping indexes/constraints does not cascade. This means they can only be dropped if it doesn't violate other
    database relationships, and only added if the prerequisite objects are present.
 
-Singular
-^^^^^^^^
+Individual constraints
+^^^^^^^^^^^^^^^^^^^^^^
 
 Dropping or adding a single constraint/index is done by providing the name:
 
@@ -61,8 +61,8 @@ definition, will raise a ``KeyError``.
    `official DDL scripts <https://github.com/OHDSI/CommonDataModel/>`_, if dropped constraints are later added again,
    the names will likely be different, as they will be determined by the naming conventions.
 
-Multiple
-^^^^^^^^
+Multiple constraints
+^^^^^^^^^^^^^^^^^^^^
 
 Constraints and/or indexes can also be dropped or added on table-level. From smallest to largest, the levels are:
 single table, cdm (non-vocabulary) tables, and the complete set of tables in your model (including vocabularies).
