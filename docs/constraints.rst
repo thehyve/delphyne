@@ -57,8 +57,9 @@ constraint/index that is not currently active, or adding one that does not exist
 definition, will raise a ``KeyError``.
 
 .. warning::
-   While delphyne can be used with CDMs created with the official DDL scripts, if dropped constraints are later
-   added again, the names will likely be different, as they will be determined by the naming conventions.
+   While delphyne can be used with CDMs created with the
+   `official DDL scripts <https://github.com/OHDSI/CommonDataModel/>`_, if dropped constraints are later added again,
+   the names will likely be different, as they will be determined by the naming conventions.
 
 Multiple
 ^^^^^^^^
