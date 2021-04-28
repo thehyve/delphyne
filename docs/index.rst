@@ -5,6 +5,7 @@ delphyne
    :maxdepth: 2
    :hidden:
 
+   delphyne_template
    cdm
    transformations
    standard_vocab
