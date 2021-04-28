@@ -4,6 +4,7 @@ Table constraints
 .. contents::
     :local:
     :backlinks: none
+    :depth: 2
 
 CDM tables created with delphyne will by default have all indexes, PKs, FKs and other constraints applied.
 The :class:`.ConstraintManager` class allows you to drop or add these on the level of your choice.
@@ -64,8 +65,11 @@ definition, will raise a ``KeyError``.
 Multiple constraints
 ^^^^^^^^^^^^^^^^^^^^
 
-Constraints and/or indexes can also be dropped or added on table-level. From smallest to largest, the levels are:
+Constraints and/or indexes can also be dropped or added on table-level. From most to least specific, the levels are:
 single table, cdm (non-vocabulary) tables, and the complete set of tables in your model (including vocabularies).
+
+Drop table constraints
+""""""""""""""""""""""
 
 .. code-block:: python
 
@@ -75,6 +79,18 @@ single table, cdm (non-vocabulary) tables, and the complete set of tables in you
     wrapper.db.constraint_manager.drop_cdm_constraints()
     # Drop all indexes/constraints on all tables
     wrapper.db.constraint_manager.drop_all_constraints()
+
+Add table constraints
+"""""""""""""""""""""
+
+.. code-block:: python
+
+    # Add all indexes/constraints on the observation table
+    wrapper.db.constraint_manager.add_table_constraints('observation')
+    # Add all indexes/constraints on all non-vocabulary tables
+    wrapper.db.constraint_manager.add_cdm_constraints()
+    # Add all indexes/constraints on all tables
+    wrapper.db.constraint_manager.add_all_constraints()
 
 All of these methods have arguments that allow you to specify the categories of the objects that should be added
 or dropped: PKs, indexes and constraints (includes FKs, check and unique constraints).
