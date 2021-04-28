@@ -36,6 +36,13 @@ Dropping or adding constraints can be done at any time during the data transform
 Depending on the aim, this can be applied to a single constraint, up until the full set of
 constraints across all tables.
 
+Drop or add methods can only be run successfully if the action does not cause conflicts.
+E.g. dropping a PK will not be possible if other FKs still depend on it. The default behavior in case an action
+cannot be performed is to raise an exception.
+Any constraints/indexes that were already dropped or added as part of the method will not be rolled back.
+To only log these occurrences without raising an exception, and continue to try to add/drop remaining
+objects (if any), the ``errors='ignore'`` argument can be provided.
+
 .. note::
    Dropping indexes/constraints does not cascade. This means they can only be dropped if it doesn't violate other
    database relationships, and only added if the prerequisite objects are present.
@@ -96,13 +103,6 @@ All of these methods have arguments that allow you to specify the categories of 
 or dropped: PKs, indexes and constraints (includes FKs, check and unique constraints).
 The default behavior is to include all objects.
 
-Dropping behavior ignores the CDM model, i.e. it will look at the objects currently active on the respective tables,
-and drops all that match the specified categories (e.g. indexes, PKs).
-
-Adding behavior on the other hand, will look at the objects specified in the CDM model.
-It will, however, only add objects that are not already active in the database.
-Any index/constraint that is already active, under the same or a different name, will therefore be skipped.
-
 E.g. the following drops all constraints (but not PKs and indexes) on all non-vocabulary tables:
 
 .. code-block:: python
@@ -111,13 +111,19 @@ E.g. the following drops all constraints (but not PKs and indexes) on all non-vo
                                                        drop_pk=False,
                                                        drop_index=False)
 
+When calling the :meth:`~.ConstraintManager.drop_cdm_constraints()`. or :meth:`~.ConstraintManager.drop_all_constraints()`
+method, only tables that are part of your CDM model will be affected. Any other tables that might be present in the
+database are ignored. Dropping behavior ignores the CDM model with regards to which objects will be dropped on a table.
+That is to say, it will look at the objects currently active on the respective tables, and drops all that match the
+specified categories (e.g. indexes, PKs). Any additional indexes/constraints that happen to be present on these tables
+that are not defined in your CDM model, will be dropped as well (if the category is included).
 
-Drop or add methods can only be run successfully if the action does not cause conflicts.
-E.g. dropping a PK will not be possible if other FKs still depend on it. The default behavior in case an action
-cannot be performed is to raise an exception.
-Any constraints/indexes that were already dropped or added as part of the method will not be rolled back.
-To only log these occurrences without raising an exception, and continue to try to add/drop remaining
-objects (if any), the ``errors='ignore'`` argument can be provided.
+Adding behavior on the other hand, will look at the objects specified in the CDM model.
+It will, however, only add objects that are not already active in the database.
+Any index/constraint that is already active, under the same or a different name, will therefore be skipped.
+
+Both add and drop methods can therefore be called at any time, regardless of what constraints/indexes are currently
+present on those tables.
 
 Use cases
 ---------
