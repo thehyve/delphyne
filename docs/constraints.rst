@@ -119,7 +119,7 @@ Similarly for **adding** non-vocabulary table constraints:
                                                       add_pk=False,
                                                       add_index=False)
 
-When calling the :meth:`~.ConstraintManager.drop_cdm_constraints()`. or :meth:`~.ConstraintManager.drop_all_constraints()`
+When calling the :meth:`~.ConstraintManager.drop_cdm_constraints()` or :meth:`~.ConstraintManager.drop_all_constraints()`
 method, only tables that are part of your CDM model will be affected. Any other tables that might be present in the
 database are ignored. Dropping behavior ignores the CDM model with regards to which objects will be dropped on a table.
 That is to say, it will look at the objects currently active on the respective tables, and drops all that match the
