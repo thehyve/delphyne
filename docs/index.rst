@@ -34,6 +34,11 @@ Requirements
 
 Python 3.7.2 or higher (tested with 3.7-3.9).
 
+Supported DBMS
+--------------
+
+delphyne currently supports PostgreSQL and Microsoft SQL Server.
+
 Installation
 ------------
 
