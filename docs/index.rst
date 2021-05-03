@@ -17,51 +17,78 @@ delphyne
 
 
 delphyne is a Python package designed to simplify and standardize the process of converting
-source data into the `OMOP Common Data Model <https://www.ohdsi.org/data-standardization/the-common-data-model/>`_.
+source data to the `OMOP Common Data Model (CDM) <https://www.ohdsi.org/data-standardization/the-common-data-model/>`_.
+
+delphyne is time-saving:
+you can automate tedious manual operations, such as the loading of standard vocabularies,
+and use one of the several built-in tools to quickly map source codes to standard concept_ids.
+
+delphyne is flexible:
+you can read source data from file or an existing relational database,
+implement transformations in Python or SQL as you feel comfortable,
+and set the target CDM model to a default version or a custom one.
+
+delphyne is powerful:
+it provides several options to improve the efficiency of data extraction and loading,
+by making use of caching and other performance optimization techniques.
+
+Once converted, the data will be available in a relational DBMS,
+where it can be queried with any of the supported `OHDSI analytics tools <https://www.ohdsi.org/analytic-tools/>`_.
 
 Main Features
 -------------
 
--   Customizable SQLAlchemy ORM of multiple OMOP CDM releases and extensions
--   Flexible data transformation options using either raw SQL or the ORM
+-   Customizable SQLAlchemy ORM for multiple target OMOP CDM releases and extensions, including legacy tables
+-   Integrated loading functionality for standard vocabularies, custom vocabularies, and source to concept mappings
+-   Flexible data transformation options using either raw SQL, SQLAlchemy queries, or the SQLAlchemy ORM
 -   Built-in tracking of ETL transformations to generate an overview of table record changes
 -   Easy use of source data files in transformations, with options for caching and various data formats
 -   Intuitive table constraint management ranging from a single constraint/index to the full CDM
--   Integrated loading functionality for standard vocabularies, custom vocabularies and source to concept mappings
+-   Efficient mapping tools from source codes to standard OMOP concept_ids
+
+Supported CDM models
+--------------------
+
+delphyne offers out-of-the-box ORM models for **CDM v5.3.1 and 6.0.0**,
+and several extension and legacy tables definitions;
+additionally, you can define your own custom model.
+
+Supported DBMSs
+---------------
+
+delphyne currently supports **PostgreSQL** and **Microsoft SQL Server**.
+For conversions from other source DBMSs, you will first need to dump the data to file.
+When the source data is extracted directly from a database,
+the converted data will be loaded to a different schema in the same database.
 
 Requirements
 ------------
 
-Python 3.7.2 or higher (tested with 3.7-3.9).
-
-Supported DBMS
---------------
-
-delphyne currently supports PostgreSQL and Microsoft SQL Server.
+**Python 3.7.2+** (tested with 3.7-3.9).
 
 Installation
 ------------
 
-For ETL builders (delphyne-template)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+For OMOP CDM conversions
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-ETL builders are strongly recommended to setup their project using `delphyne-template <https://github.com/thehyve/delphyne-template>`_,
-as it provides a ready-to-use ETL framework, complete with all files and folders required by delphyne.
-
-We provide detailed instructions on how to build your ETL project with delphyne-template
+Please follow the instructions on how to build a conversion ETL to the OMOP CDM using **delphyne-template**
 in the section :ref:`delphyne_template:Getting started with delphyne`.
 
-For developers (stand-alone)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The template provides a ready-to-use ETL framework complete with all files and folders required by delphyne,
+and easy to customize configurations and scripts, saving you loads of setup time.
 
-If you are installing delphyne for other development purposes,
+For developers and contributors
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you are installing delphyne for other purposes,
 you can get the latest version from PyPI:
 
 .. code-block:: bash
 
    pip install delphyne
 
-Alternatively, you can install from source:
+or install directly from source:
 
 .. code-block:: bash
 
@@ -74,8 +101,8 @@ Alternatively, you can install from source:
    # or install in editable mode (including test dependencies)
    pip install -e '.[TEST]'
 
-Additional instructions for developers, such as for testing and generating documentation, are available in the
-`CONTRIBUTING.md <https://github.com/thehyve/delphyne/blob/master/CONTRIBUTING.md>`_ file in delphyne's repository.
+Additional instructions for contributors are available in the
+`CONTRIBUTING.md <https://github.com/thehyve/delphyne/blob/master/CONTRIBUTING.md>`_ file.
 
 License
 -------
