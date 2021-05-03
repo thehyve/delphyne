@@ -107,7 +107,7 @@ Whenever a data retrieval method is called without ``cache=True``, any cached ob
 that currently exist, will be dropped.
 
 SAS files
-^^^^^^^^^
+---------
 SAS files can be used by loading them as a pandas dataframe.
 Column data types are typically already stored in the file format, but dtypes can be provided to overrule these.
 The same caching options apply as for delimited text files.
