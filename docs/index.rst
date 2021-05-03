@@ -7,6 +7,7 @@ delphyne
 
    cdm
    transformations
+   source_data
    constraints
    standard_vocab
    custom_vocab
