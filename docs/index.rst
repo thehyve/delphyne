@@ -16,50 +16,50 @@ delphyne
    changelog_link
 
 
-delphyne is a Python package designed to simplify and standardize the process of converting
+**delphyne** is a Python package designed to simplify and standardize the process of converting
 source data to the `OMOP Common Data Model (CDM) <https://www.ohdsi.org/data-standardization/the-common-data-model/>`_.
 
-delphyne is time-saving:
-you can automate tedious manual operations, such as the loading of standard vocabularies,
-and use one of the several built-in tools to quickly map source codes to standard concept_ids.
+delphyne offers several benefits to ETL builders:
 
-delphyne is flexible:
-you can read source data from file or an existing relational database,
-implement transformations in Python or SQL as you feel comfortable,
-and set the target CDM model to a default version or a custom one.
+- **quick development**:
+  delphyne automates tedious manual operations, such as the loading of standard OMOP vocabularies,
+  and offers a range of tools for the rapid implementation of custom transformation scripts;
+- **flexibility**:
+  you can read source data from file or a supported relational database,
+  set the target CDM model to an official version or a custom one,
+  and implement transformations in Python or SQL as you feel comfortable;
+- **performance**:
+  delphyne provides several options for efficient data extraction and loading,
+  by making use of caching and other performance optimization techniques.
 
-delphyne is powerful:
-it provides several options to improve the efficiency of data extraction and loading,
-by making use of caching and other performance optimization techniques.
+Additionally, we provide a ready-to-use ETL framework, **delphyne-template**,
+which used together with delphyne ensures a fast and optimal project setup.
 
-Once converted, the data will be available in a relational DBMS,
-where it can be queried with any of the supported `OHDSI analytics tools <https://www.ohdsi.org/analytic-tools/>`_.
+Features overview
+-----------------
 
-Main Features
--------------
-
--   Customizable SQLAlchemy ORM for multiple target OMOP CDM releases and extensions, including legacy tables
+-   Customizable SQLAlchemy ORM for multiple target OMOP CDM releases and extensions
 -   Integrated loading functionality for standard vocabularies, custom vocabularies, and source to concept mappings
 -   Flexible data transformation options using either raw SQL, SQLAlchemy queries, or the SQLAlchemy ORM
 -   Built-in tracking of ETL transformations to generate an overview of table record changes
 -   Easy use of source data files in transformations, with options for caching and various data formats
 -   Intuitive table constraint management ranging from a single constraint/index to the full CDM
--   Efficient mapping tools from source codes to standard OMOP concept_ids
+-   Efficient mapping tools based on the standard vocabularies or custom source to concept mappings
 
-Supported CDM models
---------------------
+Source data can be extracted from file or a supported relational DBMS;
+data read directly from a database will be converted and loaded to a new schema in the same database.
+
+Supported CDM versions
+^^^^^^^^^^^^^^^^^^^^^^
 
 delphyne offers out-of-the-box ORM models for **CDM v5.3.1 and 6.0.0**,
-and several extension and legacy tables definitions;
-additionally, you can define your own custom model.
+the Oncology extension, and legacy CDM tables.
+Additionally, you can create your own model.
 
 Supported DBMSs
----------------
+^^^^^^^^^^^^^^^
 
-delphyne currently supports **PostgreSQL** and **Microsoft SQL Server**.
-For conversions from other source DBMSs, you will first need to dump the data to file.
-When the source data is extracted directly from a database,
-the converted data will be loaded to a different schema in the same database.
+delphyne can be used with **PostgreSQL** and **Microsoft SQL Server** databases.
 
 Requirements
 ------------
@@ -69,10 +69,10 @@ Requirements
 Installation
 ------------
 
-For OMOP CDM conversions
-^^^^^^^^^^^^^^^^^^^^^^^^
+For ETL builders
+^^^^^^^^^^^^^^^^
 
-Please follow the instructions on how to build a conversion ETL to the OMOP CDM using **delphyne-template**
+Please follow the instructions on how to build a conversion ETL to the OMOP CDM using delphyne-template
 in the section :ref:`delphyne_template:Getting started with delphyne`.
 
 The template provides a ready-to-use ETL framework complete with all files and folders required by delphyne,
