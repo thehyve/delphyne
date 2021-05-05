@@ -6,9 +6,6 @@ Getting started with delphyne
     :backlinks: none
 
 
-Use with delphyne-template
---------------------------
-
 delphyne is intended to be used with **delphyne-template**,
 an ETL template for converting source data to the OMOP CDM.
 
@@ -33,8 +30,8 @@ Clone the project to a local environment where a delphyne-compatible Python vers
 
 delphyne itself will be automatically installed as one of the dependencies.
 
-Project structure overview
---------------------------
+Project structure
+^^^^^^^^^^^^^^^^^
 
 A project built on delphyne-template will be structured as follows:
 
@@ -83,7 +80,7 @@ The following folders are provided for convenience and can be safely removed:
 Running the ETL
 ---------------
 
-Before you can run the ETL, you need to create a custom configuration file; see step 1 of `ETL setup`_.
+All you need is to specify the path to a custom configuration file (see step 1 of `ETL setup`_):
 
 .. code-block:: bash
 
@@ -94,42 +91,69 @@ A log of the ETL run will be written to ``logs/<timestamp><version>.log``.
 Building the ETL
 ----------------
 
-ETL development is an iterative process, and you will likely find yourself coming back to the same steps several times;
-you should start with the ETL setup section as described, but other operations can be executed in any desired order.
+The core of the ETL is the module ``wrapper.py`` (under ``src/main/python``),
+which defines a subclass of delphyne's :class:`.Wrapper` responsible for controlling the execution flow.
+You can specify which operations to execute in which order by editing the content of the ``Wrapper.run()`` method.
+
+By default, the method begins with the following calls:
+
+- :meth:`~.Wrapper.create_schemas()`
+- :meth:`~.Wrapper.drop_cdm()`
+- :meth:`~.Wrapper.create_cdm()`
+
+These commands automatically create the target schemas and CDM tables (unless already present),
+and drop existing converted data, providing a clean database at the start of each ETL iteration.
+Note that vocabulary tables will be automatically created but not dropped.
+
+Additionally, :meth:`~.Wrapper.summarize()` is called at the end of the ETL run
+to produce an overview of data sources and transformations (failed and successful).
+
+Please leave the order of these operations unchanged.
 
 ETL setup
 ^^^^^^^^^
 
-1. Configure the database connection
+**1. Configure the database connection**
 
-2. Customize the target CDM model
+**2. Customize the target CDM model**
 
-3. Load the standard vocabularies
+   Follow the instructions in XXX to create a custom CDM model for your ETL.
 
-4. Configure the data sources (optional)
 
-   Initially, these will be likely synthetic data; in that case, we recommend to store them in ``resources/synthetic_data``,
-   and commit them to the repository, if not too large.
+**3. Load the standard vocabularies**
+
+   Follow the instructions in XXX to obtain the standard OMOP vocabularies required by your project and load them to the database.
+   You can repeat the procedure at any stage of ETL development (provided you first drop the vocabulary schema manually).
+
+**4. Configure the data sources (optional)**
+
+   Initially, these will likely be synthetic data; in that case, we recommend to store them in ``resources/synthetic_data``,
+   and commit them to the repository (if not too large).
 
 ETL development
 ^^^^^^^^^^^^^^^
 
-5. Write the transformation scripts
+The following steps can be executed in any desired order.
+
+**5. Configure logging and reports**
+
+   if needed, edit logging configuration + write reports
+
+**6. Write the transformation scripts**
+
    (python / sql) - any general purpose function can be added to util/
 
-6. Specify the execution order of transformations in the wrapper run() method
+   Specify the execution order of transformations in the wrapper run() method
 
-7. Write tests
+**7. Write tests for the transformations**
+
    python / R
-
-8. Configure logging options
-   if needed, edit logging configuration + write reports
 
 Further development options:
 
-9. Load custom vocabularies (optional)
+**8. Load custom vocabularies (optional)**
 
-10. Load source to concept mappings (optional)
+**10. Load source to concept mappings (optional)**
 
 ETL info
 ^^^^^^^^

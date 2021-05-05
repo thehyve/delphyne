@@ -21,9 +21,9 @@ source data to the `OMOP Common Data Model (CDM) <https://www.ohdsi.org/data-sta
 
 delphyne offers several benefits to ETL builders:
 
-- **quick development**:
-  delphyne automates tedious manual operations, such as the loading of standard OMOP vocabularies,
-  and offers a range of tools for the rapid implementation of custom transformation scripts;
+- **easy setup**:
+  delphyne automates tedious manual operations, such as the creation of target database schemas and tables,
+  and the loading of standard OMOP vocabularies;
 - **flexibility**:
   you can read source data from file or a supported relational database,
   set the target CDM model to an official version or a custom one,
@@ -44,7 +44,7 @@ Features overview
 -   Built-in tracking of ETL transformations to generate an overview of table record changes
 -   Easy use of source data files in transformations, with options for caching and various data formats
 -   Intuitive table constraint management ranging from a single constraint/index to the full CDM
--   Efficient mapping tools based on the standard vocabularies or custom source to concept mappings
+-   Efficient tools to map source values to standard concept_ids, based on OMOP vocabularies or custom source to concept mappings
 
 Source data can be extracted from file or a supported relational DBMS;
 data read directly from a database will be converted and loaded to a new schema in the same database.
