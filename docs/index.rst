@@ -22,14 +22,17 @@ source data to the `OMOP Common Data Model (CDM) <https://www.ohdsi.org/data-sta
 delphyne offers several benefits to ETL builders:
 
 - **easy setup**:
-  delphyne automates tedious manual operations, such as the creation of target database schemas and tables,
-  and the loading of standard OMOP vocabularies;
+  tedious manual operations, such as the creation of CDM tables in the target database,
+  and the loading of standard OMOP vocabularies, are fully automated;
 - **flexibility**:
   you can read source data from file or a supported relational database,
   set the target CDM model to an official version or a custom one,
   and implement transformations in Python or SQL as you feel comfortable;
+- **tooling**:
+  transformations can take advantage of several built-in methods,
+  e.g. to quickly map source values to standard OMOP concept_ids;
 - **performance**:
-  delphyne provides several options for efficient data extraction and loading,
+  delphyne provides many options for efficient data extraction and loading,
   by making use of caching and other performance optimization techniques.
 
 Additionally, we provide a ready-to-use ETL framework, **delphyne-template**,
@@ -46,8 +49,8 @@ Features overview
 -   Intuitive table constraint management ranging from a single constraint/index to the full CDM
 -   Efficient tools to map source values to standard concept_ids, based on OMOP vocabularies or custom source to concept mappings
 
-Source data can be extracted from file or a supported relational DBMS;
-data read directly from a database will be converted and loaded to a new schema in the same database.
+Source data can be extracted from file or a supported relational database;
+data read from a database will be converted and loaded to the same database.
 
 Supported CDM versions
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -56,32 +59,34 @@ delphyne offers out-of-the-box ORM models for **CDM v5.3.1 and 6.0.0**,
 the Oncology extension, and legacy CDM tables.
 Additionally, you can create your own model.
 
+Supported file formats
+^^^^^^^^^^^^^^^^^^^^^^
+
+Delimited text (e.g. csv, tsv, other), SAS.
+
 Supported DBMSs
 ^^^^^^^^^^^^^^^
 
-delphyne can be used with **PostgreSQL** and **Microsoft SQL Server** databases.
-
-Requirements
-------------
-
-**Python 3.7.2+** (tested with 3.7-3.9).
+PostgreSQL, Microsoft SQL Server.
 
 Installation
 ------------
 
+Requirements
+^^^^^^^^^^^^
+
+**Python 3.7.2+** (tested with 3.7-3.9).
+
 For ETL builders
 ^^^^^^^^^^^^^^^^
 
-Please follow the instructions on how to build a conversion ETL to the OMOP CDM using delphyne-template
+Please follow the instructions on how to **build a conversion ETL to the OMOP CDM using delphyne-template**
 in the section :ref:`delphyne_template:Getting started with delphyne`.
 
-The template provides a ready-to-use ETL framework complete with all files and folders required by delphyne,
-and easy to customize configurations and scripts, saving you loads of setup time.
+For developers
+^^^^^^^^^^^^^^
 
-For developers and contributors
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you are installing delphyne for other purposes,
+If you are installing delphyne for other development purposes,
 you can get the latest version from PyPI:
 
 .. code-block:: bash
@@ -101,8 +106,8 @@ or install directly from source:
    # or install in editable mode (including test dependencies)
    pip install -e '.[TEST]'
 
-Additional instructions for contributors are available in the
-`CONTRIBUTING.md <https://github.com/thehyve/delphyne/blob/master/CONTRIBUTING.md>`_ file.
+Additional instructions for contributors are available in
+`CONTRIBUTING.md <https://github.com/thehyve/delphyne/blob/master/CONTRIBUTING.md>`_.
 
 License
 -------
