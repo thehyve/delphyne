@@ -91,7 +91,7 @@ The easiest way to create a transformations with SQL is by following the templat
 If you have defined your transformation in Rabbit-in-a-Hat, then
 you can directly export `a SQL skeleton in this format <http://ohdsi.github.io/WhiteRabbit/RabbitInAHat.html#generating_a_sql_skeleton_(v090)>`_.
 The convention is to put these transformation scripts in the `src/main/sql` folder.
-`See delphyne-template for examples. <https://github.com/thehyve/delphyne-template/tree/master/src/main/sql>`_
+`See delphyne-template for SQL code examples. <https://github.com/thehyve/delphyne-template/tree/master/src/main/sql>`_
 
 .. code-block:: sql
 
