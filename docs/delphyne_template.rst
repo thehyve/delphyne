@@ -56,7 +56,9 @@ A project built on delphyne-template will be structured as follows:
     │   │   │   └── wrapper.py
     │   │   └── sql/
     │   └── test/
-    └── main.py
+    ├── main.py
+    ├── README.md
+    └── requirements.txt
 
 The folders listed below are **required by delphyne** and should not be renamed or removed:
 
@@ -130,77 +132,90 @@ It is recommended to keep all configuration files inside the ``config`` folder:
 files at this location, except for the provided samples, will be automatically ignored by git,
 so that any confidential information is not accidentally shared.
 
-**1. General ETL configuration**
+**1. Configure the general ETL execution**
 
-     Copy and rename ``config-sample.yml`` to any desired file name;
-     you can have as many configuration files as needed for different ETL execution scenarios.
+Copy and rename ``config-sample.yml`` to any desired file name;
+you can have as many configuration files as needed for different ETL execution scenarios.
 
-     Make sure to fill in the ``database`` and ``schema_translate_map`` sections.
-     If available, also specify the location of the (synthetic) source data (``source_data_folder`` section);
-     this can be anywhere inside or outside the repository.
-     Other configuration options can be left to their default values.
+Make sure to fill in the ``database`` and ``schema_translate_map`` sections.
+If available, also specify the location of the (synthetic) source data (``source_data_folder`` section);
+this can be anywhere inside or outside the repository.
+Other configuration options can be left to their default values for the moment.
 
-**2. Source data configuration** (optional)
+**2. Configure source data** (optional)
 
-     You only need to perform this step if you are reading source data from file.
+You only need to perform this step if you are reading source data from file.
 
-     Copy and rename ``source_config-sample.yml`` to ``source-config.yml``.
-     The configuration allows you to specify the correct delimiters and data types for individual source data files.
+Copy and rename ``source_config-sample.yml`` to ``source-config.yml``.
+The configuration allows you to specify the correct delimiters and data types for individual source data files.
 
-**3. Logging configuration**
+**3. Configure logging**
 
-     Copy and rename ``logging-sample.yml`` to ``logging.yml``.
-     By default, logging will be provided at the INFO level.
+Copy and rename ``logging-sample.yml`` to ``logging.yml``.
+By default, logging will be provided at the INFO level.
 
 ETL setup
 ^^^^^^^^^
 
 **4. Customize the target CDM model**
 
-     Follow the instructions in XXX to create a custom CDM model for your ETL.
+Follow the instructions in :ref:`cdm:Defining the CDM` to define a (custom) CDM model for your ETL.
+Available out-of-the-box CDM versions are listed in :ref:`index:Supported CDM versions`.
 
-**5. Load the standard vocabularies**
+All standard vocabulary tables, and source to concept map tables (see :ref:`stcm:Source to concept map`),
+are associate by default to the "vocabulary" schema, while other tables (including custom ones)
+can be associated to the "cdm" or other schemas (the exact names are defined in the general configuration's
+``schema_translate_map`` option, see `configuration section <TODO>`_).
 
-     Follow the instructions in XXX to obtain the standard OMOP vocabularies required by your project and load them to the database.
-     You can repeat the procedure at any stage of ETL development (provided you first drop the vocabulary schema manually).
+We recommend to not mix up this basic schema subdivision.
+
+**5. Load the standard OMOP vocabularies**
+
+Follow the instructions in :ref:`standard_vocab:Standard vocabularies` to obtain the standard OMOP vocabularies
+required by your project and load them to the database.
+This is an expensive operation that should be repeated as few times as possible.
+
+**6. Load custom vocabularies** (optional)
+
+See instructions in :ref:`custom_vocab:Custom vocabularies`.
 
 ETL development
 ^^^^^^^^^^^^^^^
 
-The following steps can be executed in any desired order.
+Should you need more information to troubleshoot errors, specify a more informative logging level in ``logging.yml``
+(see the `configuration section <TODO>`_).
 
-Should you need more information to troubleshoot errors, specify a different logging level in ``logging.yml``
-(see the `configuration section <TODO>`_ for more information).
+**7. Write source data transformations**
 
-**6. Writing the transformation scripts**
+Create your transformation scripts inside ``transformation/`` (for Python) or ``sql/`` (for SQL) folder,
+then add them to the Wrapper's run method to have them executed during an ETL run.
 
-     Transformations from source data to the target CDM can be implemented in one of several different styles;
-     the specific choice depends
+Transformations from source data to the target CDM can be implemented in one of several different styles;
+see :ref:`transformations:Transformations`.
 
-6.1. General structure
+**7.1. Write transformations in Python**
 
-     (python / sql) - any general purpose function can be added to util/
+- General structure (imports etc)
+- To extract source data inside a transformation, see :ref:`source_data:Source data`
+- To map values from the source data to standard OMOP concept_ids, see :ref:`semantic_mapping:Semantic mapping tools`
+- You can place any helper functions required by multiple Python transformations in the ``util/`` folder
 
-6.2. Obtaining the source data
+**7.2. Write transformations in SQL**
 
-     See :ref:`index:Supported DBMSs`.
+TBD
 
+**8. Write tests for the transformations**
 
+**8.1. Write tests in Python**
 
+(not yet supported)
 
-   Specify the execution order of transformations in the wrapper run() method
+**8.2. Write tests in R**
 
-**7. Write tests for the transformations**
-
-   python / R
-
-Further development options:
-
-**8. Load custom vocabularies (optional)**
-
-**10. Load source to concept mappings (optional)**
+``/src/test/R`` contains a test framework that can be automatically generated by Rabbit in a Hat.
+See `readme.md` in the folder for details on how to build and use the framework.
 
 ETL info
 ^^^^^^^^
-- Replace the generic ``README.md`` with a project-specific version of ``README-sample.md``
+- Edit ``README.md`` with project-specific information
 - Make sure to regularly update your ETL version in ``main.py`` (``__version__`` is initially set to ``0.1.0``)

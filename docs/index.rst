@@ -57,7 +57,7 @@ Supported CDM versions
 
 delphyne offers out-of-the-box ORM models for **CDM v5.3.1 and 6.0.0**,
 the Oncology extension, and legacy CDM tables.
-Additionally, you can create your own model.
+Additionally, you can define your own custom CDM model.
 
 Supported file formats
 ^^^^^^^^^^^^^^^^^^^^^^
