@@ -205,7 +205,7 @@ It is recommended to place any helper functions required by multiple Python tran
 
 **8.1. Write transformations in Python**
 
-Python transformations allow you take advantage of delphyne's built-in tools to:
+:ref:`transformations:Python transformations` allow you take advantage of delphyne's built-in tools to:
 
 - efficiently extract source data from file (see :ref:`source_data:Source data`)
 - map source values to standard OMOP concept_ids (see :ref:`semantic_mapping:Semantic mapping tools`)
@@ -216,7 +216,7 @@ Python transformations allow you take advantage of delphyne's built-in tools to:
 
 **8.2. Write transformations in SQL**
 
-SQL transformations are described in :ref:`transformations:Raw SQL`.
+SQL transformations are described in :ref:`transformations:Raw SQL transformations`.
 
 .. note::
    SQL transformations require source data to be loaded in the database.
