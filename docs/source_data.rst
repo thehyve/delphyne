@@ -18,6 +18,8 @@ Source data files can be read directly to be used in :ref:`transformations:SQLAl
 This requires a `source data path <TODO>`_ to be set in the main config file,
 and the presence of a `source_config <TODO>`_.
 
+File operations can be handled via the :class:`.SourceData` instance. From there, individual source file handlers can
+be returned as :class:`.SourceFile` instances.
 To use a file in a transformation, first define the source by providing the file name:
 
 .. code-block:: python
