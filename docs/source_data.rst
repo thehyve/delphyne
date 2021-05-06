@@ -123,6 +123,7 @@ Read from database table
 ------------------------
 If using :ref:`raw SQL queries <transformations:Raw SQL>`
 or the :ref:`SQL expression language <transformations:SQLAlchemy query>`
-for transformations, the source data will first need to be inserted into the database.
+for transformations, the source will not be a file but a database table.
+If the source data is not yet loaded into the same database, it will first need to be inserted.
 This one-off effort will need to be done outside of delphyne, after which the database tables can be used in
-transformations.
+transformations (see :ref:`transformations:Transformations` for examples).
