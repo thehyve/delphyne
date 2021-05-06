@@ -127,95 +127,125 @@ as delphyne and delphyne-template cannot currently assist you with this.
 ETL configuration
 ^^^^^^^^^^^^^^^^^
 
-A full description of the configuration options is available in the `configuration section <TODO>`_.
+A full description of the configuration options is available in `configuration section <TODO>`_.
 It is recommended to keep all configuration files inside the ``config`` folder:
-files at this location, except for the provided samples, will be automatically ignored by git,
+files at this location, except for the provided examples, will be automatically ignored by git,
 so that any confidential information is not accidentally shared.
 
-**1. Configure the general ETL execution**
+1. Configure the general ETL execution
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Copy and rename ``config-sample.yml`` to any desired file name;
 you can have as many configuration files as needed for different ETL execution scenarios.
 
-Make sure to fill in the ``database`` and ``schema_translate_map`` sections.
+Fill in the ``database`` and ``schema_translate_map`` sections;
+make sure to choose schema names that do not override existing schemas in the database.
+The "vocabulary" schema will contain all standard vocabulary and source to concept map tables
+(see :ref:`stcm:Source to concept map`), the "cdm" schema all remaining CDM tables.
+
 If available, also specify the location of the (synthetic) source data (``source_data_folder`` section);
 this can be anywhere inside or outside the repository.
 Other configuration options can be left to their default values for the moment.
 
-**2. Configure source data** (optional)
+2. Configure source data (optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You only need to perform this step if you are reading source data from file.
 
 Copy and rename ``source_config-sample.yml`` to ``source-config.yml``.
 The configuration allows you to specify the correct delimiters and data types for individual source data files.
 
-**3. Configure logging**
+3. Configure logging
+~~~~~~~~~~~~~~~~~~~~
 
 Copy and rename ``logging-sample.yml`` to ``logging.yml``.
-By default, logging will be provided at the INFO level.
+By default, logging will be provided at the INFO level;
+you can change this at any time during development to help troubleshooting errors.
 
 ETL setup
 ^^^^^^^^^
 
-**4. Customize the target CDM model**
+4. Customize the target CDM model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Follow the instructions in :ref:`cdm:Defining the CDM` to define a (custom) CDM model for your ETL.
 Available out-of-the-box CDM versions are listed in :ref:`index:Supported CDM versions`.
 
-All standard vocabulary tables, and source to concept map tables (see :ref:`stcm:Source to concept map`),
-are associate by default to the "vocabulary" schema, while other tables (including custom ones)
-can be associated to the "cdm" or other schemas (the exact names are defined in the general configuration's
-``schema_translate_map`` option, see `configuration section <TODO>`_).
-
-We recommend to not mix up this basic schema subdivision.
-
-**5. Load the standard OMOP vocabularies**
+5. Load the standard OMOP vocabularies
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Follow the instructions in :ref:`standard_vocab:Standard vocabularies` to obtain the standard OMOP vocabularies
-required by your project and load them to the database.
+required for your project and load them to the database.
 This is an expensive operation that should be repeated as few times as possible.
 
-**6. Load custom vocabularies** (optional)
+6. Load custom vocabularies (optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 See instructions in :ref:`custom_vocab:Custom vocabularies`.
+
+7. Load source to concept mappings (optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+See instructions in :ref:`stcm:Source to concept map`.
 
 ETL development
 ^^^^^^^^^^^^^^^
 
-Should you need more information to troubleshoot errors, specify a more informative logging level in ``logging.yml``
-(see the `configuration section <TODO>`_).
+8. Write source data transformations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**7. Write source data transformations**
+You can transform source data to the CDM using Python or SQL,
+taking advantage of different styles an execution options, as illustrated in :ref:`transformations:Transformations`.
 
-Create your transformation scripts inside ``transformation/`` (for Python) or ``sql/`` (for SQL) folder,
-then add them to the Wrapper's run method to have them executed during an ETL run.
+Transformations scripts must be added to the ``transformation`` (for Python) or ``sql`` (for SQL) folders
+to be automatically available to the wrapper module; then, you will need to explicitly call them in the Wrapper's run method,
+using the appropriate transformation execution method for the chosen transformation style.
 
-Transformations from source data to the target CDM can be implemented in one of several different styles;
-see :ref:`transformations:Transformations`.
+It is recommended to place any helper functions required by multiple Python transformations in the ``util`` folder.
 
-**7.1. Write transformations in Python**
+**8.1. Write transformations in Python**
 
-- General structure (imports etc)
-- To extract source data inside a transformation, see :ref:`source_data:Source data`
-- To map values from the source data to standard OMOP concept_ids, see :ref:`semantic_mapping:Semantic mapping tools`
-- You can place any helper functions required by multiple Python transformations in the ``util/`` folder
+Python transformations allow you take advantage of delphyne's built-in tools to:
 
-**7.2. Write transformations in SQL**
+- efficiently extract source data from file (see :ref:`source_data:Source data`)
+- map source values to standard OMOP concept_ids (see :ref:`semantic_mapping:Semantic mapping tools`)
 
-TBD
+.. note::
+   SQLAlchemy query transformations require source data to be loaded in the database.
+   SQLAlchemy ORM transformations are recommended for reading data from file, but can be used in both scenarios.
 
-**8. Write tests for the transformations**
+**8.2. Write transformations in SQL**
 
-**8.1. Write tests in Python**
+SQL transformations are described in :ref:`transformations:Raw SQL`.
+
+.. note::
+   SQL transformations require source data to be loaded in the database.
+
+9. Write tests for the transformations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is recommended to write tests for individual transformations to ensure that the ETL
+is producing the expected output. We provide customizable test frameworks for this.
+
+**9.1. Write tests in Python**
 
 (not yet supported)
 
-**8.2. Write tests in R**
+**9.2. Write tests in R**
 
-``/src/test/R`` contains a test framework that can be automatically generated by Rabbit in a Hat.
-See `readme.md` in the folder for details on how to build and use the framework.
+For instructions for how to write tests in R, see ``readme.md`` in ``/src/test/R``.
+The tests will be based on the
+`"testing framework" functionality <http://ohdsi.github.io/WhiteRabbit/riah_test_framework.html>`_
+of Rabbit in a Hat.
+
+.. note::
+   Using this test framework requires ``R`` with packages ``yaml`` and ``DatabaseConnector``.
 
 ETL info
 ^^^^^^^^
-- Edit ``README.md`` with project-specific information
-- Make sure to regularly update your ETL version in ``main.py`` (``__version__`` is initially set to ``0.1.0``)
+
+Bonus steps to fully customize your ETL:
+
+- Edit the provided ``README.md`` template with project-specific information
+- Regularly update the ETL version in ``main.py`` (``__version__`` is initially set to ``0.1.0``);
+  ideally, you should keep this in sync with specific code releases.
