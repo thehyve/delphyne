@@ -121,7 +121,7 @@ The same caching options apply as for delimited text files.
 
 Read from database table
 ------------------------
-If using :ref:`raw sql queries <transformations:Raw SQL>`
+If using :ref:`raw SQL queries <transformations:Raw SQL>`
 or the :ref:`SQL expression language <transformations:SQLAlchemy query>`
 for transformations, the source data will first need to be inserted into the database.
 This one-off effort will need to be done outside of delphyne, after which the database tables can be used in
